@@ -1428,7 +1428,28 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
     </div>
     <div id="panelBooks">
       <div class="admin-search-row">
-        <input class="admin-search-input" type="text" placeholder="Kitaplarda ara…" id="adminSearch" oninput="renderAdminTable()">
+        <input class="admin-search-input" type="text" placeholder="Kitaplarda ara…" id="adminSearch" oninput="adminTableReset()">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-family:'Courier Prime',monospace;font-size:0.72rem;">
+        <select id="adminSortField" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="title">Ada göre</option>
+          <option value="author">Yazara göre</option>
+          <option value="shelf">Rafa göre</option>
+          <option value="genre">Türe göre</option>
+        </select>
+        <select id="adminSortDir" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="asc">A → Z</option>
+          <option value="desc">Z → A</option>
+        </select>
+        <select id="adminFilterGenre" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="">Tüm Türler</option>
+        </select>
+        <select id="adminFilterStatus" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="">Tüm Durumlar</option>
+          <option value="available">Mevcut</option>
+          <option value="borrowed">Ödünçte</option>
+        </select>
+        <span id="adminTableInfo" style="color:var(--ink-faint);margin-left:4px;"></span>
       </div>
       <div id="bulkToolbar" style="display:none;background:var(--black);color:var(--white);padding:10px 16px;margin-bottom:8px;align-items:center;gap:10px;font-family:'Courier Prime',monospace;font-size:0.75rem;flex-wrap:wrap;">
         <span id="bulkCount">0 kitap seçildi</span>
@@ -1452,6 +1473,7 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
         </div>
         <div id="adminTableBody"></div>
       </div>
+      <div id="adminPagination" style="display:flex;gap:6px;align-items:center;justify-content:center;padding:16px 0;flex-wrap:wrap;font-family:'Courier Prime',monospace;font-size:0.72rem;"></div>
     </div>
     <div id="panelStats" style="display:none;"><div id="statsPanel"></div></div>
     <div id="panelQuotes" style="display:none;">
@@ -1640,7 +1662,8 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
   </div>
 </div>
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
+  <div class="modal" style="position:relative;">
+    <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-faint);line-height:1;padding:4px 8px;" title="Kapat">✕</button>
     <h2 id="modalTitle">Yeni Kitap Ekle</h2>
     <div class="form-grid">
       <div class="field full"><label>Kitap Adı *</label><input type="text" id="fTitle" placeholder="Kitabın tam adı"></div>
@@ -5644,10 +5667,60 @@ function renderStatsPanel() {
     ${authorSorted.map(([a,c]) => `<div class="bar-row"><div class="bar-label">${a}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((c/maxAuthor)*100)}%;background:#555"></div></div><div class="bar-val">${c} kitap</div></div>`).join('')}`;
 }
 
+let adminCurrentPage = 1;
+const ADMIN_PAGE_SIZE = 15;
+
+function adminTableReset() { adminCurrentPage = 1; renderAdminTable(); }
+
+function buildAdminGenreFilter() {
+  const sel = document.getElementById('adminFilterGenre');
+  if (!sel) return;
+  const current = sel.value;
+  const genreSet = new Set();
+  books.forEach(b => (b.genre||'').split(',').map(g=>g.trim()).filter(Boolean).forEach(g=>genreSet.add(g)));
+  sel.innerHTML = '<option value="">Tüm Türler</option>' +
+    [...genreSet].sort((a,b)=>a.localeCompare(b,'tr')).map(g=>`<option value="${g}"${g===current?' selected':''}>${g}</option>`).join('');
+}
+
 function renderAdminTable() {
+  buildAdminGenreFilter();
   const q = normalize(document.getElementById('adminSearch').value || '');
-  const filtered = books.filter(b => !q || normalize(b.title).includes(q) || normalize(b.author).includes(q) || normalize(b.shelf||'').includes(q));
-  document.getElementById('adminTableBody').innerHTML = filtered.length ? filtered.map(b => {
+  const sortField = document.getElementById('adminSortField')?.value || 'title';
+  const sortDir = document.getElementById('adminSortDir')?.value || 'asc';
+  const filterGenre = document.getElementById('adminFilterGenre')?.value || '';
+  const filterStatus = document.getElementById('adminFilterStatus')?.value || '';
+
+  let filtered = books.filter(b => {
+    if (q && !normalize(b.title).includes(q) && !normalize(b.author||'').includes(q) && !normalize(b.shelf||'').includes(q)) return false;
+    if (filterGenre && !(b.genre||'').split(',').map(g=>g.trim()).includes(filterGenre)) return false;
+    if (filterStatus && b.status !== filterStatus) return false;
+    return true;
+  });
+
+  // Sırala
+  filtered.sort((a, b) => {
+    let av = (a[sortField] || '').toString().toLowerCase();
+    let bv = (b[sortField] || '').toString().toLowerCase();
+    if (sortField === 'shelf') {
+      // Raf için alfanumerik sıralama
+      av = av.replace(/(\d+)/g, n => n.padStart(6,'0'));
+      bv = bv.replace(/(\d+)/g, n => n.padStart(6,'0'));
+    }
+    return sortDir === 'asc' ? av.localeCompare(bv,'tr') : bv.localeCompare(av,'tr');
+  });
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE));
+  if (adminCurrentPage > totalPages) adminCurrentPage = totalPages;
+  const start = (adminCurrentPage - 1) * ADMIN_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + ADMIN_PAGE_SIZE);
+
+  // Info
+  const info = document.getElementById('adminTableInfo');
+  if (info) info.textContent = `${total} kitap · Sayfa ${adminCurrentPage}/${totalPages}`;
+
+  // Tablo
+  document.getElementById('adminTableBody').innerHTML = pageItems.length ? pageItems.map(b => {
     const isSelected = selectedIds.has(b.id);
     const statusBadge = b.status === 'available'
       ? '<span class="badge-status status-available" style="font-size:0.7rem">Mevcut</span>'
@@ -5666,6 +5739,44 @@ function renderAdminTable() {
       </div>
     </div>`;
   }).join('') : '<div style="text-align:center;padding:32px;color:var(--ink-faint);font-family:monospace">Kitap bulunamadı.</div>';
+
+  // Sayfalama butonları
+  const pg = document.getElementById('adminPagination');
+  if (!pg) return;
+  if (totalPages <= 1) { pg.innerHTML = ''; return; }
+
+  let html = '';
+  const btnStyle = (active) => `style="padding:4px 10px;border:1px solid ${active?'var(--ink)':'var(--border)'};background:${active?'var(--ink)':'transparent'};color:${active?'var(--white)':'var(--ink)'};font-family:'Courier Prime',monospace;font-size:0.7rem;cursor:pointer;"`;
+
+  html += `<button ${btnStyle(false)} onclick="adminGoPage(${adminCurrentPage-1})" ${adminCurrentPage===1?'disabled':''}>‹</button>`;
+
+  // Sayfa numaraları — max 7 göster
+  let pages = [];
+  if (totalPages <= 7) {
+    pages = Array.from({length:totalPages},(_,i)=>i+1);
+  } else {
+    pages = [1];
+    if (adminCurrentPage > 3) pages.push('…');
+    for (let i=Math.max(2,adminCurrentPage-1); i<=Math.min(totalPages-1,adminCurrentPage+1); i++) pages.push(i);
+    if (adminCurrentPage < totalPages-2) pages.push('…');
+    pages.push(totalPages);
+  }
+
+  pages.forEach(p => {
+    if (p === '…') html += `<span style="padding:4px 6px;color:var(--ink-faint);">…</span>`;
+    else html += `<button ${btnStyle(p===adminCurrentPage)} onclick="adminGoPage(${p})">${p}</button>`;
+  });
+
+  html += `<button ${btnStyle(false)} onclick="adminGoPage(${adminCurrentPage+1})" ${adminCurrentPage===totalPages?'disabled':''}>›</button>`;
+  pg.innerHTML = html;
+}
+
+function adminGoPage(p) {
+  const totalPages = Math.ceil(books.length / ADMIN_PAGE_SIZE);
+  if (p < 1 || p > totalPages) return;
+  adminCurrentPage = p;
+  renderAdminTable();
+  document.getElementById('adminTableBody')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ===== BULK =====
@@ -5804,7 +5915,7 @@ function addAuthorField() {
   document.getElementById('authorFields').appendChild(makeAuthorInput('', true));
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
-document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+// Modal dışına tıklayınca kapanmaz — sadece ✕ butonu veya İptal kapatır
 
 async function saveBook() {
   const title = document.getElementById('fTitle').value.trim();
