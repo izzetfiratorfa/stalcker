@@ -187,7 +187,7 @@ body.dark .detail-cover-img { border-color:#333; }
 .gb-stars { color:#9c7a3c;letter-spacing:1px; }
 .gb-link { font-size:0.65rem;color:var(--ink-faint);text-decoration:none;border-bottom:1px dashed var(--ink-faint); }
 .gb-link:hover { color:var(--ink); }
-.detail-description { font-size:0.82rem;line-height:1.7;color:var(--ink-light);margin-top:10px;margin-bottom:16px;font-style:italic;border-left:3px solid var(--border);padding-left:12px; }
+.detail-description { font-size:0.82rem;line-height:1.7;color:var(--ink-light);margin-top:10px;margin-bottom:16px;font-style:italic;border-left:3px solid var(--border);padding-left:12px;white-space:pre-line; }
 body.dark .detail-description { border-color:#333; }
 .detail-tags { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px; }
 .reviews-section { margin-top:20px;border-top:1px solid var(--border);padding-top:16px; }
@@ -570,6 +570,172 @@ body.dark .profile-status-pill.done { background:#0d2a0d; }
 body.dark .profile-status-pill.want { background:#1a1200; }
 
 /* ===== NoRa.dio ===== */
+/* ===== RUH HALİ EŞLEŞTİRİCİ ===== */
+.mood-wrap { max-width:600px;margin:0 auto;padding:32px 20px 80px; }
+.mood-hero { text-align:center;padding-bottom:28px;border-bottom:2px dashed var(--border);margin-bottom:32px; }
+.mood-title { font-family:'Special Elite',cursive;font-size:1.6rem;letter-spacing:4px;margin-bottom:8px; }
+.mood-sub { font-family:'Courier Prime',monospace;font-size:0.78rem;color:var(--ink-faint);letter-spacing:1px; }
+.mood-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px; }
+.mood-btn { border:1.5px solid var(--border-dark);background:var(--white);padding:18px 8px;cursor:pointer;text-align:center;transition:all 0.15s;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:1px; }
+.mood-btn:hover,.mood-btn.active { border-color:var(--ink);background:var(--ink);color:var(--white); }
+.mood-emoji { font-size:1.8rem;display:block;margin-bottom:6px; }
+.mood-result { display:none;animation:slideUp 0.3s ease; }
+.mood-result.show { display:block; }
+.mood-result-title { font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:3px;color:var(--ink-faint);text-transform:uppercase;margin-bottom:16px; }
+
+/* ===== KÖR BULUŞMA ===== */
+.blind-wrap { max-width:600px;margin:0 auto;padding:32px 20px 80px; }
+.blind-hero { text-align:center;padding-bottom:24px;border-bottom:2px dashed var(--border);margin-bottom:32px; }
+.blind-title { font-family:'Special Elite',cursive;font-size:1.6rem;letter-spacing:4px;margin-bottom:8px; }
+.blind-sub { font-family:'Courier Prime',monospace;font-size:0.78rem;color:var(--ink-faint);letter-spacing:1px;line-height:1.8; }
+.blind-filters { display:flex;flex-direction:column;gap:14px;margin-bottom:24px; }
+.blind-filter-label { font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-bottom:6px; }
+.blind-chips { display:flex;flex-wrap:wrap;gap:8px; }
+.blind-chip { border:1.5px solid var(--border-dark);background:var(--white);padding:5px 14px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:1px;transition:all 0.15s; }
+.blind-chip:hover { border-color:var(--ink); }
+.blind-chip.active { border-color:var(--ink);background:var(--ink);color:var(--white); }
+.blind-btn { width:100%;padding:14px;background:var(--black);color:var(--white);border:none;font-family:'Special Elite',cursive;font-size:1rem;letter-spacing:4px;cursor:pointer;transition:background 0.15s;margin-bottom:20px; }
+.blind-btn:hover { background:#333; }
+.blind-reveal { display:none;border:3px double var(--ink);padding:24px;text-align:center;animation:slideUp 0.4s ease; }
+.blind-reveal.show { display:block; }
+.blind-reveal-hint { font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-bottom:12px; }
+.blind-reveal-clue { font-family:'Playfair Display',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:16px;color:var(--ink); }
+.blind-reveal-shelf { font-family:'Special Elite',cursive;font-size:2rem;letter-spacing:4px;color:var(--ink);margin:12px 0; }
+.blind-reveal-open { background:none;border:1.5px solid var(--ink);padding:8px 24px;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;cursor:pointer;margin-top:8px;transition:all 0.15s; }
+.blind-reveal-open:hover { background:var(--ink);color:var(--white); }
+
+/* ===== NORA'NIN GÜNLÜĞÜ ===== */
+.diary-wrap { max-width:600px;margin:0 auto;padding:32px 20px 80px; }
+.diary-hero { text-align:center;padding-bottom:24px;border-bottom:2px dashed var(--border);margin-bottom:28px; }
+.diary-title { font-family:'Special Elite',cursive;font-size:1.6rem;letter-spacing:4px;margin-bottom:6px; }
+.diary-sub { font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-faint);letter-spacing:1px; }
+.diary-entry { border-left:4px solid var(--border-dark);padding:18px 20px;margin-bottom:20px;background:var(--white);animation:slideUp 0.3s ease; }
+body.dark .diary-entry { background:#111; }
+.diary-entry-date { font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-bottom:10px; }
+.diary-entry-text { font-family:'Playfair Display',serif;font-size:0.95rem;line-height:1.9;color:var(--ink);font-style:italic; }
+.diary-entry-mood { font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-top:10px;letter-spacing:1px; }
+.diary-empty { font-family:'Courier Prime',monospace;font-size:0.8rem;color:var(--ink-faint);text-align:center;padding:40px 0;letter-spacing:1px; }
+/* Admin diary form */
+.diary-admin-form { background:var(--paper);border:1px solid var(--ink);padding:20px;margin-bottom:24px; }
+body.dark .diary-admin-form { background:#0e0e0e; }
+
+/* ===== KİTAP HAFIZASI — Kelime Bulutu ===== */
+.memory-modal { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:600;align-items:center;justify-content:center;padding:20px; }
+.memory-modal.open { display:flex;animation:ikramFadeIn 0.3s ease; }
+.memory-box { background:var(--paper);border:2px solid var(--ink);padding:28px 24px;max-width:420px;width:100%;text-align:center;position:relative;animation:ikramPop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+body.dark .memory-box { background:#111; }
+.memory-title { font-family:'Special Elite',cursive;font-size:1.1rem;letter-spacing:3px;margin-bottom:6px; }
+.memory-sub { font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:18px; }
+.memory-input { width:100%;padding:10px 14px;font-family:'Playfair Display',serif;font-size:1.1rem;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);text-align:center;box-sizing:border-box;margin-bottom:12px; }
+.memory-send { width:100%;padding:10px;background:var(--black);color:var(--white);border:none;font-family:'Courier Prime',monospace;font-size:0.78rem;letter-spacing:2px;cursor:pointer; }
+.memory-send:hover { background:#333; }
+.memory-close { background:none;border:none;position:absolute;top:10px;right:14px;font-size:1.1rem;cursor:pointer;color:var(--ink-faint); }
+.word-cloud { display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;padding:16px 0;min-height:60px; }
+.cloud-word { font-family:'Playfair Display',serif;font-style:italic;color:var(--ink);cursor:default;transition:transform 0.15s; }
+.cloud-word:hover { transform:scale(1.1); }
+
+/* ===== NORA SAHAF ===== */
+/* ===== İLAN PANOSU ===== */
+.pano-view { min-height:100vh;background:#2C1810;padding:0 0 80px; }
+.pano-header { background:#1a0e08;border-bottom:4px solid #8B4513;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+.pano-header-title { font-family:'Special Elite',cursive;font-size:1.4rem;letter-spacing:4px;color:#d4a96a;text-shadow:0 2px 4px rgba(0,0,0,0.5); }
+.pano-header-sub { font-family:'Courier Prime',monospace;font-size:0.68rem;color:#8a6a4a;letter-spacing:2px;margin-top:4px; }
+.pano-add-btn { background:#8B4513;color:#f5e6d0;border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:9px 18px;cursor:pointer;text-transform:uppercase;transition:background 0.15s;white-space:nowrap; }
+.pano-add-btn:hover { background:#a0521a; }
+
+/* Mantar dokusu arka plan */
+.pano-board { 
+  background: 
+    radial-gradient(ellipse at 20% 30%, rgba(180,120,60,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(160,100,40,0.1) 0%, transparent 50%),
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,0.02) 3px, rgba(0,0,0,0.02) 4px),
+    #c4956a;
+  min-height:calc(100vh - 120px);
+  padding:32px 20px;
+  position:relative;
+}
+.pano-board::before {
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events:none;opacity:0.4;
+}
+
+/* İlanlar grid */
+.pano-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0;position:relative;z-index:1; }
+
+/* Tek ilan — kağıt görünümü */
+.pano-note {
+  position:relative;
+  padding:22px 18px 18px;
+  margin:12px;
+  font-family:'Courier Prime',monospace;
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.35), 1px 1px 3px rgba(0,0,0,0.2);
+  cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.2s;
+  word-break:break-word;
+  min-height:160px;
+}
+.pano-note:hover { transform:scale(1.03) rotate(0deg) !important; box-shadow:6px 6px 16px rgba(0,0,0,0.5); z-index:10; }
+
+/* Raptiye */
+.pano-pin {
+  position:absolute;
+  top:-10px;left:50%;transform:translateX(-50%);
+  width:16px;height:16px;border-radius:50%;
+  box-shadow:0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(0,0,0,0.3);
+  z-index:2;
+}
+.pano-pin::after {
+  content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+  width:3px;height:8px;background:rgba(0,0,0,0.3);border-radius:0 0 2px 2px;
+}
+
+.pano-note-cat { font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;opacity:0.6;margin-bottom:8px; }
+.pano-note-text { font-size:0.85rem;line-height:1.7;color:#1a0e08; }
+.pano-note-author { font-size:0.62rem;margin-top:12px;opacity:0.55;font-style:italic; }
+.pano-note-date { font-size:0.58rem;opacity:0.45;margin-top:2px;letter-spacing:1px; }
+.pano-note-actions { display:flex;gap:6px;margin-top:10px; }
+.pano-like-btn { background:none;border:1px solid rgba(0,0,0,0.2);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:2px 8px;cursor:pointer;color:#1a0e08;opacity:0.6;transition:opacity 0.15s; }
+.pano-like-btn:hover { opacity:1; }
+
+/* Pano modal — not ekle */
+.pano-modal { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:700;align-items:center;justify-content:center;padding:20px; }
+.pano-modal.open { display:flex;animation:ikramFadeIn 0.3s ease; }
+.pano-modal-box { background:#fef9f0;border:none;padding:32px 28px;max-width:420px;width:100%;position:relative;box-shadow:8px 8px 0 rgba(0,0,0,0.4);animation:ikramPop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+.pano-modal-title { font-family:'Special Elite',cursive;font-size:1.2rem;letter-spacing:3px;color:#2C1810;margin-bottom:18px; }
+.pano-modal-close { position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.1rem;cursor:pointer;color:#8B4513; }
+.pano-cat-chips { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px; }
+.pano-cat-chip { border:1.5px solid #c4956a;background:transparent;padding:4px 12px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:1px;color:#5a3010;transition:all 0.15s; }
+.pano-cat-chip:hover,.pano-cat-chip.active { background:#8B4513;border-color:#8B4513;color:#fff; }
+.pano-modal textarea { width:100%;min-height:100px;padding:10px;font-family:'Courier Prime',monospace;font-size:0.85rem;border:1.5px solid #c4956a;background:#fffdf5;color:#1a0e08;resize:vertical;box-sizing:border-box;margin-bottom:10px;line-height:1.7; }
+.pano-modal input { width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1.5px solid #c4956a;background:#fffdf5;color:#1a0e08;box-sizing:border-box;margin-bottom:10px; }
+.pano-modal-send { width:100%;padding:11px;background:#8B4513;color:#fff;border:none;font-family:'Courier Prime',monospace;font-size:0.78rem;letter-spacing:2px;cursor:pointer;text-transform:uppercase; }
+.pano-modal-send:hover { background:#a0521a; }
+.pano-filter-bar { display:flex;gap:8px;padding:12px 24px;background:#1a0e08;flex-wrap:wrap; }
+.pano-filter { background:transparent;border:1px solid #4a2810;color:#8a6a4a;font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;padding:4px 12px;cursor:pointer;transition:all 0.15s; }
+.pano-filter.active,.pano-filter:hover { background:#8B4513;border-color:#8B4513;color:#fff; }
+@media(max-width:600px) { .pano-grid { grid-template-columns:repeat(2,1fr); } .pano-note { margin:8px; } }
+@media(max-width:380px) { .pano-grid { grid-template-columns:1fr; } }
+
+.sahaf-wrap { max-width:640px;margin:0 auto;padding:32px 20px 80px; }
+.sahaf-hero { text-align:center;padding-bottom:24px;border-bottom:2px dashed var(--border);margin-bottom:32px; }
+.sahaf-title { font-family:'Special Elite',cursive;font-size:1.8rem;letter-spacing:4px;margin-bottom:8px; }
+.sahaf-sub { font-family:'Courier Prime',monospace;font-size:0.78rem;color:var(--ink-faint);letter-spacing:1px;line-height:1.9; }
+.sahaf-form { background:var(--white);border:1.5px solid var(--border-dark);padding:24px;margin-bottom:32px; }
+body.dark .sahaf-form { background:#111;border-color:#333; }
+.sahaf-form-title { font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);text-transform:uppercase;margin-bottom:18px; }
+.sahaf-offers { display:flex;flex-direction:column;gap:14px; }
+.sahaf-offer { border:1.5px solid var(--border-dark);padding:18px;position:relative; }
+body.dark .sahaf-offer { border-color:#333; }
+.sahaf-offer-title { font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:4px; }
+.sahaf-offer-meta { font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:10px; }
+.sahaf-offer-status { font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;text-transform:uppercase; }
+.sahaf-offer-price { font-family:'Special Elite',cursive;font-size:1.4rem;color:#2a7a2a;margin-top:6px; }
+body.dark .sahaf-offer-price { color:#4aaa4a; }
+.sahaf-pending { color:#9c7a3c; }
+.sahaf-rejected { color:#c84040; }
+
 .radio-wrap { max-width:600px;margin:0 auto;padding:40px 20px 80px; }
 .radio-hero { background:var(--black);padding:36px 28px 28px;text-align:center;border-bottom:3px double #1a3a1a;position:relative;overflow:hidden; }
 .radio-hero::before { content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(29,185,84,0.08) 0%,transparent 70%);pointer-events:none; }
@@ -1253,6 +1419,11 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
       </div>
     </div>
     <button class="btn-mode" id="btnRadio" onclick="showView('radio')" style="color:#1DB954;border-left-color:#0a2a0a;">📻 NoRa.dio</button>
+    <button class="btn-mode" id="btnMood" onclick="showView('mood')">✦ Ruh Hali</button>
+    <button class="btn-mode" id="btnBlind" onclick="showView('blind')">? Kör Buluşma</button>
+    <button class="btn-mode" id="btnDiary" onclick="showView('diary')" style="color:#9c7a3c;">📔 Günlük</button>
+    <button class="btn-mode" id="btnSahaf" onclick="showView('sahaf')" style="color:#c8a86b;">📦 Nora Sahaf</button>
+    <button class="btn-mode" id="btnPano" onclick="showView('pano')" style="color:#8B4513;">📌 Pano</button>
     <button class="btn-mode" id="btnWheel" onclick="openWheel()" title="Kitap Çarkı">🎡 Çark</button>
     <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Karanlık mod">◐</button>
     <div class="user-badge" id="userBadge" style="display:none;">
@@ -1425,6 +1596,8 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
       <button class="tab-btn" id="tabGunun" onclick="switchTab('gunun')" style="color:#9c7a3c;">GÜNÜN KİTABI</button>
       <button class="tab-btn" id="tabSpotify" onclick="switchTab('spotify')" style="color:#1DB954;">SPOTİFY</button>
       <button class="tab-btn" id="tabIkram" onclick="switchTab('ikram')" style="color:#c8a86b;">İKRAM</button>
+      <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:#9c7a3c;">GÜNLÜK</button>
+      <button class="tab-btn" id="tabSahaf" onclick="switchTab('sahaf')" style="color:#c8a86b;">SAHAF</button>
     </div>
     <div id="panelBooks">
       <div class="admin-search-row">
@@ -1448,6 +1621,13 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
           <option value="">Tüm Durumlar</option>
           <option value="available">Mevcut</option>
           <option value="borrowed">Ödünçte</option>
+        </select>
+        <select id="adminFilterShelf" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="">Tüm Raflar</option>
+        </select>
+        <select id="adminFilterNora" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="">Tüm Kitaplar</option>
+          <option value="1">★ Sadece Nora'nın Önerdikleri</option>
         </select>
         <span id="adminTableInfo" style="color:var(--ink-faint);margin-left:4px;"></span>
       </div>
@@ -1659,6 +1839,31 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
       </div>
     </div>
 
+    <!-- GÜNLÜK PANELİ -->
+    <div id="panelDiary" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#9c7a3c;letter-spacing:2px;margin-bottom:20px;">> NORA'NIN GÜNLÜĞÜ — müşteriler "Günlük" sekmesinde görür.</div>
+      <div class="diary-admin-form">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;margin-bottom:14px;">+ YENİ NOT</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Not <span style="font-size:0.7rem;color:var(--ink-faint);">(Nora'nın sesi, samimi, kısa)</span></label>
+          <textarea id="diaryText" placeholder="Bugün rafa yeni kitaplar dizdi. Pencere kenarındaki sandalyeye kim otursa..." style="width:100%;min-height:90px;resize:vertical;padding:10px;font-family:'Playfair Display',serif;font-size:0.9rem;font-style:italic;border:1px solid var(--ink);background:var(--paper);color:var(--ink);box-sizing:border-box;line-height:1.8;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn-save" onclick="saveDiaryEntry()">Kaydet</button>
+          <span id="diaryMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;"></span>
+        </div>
+      </div>
+      <div id="diaryAdminList"></div>
+    </div>
+
+    <!-- SAHAF PANELİ -->
+    <div id="panelSahaf" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#c8a86b;letter-spacing:2px;margin-bottom:20px;">> NORA SAHAF — gelen alım teklifleri. Fiyat biçerek cevap ver.</div>
+      <div id="sahafAdminList" style="display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:'Courier Prime',monospace;color:#888;font-size:0.8rem;">Yükleniyor...</div>
+      </div>
+    </div>
+
   </div>
 </div>
 <div class="modal-overlay" id="modalOverlay">
@@ -1722,6 +1927,192 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
       <button class="btn-cancel" onclick="closeModal()">İptal</button>
       <button class="btn-save" onclick="saveBook()">Kaydet</button>
     </div>
+  </div>
+</div>
+
+<!-- RUH HALİ EŞLEŞTİRİCİ VIEW -->
+<div class="view" id="viewMood">
+  <div class="mood-wrap">
+    <div class="mood-hero">
+      <div class="mood-title">Şu An Nasıl Hissediyorsun?</div>
+      <div class="mood-sub">Ruh haline göre bir kitap seçelim</div>
+    </div>
+    <div class="mood-grid">
+      <button class="mood-btn" onclick="selectMood('melankolik','#melankoli','Hüzünlü, derin, yalnız')">
+        <span class="mood-emoji">🌧</span>Melankolik
+      </button>
+      <button class="mood-btn" onclick="selectMood('heyecanli','#macera','Hareketli, merak dolu')">
+        <span class="mood-emoji">⚡</span>Heyecanlı
+      </button>
+      <button class="mood-btn" onclick="selectMood('sakin','#şiir #doğa','Huzurlu, yavaş')">
+        <span class="mood-emoji">🌿</span>Sakin
+      </button>
+      <button class="mood-btn" onclick="selectMood('kayboluş','#varoluş #felsefe','Düşünceli, kaybolmuş')">
+        <span class="mood-emoji">🌀</span>Kaybolmuş
+      </button>
+      <button class="mood-btn" onclick="selectMood('ask','#aşk #roman','Romantik, duygusal')">
+        <span class="mood-emoji">🌸</span>Aşık
+      </button>
+      <button class="mood-btn" onclick="selectMood('öfkeli','#toplum #başkaldırı','Sorgulayan, isyankâr')">
+        <span class="mood-emoji">🔥</span>Öfkeli
+      </button>
+      <button class="mood-btn" onclick="selectMood('merakli','#bilim #tarih','Öğrenmek isteyen')">
+        <span class="mood-emoji">🔭</span>Meraklı
+      </button>
+      <button class="mood-btn" onclick="selectMood('yorgun','#kısa #hikaye','Hafif, rahat, kısa')">
+        <span class="mood-emoji">☕</span>Yorgun
+      </button>
+      <button class="mood-btn" onclick="selectMood('maceraci','#gezi #dünya','Özgür, keşfetmek isteyen')">
+        <span class="mood-emoji">🗺</span>Maceracı
+      </button>
+    </div>
+    <div class="mood-result" id="moodResult">
+      <div class="mood-result-title" id="moodResultTitle"></div>
+      <div id="moodResultBooks"></div>
+    </div>
+  </div>
+</div>
+
+<!-- KÖR BULUŞMA VIEW -->
+<div class="view" id="viewBlind">
+  <div class="blind-wrap">
+    <div class="blind-hero">
+      <div class="blind-title">Kör Buluşma</div>
+      <div class="blind-sub">Kitabın adını bilmeden rafa git.<br>İpucuyla onu bul, ilk sayfayı aç.</div>
+    </div>
+    <div class="blind-filters">
+      <div>
+        <div class="blind-filter-label">Tür</div>
+        <div class="blind-chips" id="blindGenreChips"></div>
+      </div>
+      <div>
+        <div class="blind-filter-label">Sayfa Sayısı</div>
+        <div class="blind-chips">
+          <button class="blind-chip" data-group="pages" onclick="toggleBlindChip(this,'pages')" data-val="short">300 altı</button>
+          <button class="blind-chip" data-group="pages" onclick="toggleBlindChip(this,'pages')" data-val="medium">300-500</button>
+          <button class="blind-chip" data-group="pages" onclick="toggleBlindChip(this,'pages')" data-val="long">500 üstü</button>
+          <button class="blind-chip active" data-group="pages" onclick="toggleBlindChip(this,'pages')" data-val="">Farketmez</button>
+        </div>
+      </div>
+    </div>
+    <button class="blind-btn" onclick="drawBlindBook()">✦ Kitabımı Bul</button>
+    <div class="blind-reveal" id="blindReveal">
+      <div class="blind-reveal-hint">Bu kitap seni bekliyor</div>
+      <div class="blind-reveal-clue" id="blindClue"></div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);letter-spacing:2px;margin-bottom:4px;">RAFINA GİT</div>
+      <div class="blind-reveal-shelf" id="blindShelf"></div>
+      <br>
+      <button class="blind-reveal-open" onclick="revealBlindBook()">Kitabı Gör →</button>
+      <button class="blind-btn" style="margin-top:12px;font-size:0.8rem;letter-spacing:2px;" onclick="drawBlindBook()">Başka Bir Kitap</button>
+    </div>
+  </div>
+</div>
+
+<!-- İLAN PANOSU VIEW -->
+<div class="view" id="viewPano">
+  <div class="pano-view">
+    <div class="pano-header">
+      <div>
+        <div class="pano-header-title">📌 Nora'nın Panosu</div>
+        <div class="pano-header-sub">Herkesin duyurabildiği, herkesin okuyabildiği</div>
+      </div>
+      <button class="pano-add-btn" onclick="openPanoModal()">+ İlan As</button>
+    </div>
+    <div class="pano-filter-bar">
+      <button class="pano-filter active" onclick="filterPano(this,'')" data-cat="">Tümü</button>
+      <button class="pano-filter" onclick="filterPano(this,'arıyorum')" data-cat="arıyorum">📖 Kitap Arıyorum</button>
+      <button class="pano-filter" onclick="filterPano(this,'veriyorum')" data-cat="veriyorum">🎁 Kitap Veriyorum</button>
+      <button class="pano-filter" onclick="filterPano(this,'okuma')" data-cat="okuma">☕ Birlikte Okuma</button>
+      <button class="pano-filter" onclick="filterPano(this,'tavsiye')" data-cat="tavsiye">⭐ Tavsiye</button>
+      <button class="pano-filter" onclick="filterPano(this,'duyuru')" data-cat="duyuru">📢 Duyuru</button>
+      <button class="pano-filter" onclick="filterPano(this,'kayıp')" data-cat="kayıp">🔍 Kayıp & Bulunan</button>
+    </div>
+    <div class="pano-board">
+      <div class="pano-grid" id="panoGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:60px 0;font-family:'Courier Prime',monospace;font-size:0.8rem;color:#8a6a4a;letter-spacing:2px;">Pano yükleniyor...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANO MODAL -->
+<div class="pano-modal" id="panoModal" onclick="if(event.target===this)closePanoModal()">
+  <div class="pano-modal-box">
+    <button class="pano-modal-close" onclick="closePanoModal()">✕</button>
+    <div class="pano-modal-title">İlan As</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:#8B4513;letter-spacing:1px;margin-bottom:10px;">Kategori:</div>
+    <div class="pano-cat-chips">
+      <button class="pano-cat-chip active" data-cat="arıyorum" onclick="selectPanoCat(this)">📖 Kitap Arıyorum</button>
+      <button class="pano-cat-chip" data-cat="veriyorum" onclick="selectPanoCat(this)">🎁 Kitap Veriyorum</button>
+      <button class="pano-cat-chip" data-cat="okuma" onclick="selectPanoCat(this)">☕ Birlikte Okuma</button>
+      <button class="pano-cat-chip" data-cat="tavsiye" onclick="selectPanoCat(this)">⭐ Tavsiye</button>
+      <button class="pano-cat-chip" data-cat="duyuru" onclick="selectPanoCat(this)">📢 Duyuru</button>
+      <button class="pano-cat-chip" data-cat="kayıp" onclick="selectPanoCat(this)">🔍 Kayıp & Bulunan</button>
+    </div>
+    <textarea id="panoText" placeholder="İlanın... (kitap adı, ne istediğin, nasıl ulaşılacağı)"></textarea>
+    <input id="panoAuthor" placeholder="İsmin veya takma adın (opsiyonel)">
+    <button class="pano-modal-send" onclick="submitPanoNote()">Panoyu As 📌</button>
+    <div id="panoMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;margin-top:8px;color:#2a7a2a;"></div>
+  </div>
+</div>
+
+<!-- KİTAP HAFIZASI MODAL -->
+<div class="memory-modal" id="memoryModal">
+  <div class="memory-box">
+    <button class="memory-close" onclick="closeMemoryModal()">✕</button>
+    <div class="memory-title">Kitap Hafızası</div>
+    <div class="memory-sub" id="memoryBookTitle"></div>
+    <div class="word-cloud" id="memoryCloud"></div>
+    <hr style="border:none;border-top:1px dashed var(--border);margin:16px 0;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);margin-bottom:10px;letter-spacing:1px;">Bu kitap sana ne hissettirdi? Tek kelime:</div>
+    <input class="memory-input" id="memoryInput" placeholder="kelimeni yaz..." maxlength="20" onkeydown="if(event.key==='Enter')submitMemoryWord()">
+    <button class="memory-send" onclick="submitMemoryWord()">BIRAK</button>
+  </div>
+</div>
+
+<!-- NORA SAHAF VIEW -->
+<div class="view" id="viewSahaf">
+  <div class="sahaf-wrap">
+    <div class="sahaf-hero">
+      <div class="sahaf-title">Nora Sahaf</div>
+      <div class="sahaf-sub">Elindeki kitabı bize sat.<br>Kitap adını, yazarını, baskısını ve durumunu yaz.<br>Nora fiyat biçerek sana döner.</div>
+    </div>
+    <div class="sahaf-form">
+      <div class="sahaf-form-title">Teklif Gönder</div>
+      <div class="form-grid">
+        <div class="field full"><label>Kitap Adı *</label><input type="text" id="sahafTitle" placeholder="Kitabın tam adı"></div>
+        <div class="field"><label>Yazar *</label><input type="text" id="sahafAuthor" placeholder="Yazar adı"></div>
+        <div class="field"><label>Baskı</label><input type="text" id="sahafEdition" placeholder="örn: 5. Baskı, 2019"></div>
+        <div class="field"><label>Yayınevi</label><input type="text" id="sahafPublisher" placeholder="Yayınevi"></div>
+        <div class="field full"><label>Kitabın Durumu</label>
+          <select id="sahafCondition" style="width:100%;padding:9px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
+            <option value="cok-iyi">Çok İyi — Neredeyse yeni gibi</option>
+            <option value="iyi">İyi — Hafif kullanım izleri var</option>
+            <option value="orta">Orta — Belirgin kullanım izleri</option>
+            <option value="kotu">Kötü — Yıpranmış ama okunabilir</option>
+          </select>
+        </div>
+        <div class="field full"><label>Not <span style="font-weight:normal;color:var(--ink-faint);font-size:0.75rem;">(opsiyonel — imza, not, eksik sayfa vs.)</span></label>
+          <textarea id="sahafNote" placeholder="Eklemek istediğin bir şey varsa..." style="width:100%;min-height:60px;resize:vertical;padding:9px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);box-sizing:border-box;"></textarea>
+        </div>
+        <div class="field full"><label>İletişim <span style="font-weight:normal;color:var(--ink-faint);font-size:0.75rem;">(telefon veya e-posta)</span></label>
+          <input type="text" id="sahafContact" placeholder="Sana nasıl ulaşalım?"></div>
+      </div>
+      <button class="btn-save" style="margin-top:8px;width:100%;padding:12px;font-size:0.82rem;" onclick="submitSahafOffer()">Teklif Gönder →</button>
+      <div id="sahafMsg" style="font-family:'Courier Prime',monospace;font-size:0.75rem;margin-top:10px;"></div>
+    </div>
+    <div id="sahafMyOffers"></div>
+  </div>
+</div>
+
+<!-- NORA'NIN GÜNLÜĞÜ VIEW -->
+<div class="view" id="viewDiary">
+  <div class="diary-wrap">
+    <div class="diary-hero">
+      <div class="diary-title">Nora'nın Günlüğü</div>
+      <div class="diary-sub">Kafemizden küçük notlar</div>
+    </div>
+    <div id="diaryEntries"><div class="diary-empty">> Henüz bir şey yazılmadı.</div></div>
   </div>
 </div>
 
@@ -1922,8 +2313,8 @@ function showLoading(id) {
 async function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.add('active');
-  ['btnCustomer','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
-  const btnMap = {customer:'btnCustomer', quotes:'btnQuotes', universe:'btnUniverse', stats:'btnStats', admin:'btnAdmin', profile:'btnProfile', askida:'btnAskida', bagiscilar:'btnAskida', radio:'btnRadio'};
+  ['btnCustomer','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+  const btnMap = {customer:'btnCustomer', quotes:'btnQuotes', universe:'btnUniverse', stats:'btnStats', admin:'btnAdmin', profile:'btnProfile', askida:'btnAskida', bagiscilar:'btnAskida', radio:'btnRadio', mood:'btnMood', blind:'btnBlind', diary:'btnDiary', sahaf:'btnSahaf', pano:'btnPano'};
   if (btnMap[v]) document.getElementById(btnMap[v]).classList.add('active');
   // dropdown item active state
   ['btnAskidaKitaplar','btnAskidaBagis'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
@@ -1936,6 +2327,11 @@ async function showView(v) {
   if (v === 'askida') { loadAskidaView(); }
   if (v === 'bagiscilar') { loadBagiscilarView(); }
   if (v === 'radio') { loadNowPlaying(); }
+  if (v === 'mood') { initMoodView(); }
+  if (v === 'blind') { initBlindView(); }
+  if (v === 'diary') { loadDiaryView(); }
+  if (v === 'sahaf') { loadSahafOffers(); }
+  if (v === 'pano') { loadPanoNotes(); }
   if (v === 'universe') {
     await fetchBooks();
     // D3 yüklenene kadar bekle (defer ile yükleniyor)
@@ -4225,7 +4621,6 @@ async function openDetail(id) {
         </div>
       </div>
     </div>
-    ${b.description ? `<div class="detail-description">${b.description}</div>` : ''}
     ` : `
     <div class="detail-title">${b.title}</div>
     <div class="detail-author">${authorLinksDetail(b.author)}${b.publisher ? ' · ' + b.publisher : ''}${b.preparer ? ' · <span style="font-size:0.82rem;color:var(--ink-faint)">Haz: ' + b.preparer + '</span>' : ''}</div>
@@ -4233,12 +4628,12 @@ async function openDetail(id) {
       ${statusBadge}
       ${b.isbn ? `<span class="badge-tag">ISBN: ${b.isbn}</span>` : ''}
     </div>
-    ${b.description ? `<div class="detail-description">${b.description}</div>` : ''}
     `}
     <div class="detail-shelf-label">rafını bul</div>
     <div class="detail-shelf-big">RAF ${b.shelf}</div>
     ${b.pages ? `<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:8px;">${b.pages} sayfa</div>` : ''}
     ${passportHtml}
+    ${b.description ? `<div class="detail-description">${b.description.replace(/\n/g,'<br>')}</div>` : ''}
     ${(b.pages && parseInt(b.pages) > 0) ? `
     <div class="reading-time-section">
       <div class="reading-time-title">⏱ Tahmini Okuma Süresi</div>
@@ -4259,6 +4654,13 @@ async function openDetail(id) {
     ${tags.length ? `<div class="detail-tags">${tags.map(t=>`<span class="badge-tag">#${t}</span>`).join('')}</div>` : ''}
     ${buildSuggestionChain(b)}
     ${neighborsHtml}
+    <div class="messages-section" style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+      <div class="messages-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>💭 Kitap Hafızası</span>
+        <button onclick="openMemoryModal(${b.id},'${b.title.replace(/'/g,"\\'")}');" style="background:none;border:1px solid var(--border-dark);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;color:var(--ink-faint);letter-spacing:1px;">+ Kelime Bırak</button>
+      </div>
+      <div id="inlineMemoryCloud_${b.id}" style="min-height:32px;"></div>
+    </div>
     <div class="messages-section">
       <div class="messages-title">✉ Bir Sonraki Okuyucuya</div>
       <div id="msgList">${messagesHtml}</div>
@@ -4282,6 +4684,25 @@ async function openDetail(id) {
       </div>
     </div>`;
   document.getElementById('detailOverlay').classList.add('open');
+  // Inline kelime bulutu yükle
+  setTimeout(async () => {
+    const cloudEl = document.getElementById('inlineMemoryCloud_' + id);
+    if (!cloudEl) return;
+    try {
+      const res = await api(`settings?key=eq.memory_${id}&select=*`);
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!rows.length || !rows[0].value) { cloudEl.innerHTML = '<span style="font-family:Courier Prime,monospace;font-size:0.68rem;color:#aaa;letter-spacing:1px;">henüz kelime yok</span>'; return; }
+      const words = JSON.parse(rows[0].value);
+      const max = Math.max(...words.map(w => w.count));
+      cloudEl.innerHTML = '<div class="word-cloud" style="justify-content:flex-start;padding:8px 0;">' +
+        words.map(w => {
+          const size = 0.7 + (w.count / max) * 1.1;
+          const opacity = 0.45 + (w.count / max) * 0.55;
+          return `<span class="cloud-word" style="font-size:${size.toFixed(2)}rem;opacity:${opacity.toFixed(2)};" title="${w.count} kişi">${w.word}</span>`;
+        }).join('') + '</div>';
+    } catch(e) {}
+  }, 100);
   // İkram kontrolü — en üste ekle
   const content = document.getElementById('detailContent');
   if (content) {
@@ -4672,6 +5093,7 @@ function switchTab(tab) {
   document.getElementById('panelGunun').style.display = tab === 'gunun' ? 'block' : 'none';
   document.getElementById('panelSpotify').style.display = tab === 'spotify' ? 'block' : 'none';
   document.getElementById('panelIkram').style.display = tab === 'ikram' ? 'block' : 'none';
+  document.getElementById('panelDiary').style.display = tab === 'diary' ? 'block' : 'none';
   document.getElementById('tabBooks').classList.toggle('active', tab === 'books');
   document.getElementById('tabStats').classList.toggle('active', tab === 'stats');
   document.getElementById('tabQuotes').classList.toggle('active', tab === 'quotes');
@@ -4682,6 +5104,7 @@ function switchTab(tab) {
   document.getElementById('tabGunun').classList.toggle('active', tab === 'gunun');
   document.getElementById('tabSpotify').classList.toggle('active', tab === 'spotify');
   document.getElementById('tabIkram').classList.toggle('active', tab === 'ikram');
+  document.getElementById('tabDiary').classList.toggle('active', tab === 'diary');
   if (tab === 'stats') renderStatsPanel();
   if (tab === 'quotes') renderAdminQuotes();
   if (tab === 'askida') loadAdminAskida();
@@ -4691,6 +5114,10 @@ function switchTab(tab) {
   if (tab === 'gunun') loadDailyBookPanel();
   if (tab === 'spotify') loadSpotifyPanel();
   if (tab === 'ikram') loadIkramPanel();
+  if (tab === 'diary') loadDiaryAdmin();
+  if (tab === 'sahaf') loadSahafAdmin();
+  document.getElementById('panelSahaf').style.display = tab === 'sahaf' ? 'block' : 'none';
+  document.getElementById('tabSahaf').classList.toggle('active', tab === 'sahaf');
 }
 
 function renderMissedSearches() {
@@ -5580,6 +6007,485 @@ function closeIkram() {
   document.getElementById('ikramModal').classList.remove('open');
 }
 
+// ===== RUH HALİ EŞLEŞTİRİCİ =====
+const moodTags = {
+  melankolik: ['melankoli','hüzün','yalnızlık','trajedi','ölüm','kayıp','keder'],
+  heyecanli:  ['macera','gerilim','aksiyon','gizem','polisiye','dedektif'],
+  sakin:      ['şiir','doğa','huzur','deneme','günlük','gezi'],
+  kayboluş:   ['varoluş','felsefe','absürd','kimlik','anlam','modernizm'],
+  ask:        ['aşk','roman','romantik','duygu','ilişki','tutku'],
+  öfkeli:     ['toplum','başkaldırı','distopya','siyaset','savaş','adalet'],
+  merakli:    ['bilim','tarih','biyografi','keşif','teknoloji','psikoloji'],
+  yorgun:     ['kısa','hikaye','öykü','mizah','komedi','rahat'],
+  maceraci:   ['gezi','dünya','macera','keşif','yolculuk','özgürlük']
+};
+
+let selectedMood = null;
+
+function selectMood(mood, tagStr, desc) {
+  selectedMood = mood;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  // Kitapları eşleştir
+  const tags = moodTags[mood] || [];
+  const matches = books.filter(b => {
+    if (b.genre === 'gizli-raf') return false;
+    const haystack = ((b.title||'') + ' ' + (b.author||'') + ' ' + (b.tags||'') + ' ' + (b.genre||'') + ' ' + (b.description||'')).toLowerCase();
+    return tags.some(t => haystack.includes(t));
+  });
+
+  // Yoksa rastgele 3 tane ver
+  const pool = matches.length >= 3 ? matches : books.filter(b => b.genre !== 'gizli-raf');
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
+
+  const result = document.getElementById('moodResult');
+  const title = document.getElementById('moodResultTitle');
+  const booksEl = document.getElementById('moodResultBooks');
+
+  title.textContent = `${desc} — ${shuffled.length} öneri`;
+  booksEl.innerHTML = shuffled.map(b => `
+    <div style="border:1.5px solid var(--border-dark);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;background:var(--white);transition:box-shadow 0.15s;" onclick="openDetail(${b.id})" onmouseover="this.style.boxShadow='4px 4px 0 var(--ink)'" onmouseout="this.style.boxShadow=''">
+      ${b.cover_url ? `<img src="${b.cover_url}" style="width:40px;height:58px;object-fit:cover;flex-shrink:0;">` : `<div style="width:40px;height:58px;background:var(--black);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">📖</div>`}
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:3px;">${b.title}</div>
+        <div style="font-size:0.78rem;color:var(--ink-faint);font-style:italic;">${b.author||''}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);margin-top:4px;">Raf ${b.shelf||'?'} · ${b.status==='available'?'✓ Mevcut':'⏳ Ödünçte'}</div>
+      </div>
+    </div>`).join('');
+
+  result.classList.add('show');
+}
+
+function initMoodView() {
+  // Sayfayı başlatırken seçimi temizle
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('moodResult').classList.remove('show');
+  selectedMood = null;
+}
+
+// ===== KÖR BULUŞMA =====
+let blindBook = null;
+const blindState = { genre: '', pages: '' };
+
+function initBlindView() {
+  // Tür chip'lerini doldur
+  const wrap = document.getElementById('blindGenreChips');
+  if (!wrap) return;
+  const genreSet = new Set();
+  books.filter(b => b.genre && b.genre !== 'gizli-raf').forEach(b =>
+    b.genre.split(',').map(g => g.trim()).filter(Boolean).forEach(g => genreSet.add(g))
+  );
+  wrap.innerHTML = `<button class="blind-chip active" data-group="genre" onclick="toggleBlindChip(this,'genre')" data-val="">Hepsi</button>` +
+    [...genreSet].sort((a,b) => a.localeCompare(b,'tr')).map(g =>
+      `<button class="blind-chip" data-group="genre" onclick="toggleBlindChip(this,'genre')" data-val="${g}">${g}</button>`
+    ).join('');
+  document.getElementById('blindReveal').classList.remove('show');
+  blindBook = null;
+}
+
+function toggleBlindChip(el, group) {
+  document.querySelectorAll(`.blind-chip[data-group="${group}"]`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  blindState[group] = el.dataset.val;
+}
+
+function drawBlindBook() {
+  let pool = books.filter(b => b.genre !== 'gizli-raf' && b.status === 'available');
+  if (blindState.genre) pool = pool.filter(b => (b.genre||'').split(',').map(g=>g.trim()).includes(blindState.genre));
+  if (blindState.pages === 'short') pool = pool.filter(b => b.pages && parseInt(b.pages) < 300);
+  else if (blindState.pages === 'medium') pool = pool.filter(b => b.pages && parseInt(b.pages) >= 300 && parseInt(b.pages) <= 500);
+  else if (blindState.pages === 'long') pool = pool.filter(b => b.pages && parseInt(b.pages) > 500);
+
+  if (!pool.length) pool = books.filter(b => b.genre !== 'gizli-raf' && b.status === 'available');
+  if (!pool.length) { alert('Mevcut kitap bulunamadı.'); return; }
+
+  blindBook = pool[Math.floor(Math.random() * pool.length)];
+
+  // İpucu oluştur — başlık ve yazar olmadan
+  const clues = [];
+  if (blindBook.genre) clues.push(`Türü: ${blindBook.genre.split(',')[0].trim()}`);
+  if (blindBook.pages) clues.push(`${blindBook.pages} sayfa`);
+  if (blindBook.description) {
+    // Açıklamadan ilk cümle, kitap adını sansürle
+    const firstSentence = blindBook.description.split(/[.!?]/)[0];
+    clues.push(`"${firstSentence.substring(0,120)}..."`);
+  } else {
+    clues.push('"Rafında bekleyen bir kitap seni çağırıyor."');
+  }
+
+  document.getElementById('blindClue').textContent = clues.join(' · ');
+  document.getElementById('blindShelf').textContent = 'RAF ' + (blindBook.shelf || '?');
+  document.getElementById('blindReveal').classList.add('show');
+}
+
+function revealBlindBook() {
+  if (blindBook) openDetail(blindBook.id);
+}
+
+// ===== NORA'NIN GÜNLÜĞÜ =====
+async function loadDiaryView() {
+  const el = document.getElementById('diaryEntries');
+  if (!el) return;
+  el.innerHTML = '<div class="diary-empty">> Yükleniyor...</div>';
+  try {
+    const res = await api('settings?key=like.diary_%&select=*&order=key.desc');
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    if (!rows.length) { el.innerHTML = '<div class="diary-empty">> Henüz bir şey yazılmadı.</div>'; return; }
+    el.innerHTML = rows.map(r => {
+      let val;
+      try { val = JSON.parse(r.value); } catch(e) { val = {text: r.value, date: ''}; }
+      return `<div class="diary-entry">
+        <div class="diary-entry-date">${val.date || ''}</div>
+        <div class="diary-entry-text">${val.text || ''}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = '<div class="diary-empty">> Bağlantı hatası.</div>'; }
+}
+
+async function saveDiaryEntry() {
+  const text = document.getElementById('diaryText').value.trim();
+  if (!text) return;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric', weekday:'long'});
+  const key = 'diary_' + now.getTime();
+  const val = JSON.stringify({ text, date: dateStr });
+  await api('settings', { method: 'POST', headers: {'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({ key, value: val }) });
+  document.getElementById('diaryText').value = '';
+  const m = document.getElementById('diaryMsg');
+  m.textContent = '> Kaydedildi.';
+  setTimeout(() => m.textContent = '', 2500);
+  await loadDiaryAdmin();
+}
+
+async function loadDiaryAdmin() {
+  const el = document.getElementById('diaryAdminList');
+  if (!el) return;
+  try {
+    const res = await api('settings?key=like.diary_%25&select=*&order=key.desc');
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    if (!rows.length) { el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;padding:12px 0;">Henüz not yok.</div>'; return; }
+    el.innerHTML = rows.map(r => {
+      let val;
+      try { val = JSON.parse(r.value); } catch(e) { val = {text: r.value, date: ''}; }
+      return `<div style="border-left:3px solid var(--border);padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:6px;">${val.date||''}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:0.88rem;font-style:italic;color:var(--ink);line-height:1.7;">${val.text||''}</div>
+        </div>
+        <button onclick="deleteDiaryEntry('${r.key}')" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;flex-shrink:0;">Sil</button>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+async function deleteDiaryEntry(key) {
+  if (!confirm('Silinsin mi?')) return;
+  await api(`settings?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE' });
+  await loadDiaryAdmin();
+}
+
+// ===== İLAN PANOSU =====
+const panoColors = [
+  { bg: '#fef9c3', border: '#f0d060' }, // sarı
+  { bg: '#fce7e7', border: '#e08080' }, // pembe
+  { bg: '#e7f3fe', border: '#7ab8e8' }, // mavi
+  { bg: '#eafbe7', border: '#7acc6a' }, // yeşil
+  { bg: '#fde8d8', border: '#e0a060' }, // turuncu
+  { bg: '#f0e8fe', border: '#a87ae0' }, // mor
+  { bg: '#fef3e2', border: '#d4a060' }, // krem
+];
+
+const pinColors = ['#e03030','#1a6ad4','#2a9a2a','#d4a020','#8030c0','#e06020'];
+
+const catLabels = {
+  'arıyorum': '📖 Kitap Arıyorum',
+  'veriyorum': '🎁 Kitap Veriyorum',
+  'okuma': '☕ Birlikte Okuma',
+  'tavsiye': '⭐ Tavsiye',
+  'duyuru': '📢 Duyuru',
+  'kayıp': '🔍 Kayıp & Bulunan'
+};
+
+let panoNotes = [];
+let panoFilterCat = '';
+let selectedPanoCat = 'arıyorum';
+
+function selectPanoCat(el) {
+  document.querySelectorAll('.pano-cat-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedPanoCat = el.dataset.cat;
+}
+
+function openPanoModal() {
+  document.getElementById('panoText').value = '';
+  document.getElementById('panoAuthor').value = '';
+  document.getElementById('panoMsg').textContent = '';
+  document.getElementById('panoModal').classList.add('open');
+}
+
+function closePanoModal() {
+  document.getElementById('panoModal').classList.remove('open');
+}
+
+function filterPano(el, cat) {
+  document.querySelectorAll('.pano-filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  panoFilterCat = cat;
+  renderPanoGrid();
+}
+
+async function loadPanoNotes() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pano_notes?order=created_at.desc&select=*`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (!res.ok) throw new Error('tablo yok');
+    panoNotes = await res.json();
+    renderPanoGrid();
+  } catch(e) {
+    document.getElementById('panoGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;font-family:'Courier Prime',monospace;font-size:0.8rem;color:#8a6a4a;letter-spacing:1px;">Pano yüklenemedi.<br><span style="font-size:0.65rem;opacity:0.7;">Supabase tablosunu oluşturman gerekiyor.</span></div>`;
+  }
+}
+
+function renderPanoGrid() {
+  const grid = document.getElementById('panoGrid');
+  const filtered = panoFilterCat ? panoNotes.filter(n => n.category === panoFilterCat) : panoNotes;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 0;font-family:'Courier Prime',monospace;font-size:0.8rem;color:#8a6a4a;letter-spacing:2px;">Bu kategoride henüz ilan yok.</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((note, i) => {
+    const colorIdx = note.id ? (note.id % panoColors.length) : (i % panoColors.length);
+    const pinIdx = note.id ? (note.id % pinColors.length) : (i % pinColors.length);
+    const color = panoColors[colorIdx];
+    const pin = pinColors[pinIdx];
+    const rotate = ((note.id || i) % 7 - 3); // -3 ile +3 derece
+    const date = note.created_at ? new Date(note.created_at).toLocaleDateString('tr-TR', {day:'numeric',month:'short'}) : '';
+    return `
+      <div class="pano-note" style="background:${color.bg};border-bottom:3px solid ${color.border};transform:rotate(${rotate}deg);">
+        <div class="pano-pin" style="background:${pin};"></div>
+        <div class="pano-note-cat">${catLabels[note.category] || note.category}</div>
+        <div class="pano-note-text">${(note.text||'').replace(/\n/g,'<br>')}</div>
+        <div class="pano-note-author">${note.author ? '— ' + note.author : '— anonim'}</div>
+        <div class="pano-note-date">${date}</div>
+        <div class="pano-note-actions">
+          <button class="pano-like-btn" onclick="event.stopPropagation();likePanoNote(${note.id},this)">❤ ${note.likes||0}</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function submitPanoNote() {
+  const text = document.getElementById('panoText').value.trim();
+  if (!text) { document.getElementById('panoMsg').textContent = 'Bir şeyler yaz!'; return; }
+  if (text.length > 300) { document.getElementById('panoMsg').textContent = 'En fazla 300 karakter.'; return; }
+
+  const note = {
+    category: selectedPanoCat,
+    text,
+    author: document.getElementById('panoAuthor').value.trim() || null,
+    likes: 0,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/pano_notes`,
+      { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(note) });
+    document.getElementById('panoMsg').textContent = '✓ İlanın panoya asıldı!';
+    document.getElementById('panoText').value = '';
+    document.getElementById('panoAuthor').value = '';
+    await loadPanoNotes();
+    setTimeout(closePanoModal, 1200);
+  } catch(e) {
+    document.getElementById('panoMsg').textContent = 'Hata: ' + e.message;
+  }
+}
+
+async function likePanoNote(id, btn) {
+  const current = parseInt(btn.textContent.replace('❤ ','')) || 0;
+  btn.textContent = '❤ ' + (current + 1);
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/pano_notes?id=eq.${id}`,
+      { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ likes: current + 1 }) });
+  } catch(e) {}
+}
+
+// ===== KİTAP HAFIZASI — Kelime Bulutu =====
+let memoryBookId = null;
+
+function openMemoryModal(bookId, bookTitle) {
+  memoryBookId = bookId;
+  document.getElementById('memoryBookTitle').textContent = '"' + bookTitle + '"';
+  document.getElementById('memoryInput').value = '';
+  loadMemoryCloud(bookId);
+  document.getElementById('memoryModal').classList.add('open');
+}
+
+function closeMemoryModal() {
+  document.getElementById('memoryModal').classList.remove('open');
+  memoryBookId = null;
+}
+
+async function loadMemoryCloud(bookId) {
+  const el = document.getElementById('memoryCloud');
+  el.innerHTML = '<span style="font-family:Courier Prime,monospace;font-size:0.7rem;color:#888;">yükleniyor...</span>';
+  try {
+    const res = await api(`settings?key=eq.memory_${bookId}&select=*`);
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    if (!rows.length || !rows[0].value) { el.innerHTML = '<span style="font-family:Courier Prime,monospace;font-size:0.7rem;color:#888;">henüz kelime yok — ilk sen bırak!</span>'; return; }
+    const words = JSON.parse(rows[0].value); // [{word, count}]
+    const max = Math.max(...words.map(w => w.count));
+    el.innerHTML = words.map(w => {
+      const size = 0.75 + (w.count / max) * 1.4;
+      const opacity = 0.5 + (w.count / max) * 0.5;
+      return `<span class="cloud-word" style="font-size:${size.toFixed(2)}rem;opacity:${opacity.toFixed(2)};color:var(--ink);" title="${w.count} kişi">${w.word}</span>`;
+    }).join('');
+  } catch(e) { el.innerHTML = ''; }
+}
+
+async function submitMemoryWord() {
+  const word = document.getElementById('memoryInput').value.trim().toLowerCase().replace(/[^a-züöşçğı ]/gi,'');
+  if (!word || !memoryBookId) return;
+  if (word.split(' ').length > 2) { alert('En fazla 2 kelime yazabilirsin.'); return; }
+
+  try {
+    const res = await api(`settings?key=eq.memory_${memoryBookId}&select=*`);
+    const rows = res.ok ? await res.json() : [];
+    let words = rows.length && rows[0].value ? JSON.parse(rows[0].value) : [];
+    const existing = words.find(w => w.word === word);
+    if (existing) { existing.count++; } else { words.push({ word, count: 1 }); }
+    words.sort((a,b) => b.count - a.count);
+    const val = JSON.stringify(words.slice(0, 30)); // max 30 kelime
+    if (rows.length) {
+      await api(`settings?key=eq.memory_${memoryBookId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ value: val }) });
+    } else {
+      await api('settings', { method: 'POST', headers: {'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({ key: `memory_${memoryBookId}`, value: val }) });
+    }
+    document.getElementById('memoryInput').value = '';
+    await loadMemoryCloud(memoryBookId);
+  } catch(e) {}
+}
+
+// ===== NORA SAHAF =====
+async function submitSahafOffer() {
+  const title = document.getElementById('sahafTitle').value.trim();
+  const author = document.getElementById('sahafAuthor').value.trim();
+  const contact = document.getElementById('sahafContact').value.trim();
+  if (!title || !author || !contact) {
+    const m = document.getElementById('sahafMsg');
+    m.textContent = '> Kitap adı, yazar ve iletişim zorunlu.'; m.style.color = '#c84040'; return;
+  }
+  const offer = {
+    book_title: title,
+    author,
+    edition: document.getElementById('sahafEdition').value.trim(),
+    publisher: document.getElementById('sahafPublisher').value.trim(),
+    condition: document.getElementById('sahafCondition').value,
+    note: document.getElementById('sahafNote').value.trim(),
+    contact,
+    status: 'pending',
+    submitted_at: new Date().toISOString()
+  };
+  try {
+    await api('sahaf_offers', { method: 'POST', headers: {'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify(offer) });
+    const m = document.getElementById('sahafMsg');
+    m.textContent = '> Teklifin alındı! Nora en kısa sürede cevap verecek.'; m.style.color = '#2a7a2a';
+    ['sahafTitle','sahafAuthor','sahafEdition','sahafPublisher','sahafNote','sahafContact'].forEach(id => document.getElementById(id).value = '');
+    await loadSahafOffers();
+  } catch(e) {
+    const m = document.getElementById('sahafMsg');
+    m.textContent = '> Hata: ' + e.message; m.style.color = '#c84040';
+  }
+}
+
+const conditionLabels = { 'cok-iyi': 'Çok İyi', 'iyi': 'İyi', 'orta': 'Orta', 'kotu': 'Kötü' };
+
+async function loadSahafOffers() {
+  const el = document.getElementById('sahafMyOffers');
+  if (!el) return;
+  // Kullanıcının kendi tekliflerini IP ile takip et
+  try {
+    const ip = await getClientIP();
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sahaf_offers?contact=neq.&order=submitted_at.desc&select=*`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (!res.ok) { el.innerHTML = ''; return; }
+    const all = await res.json();
+    // İletişim bilgisi bu cihazdan gönderilenleri göster — basitçe son 5 teklif
+    if (!all.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:12px;text-transform:uppercase;">Son Teklifler</div>` +
+      all.slice(0,5).map(o => {
+        const statusEl = o.status === 'pending'
+          ? '<span class="sahaf-offer-status sahaf-pending">> Değerlendiriliyor...</span>'
+          : o.status === 'priced'
+          ? `<div class="sahaf-offer-price">₺${o.price}</div><span class="sahaf-offer-status" style="color:#2a7a2a;">Nora fiyat biçti — kafede görüşelim!</span>`
+          : '<span class="sahaf-offer-status sahaf-rejected">> Bu sefer alamayız, üzgünüz.</span>';
+        return `<div class="sahaf-offer">
+          <div class="sahaf-offer-title">${o.book_title}</div>
+          <div class="sahaf-offer-meta">${o.author} · ${conditionLabels[o.condition]||o.condition} · ${new Date(o.submitted_at).toLocaleDateString('tr-TR')}</div>
+          ${statusEl}
+        </div>`;
+      }).join('');
+  } catch(e) { el.innerHTML = ''; }
+}
+
+async function loadSahafAdmin() {
+  const el = document.getElementById('sahafAdminList');
+  if (!el) return;
+  el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;">Yükleniyor...</div>';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sahaf_offers?order=submitted_at.desc&select=*`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (!res.ok) throw new Error('Tablo bulunamadı — SQL\'i çalıştır');
+    const offers = await res.json();
+    if (!offers.length) { el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;">Henüz teklif yok.</div>'; return; }
+    el.innerHTML = offers.map(o => `
+      <div style="border:1.5px solid var(--border-dark);padding:18px;background:var(--white);" id="sahaf_${o.id}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:1rem;">${o.book_title}</div>
+            <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-top:3px;">${o.author} · ${o.publisher||''} · ${o.edition||''}</div>
+            <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Durum: ${conditionLabels[o.condition]||o.condition}</div>
+            ${o.note ? `<div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);margin-top:4px;">Not: ${o.note}</div>` : ''}
+            <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;margin-top:6px;">📞 ${o.contact}</div>
+            <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">${new Date(o.submitted_at).toLocaleString('tr-TR')}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+            ${o.status === 'pending' ? `
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="text" id="price_${o.id}" placeholder="₺ Fiyat" style="width:90px;padding:6px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
+                <button onclick="setSahafPrice(${o.id})" style="background:var(--black);color:var(--white);border:none;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">Fiyat Biç</button>
+              </div>
+              <button onclick="setSahafStatus(${o.id},'rejected')" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:4px 10px;cursor:pointer;">Reddet</button>
+            ` : `<span style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:${o.status==='priced'?'#2a7a2a':'#c84040'};">${o.status==='priced'?'✓ Fiyat: ₺'+o.price:'✗ Reddedildi'}</span>`}
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = `<div style="font-family:'Courier Prime',monospace;color:#c84040;font-size:0.8rem;">${e.message}</div>`; }
+}
+
+async function setSahafPrice(id) {
+  const price = document.getElementById('price_' + id)?.value.trim().replace('₺','');
+  if (!price) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/sahaf_offers?id=eq.${id}`,
+    { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'priced', price }) });
+  await loadSahafAdmin();
+}
+
+async function setSahafStatus(id, status) {
+  await fetch(`${SUPABASE_URL}/rest/v1/sahaf_offers?id=eq.${id}`,
+    { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }) });
+  await loadSahafAdmin();
+}
+
 // ===== checkBirthdays =====
 // Bugün doğum/ölüm günü olan yazarları kontrol et ve banner göster
 async function checkBirthdays() {
@@ -5682,18 +6588,44 @@ function buildAdminGenreFilter() {
     [...genreSet].sort((a,b)=>a.localeCompare(b,'tr')).map(g=>`<option value="${g}"${g===current?' selected':''}>${g}</option>`).join('');
 }
 
+function buildAdminShelfFilter() {
+  const sel = document.getElementById('adminFilterShelf');
+  if (!sel) return;
+  const current = sel.value;
+  // Raf prefix'lerini topla (A, B, C... veya A-1, A-2 gibi)
+  const shelfSet = new Set();
+  books.forEach(b => {
+    if (b.shelf) {
+      // Tam raf numaralarını ekle
+      shelfSet.add(b.shelf.trim());
+    }
+  });
+  const shelves = [...shelfSet].sort((a,b) => {
+    // Alfanumerik sıralama
+    return a.replace(/(\d+)/g, n=>n.padStart(6,'0')).localeCompare(
+      b.replace(/(\d+)/g, n=>n.padStart(6,'0')), 'tr');
+  });
+  sel.innerHTML = '<option value="">Tüm Raflar</option>' +
+    shelves.map(s=>`<option value="${s}"${s===current?' selected':''}>${s}</option>`).join('');
+}
+
 function renderAdminTable() {
   buildAdminGenreFilter();
+  buildAdminShelfFilter();
   const q = normalize(document.getElementById('adminSearch').value || '');
   const sortField = document.getElementById('adminSortField')?.value || 'title';
   const sortDir = document.getElementById('adminSortDir')?.value || 'asc';
   const filterGenre = document.getElementById('adminFilterGenre')?.value || '';
   const filterStatus = document.getElementById('adminFilterStatus')?.value || '';
+  const filterShelf = document.getElementById('adminFilterShelf')?.value || '';
+  const filterNora = document.getElementById('adminFilterNora')?.value || '';
 
   let filtered = books.filter(b => {
     if (q && !normalize(b.title).includes(q) && !normalize(b.author||'').includes(q) && !normalize(b.shelf||'').includes(q)) return false;
     if (filterGenre && !(b.genre||'').split(',').map(g=>g.trim()).includes(filterGenre)) return false;
     if (filterStatus && b.status !== filterStatus) return false;
+    if (filterShelf && (b.shelf||'').trim() !== filterShelf) return false;
+    if (filterNora === '1' && !b.nora_pick) return false;
     return true;
   });
 
