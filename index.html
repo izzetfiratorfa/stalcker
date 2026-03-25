@@ -2418,7 +2418,12 @@ function onSearchInput() {
     acSelected = -1;
   }, 280);
 }
+
+function selectAC(idx) {
+  const list = document.getElementById('autocompleteList');
+  if (!list._matches) return;
   const b = list._matches[idx];
+  if (!b) return;
   document.getElementById('searchInput').value = b.title;
   list.style.display = 'none';
   doSearch();
