@@ -1157,29 +1157,9 @@ body.dark .author-book-row:hover { background:rgba(255,255,255,0.04); }
 <body>
 <div id="offlineBanner">⚠ İnternet bağlantısı yok — önbellek gösteriliyor</div>
 <script>
-// Offline tespiti
 window.addEventListener('online', () => { document.getElementById('offlineBanner').style.display='none'; });
 window.addEventListener('offline', () => { document.getElementById('offlineBanner').style.display='block'; });
 if (!navigator.onLine) document.getElementById('offlineBanner').style.display='block';
-// Service Worker kayıt
-if ('serviceWorker' in navigator) {
-  const swCode = `
-const CACHE='nora-v1';
-const ASSETS=['/'];
-self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))); self.skipWaiting(); });
-self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
-self.addEventListener('fetch',e=>{
-  if(e.request.url.includes('supabase.co')||e.request.url.includes('spotify')||e.request.url.includes('googleapis')){return;}
-  e.respondWith(fetch(e.request).then(r=>{
-    const clone=r.clone();
-    caches.open(CACHE).then(c=>c.put(e.request,clone));
-    return r;
-  }).catch(()=>caches.match(e.request)));
-});`;
-  const blob = new Blob([swCode], {type:'application/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(()=>{});
-}
 </script>
 
 <!-- EASTER EGG ELEMENTS -->
