@@ -86,6 +86,36 @@ header::after { content:'';position:absolute;bottom:-8px;left:0;right:0;height:3
 .filter-chip:hover { border-color:var(--ink);color:var(--ink); }
 .filter-chip.active { background:var(--black);border-color:var(--black);color:var(--white);font-weight:700; }
 
+/* Gelişmiş filtre satırı */
+.adv-filter-row { display:flex;gap:10px;padding:8px 20px 0;max-width:600px;margin:0 auto;flex-wrap:wrap;align-items:center; }
+.adv-filter-btn { background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;padding:3px 10px;cursor:pointer;transition:all 0.15s; }
+.adv-filter-btn:hover,.adv-filter-btn.active { border-color:var(--ink);color:var(--ink); }
+.adv-filter-panel { display:none;background:var(--white);border:1.5px solid var(--border-dark);padding:14px 16px;max-width:600px;margin:6px 20px 0;animation:slideUp 0.2s ease; }
+body.dark .adv-filter-panel { background:#111;border-color:#333; }
+.adv-filter-panel.open { display:block; }
+.adv-filter-label { font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px; }
+.page-range-wrap { display:flex;align-items:center;gap:10px;flex-wrap:wrap; }
+.page-range-input { width:70px;padding:4px 8px;font-family:'Courier Prime',monospace;font-size:0.78rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);text-align:center; }
+.multi-genre-wrap { display:flex;flex-wrap:wrap;gap:6px; }
+.multi-genre-chip { border:1.5px solid var(--border-dark);background:transparent;padding:3px 10px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:1px;transition:all 0.15s;color:var(--ink-light); }
+.multi-genre-chip:hover { border-color:var(--ink); }
+.multi-genre-chip.active { background:var(--black);border-color:var(--black);color:var(--white); }
+.rating-filter-row { display:flex;gap:6px;align-items:center; }
+.rating-filter-star { font-size:1rem;cursor:pointer;opacity:0.35;transition:opacity 0.1s; }
+.rating-filter-star.active,.rating-filter-star:hover { opacity:1; }
+
+/* Etiket bulutu */
+.tag-cloud-wrap { max-width:600px;margin:0 auto;padding:10px 20px 0; }
+.tag-cloud { display:flex;flex-wrap:wrap;gap:6px; }
+.cloud-tag { font-family:'Courier Prime',monospace;cursor:pointer;padding:2px 8px;border:1px solid transparent;transition:all 0.15s;letter-spacing:1px; }
+.cloud-tag:hover,.cloud-tag.active { background:var(--black);color:var(--white); }
+
+/* Tür renk kodlaması */
+.book-card[data-genre-color] { border-left-width:5px; }
+.did-you-mean { max-width:600px;margin:8px 20px 0;font-family:'Courier Prime',monospace;font-size:0.75rem;color:#9c7a3c;letter-spacing:1px; }
+.did-you-mean span { cursor:pointer;border-bottom:1px dashed #9c7a3c; }
+.did-you-mean span:hover { color:var(--ink); }
+
 /* RESULTS */
 .results-section { padding:20px 20px 50px;max-width:600px;margin:0 auto; }
 .results-title { font-size:0.68rem;color:var(--ink-faint);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border); }
@@ -1506,6 +1536,50 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <button class="filter-chip" id="filterNew" onclick="setFilterNew(this)" style="border-color:#1a5a1a;color:#2a7a2a;">⚡ Bu Hafta</button>
   </div>
 
+  <!-- Gelişmiş Filtre -->
+  <div class="adv-filter-row">
+    <button class="adv-filter-btn" id="advFilterBtn" onclick="toggleAdvFilter()">⚙ Filtrele</button>
+    <span id="advFilterSummary" style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#9c7a3c;letter-spacing:1px;"></span>
+    <button id="advFilterClear" onclick="clearAdvFilters()" style="display:none;background:none;border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;color:#c84040;cursor:pointer;padding:0;letter-spacing:1px;">✕ Temizle</button>
+  </div>
+  <div class="adv-filter-panel" id="advFilterPanel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
+      <div>
+        <div class="adv-filter-label">Sayfa Aralığı</div>
+        <div class="page-range-wrap">
+          <input class="page-range-input" id="pageMin" type="number" placeholder="min" min="0" oninput="doSearch()">
+          <span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);">—</span>
+          <input class="page-range-input" id="pageMax" type="number" placeholder="max" oninput="doSearch()">
+          <span style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">sayfa</span>
+        </div>
+      </div>
+      <div>
+        <div class="adv-filter-label">Min. Puan</div>
+        <div class="rating-filter-row" id="ratingFilterRow">
+          <span class="rating-filter-star active" data-val="0" onclick="setRatingFilter(0)">Tümü</span>
+          <span class="rating-filter-star" data-val="1" onclick="setRatingFilter(1)">★1</span>
+          <span class="rating-filter-star" data-val="2" onclick="setRatingFilter(2)">★2</span>
+          <span class="rating-filter-star" data-val="3" onclick="setRatingFilter(3)">★3</span>
+          <span class="rating-filter-star" data-val="4" onclick="setRatingFilter(4)">★4</span>
+          <span class="rating-filter-star" data-val="5" onclick="setRatingFilter(5)">★5</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <div class="adv-filter-label">Çoklu Tür Seçimi <span style="color:#555;text-transform:none;letter-spacing:0;">(birden fazla seçilebilir)</span></div>
+      <div class="multi-genre-wrap" id="multiGenreWrap"></div>
+    </div>
+  </div>
+
+  <!-- Etiket Bulutu -->
+  <div class="tag-cloud-wrap" id="tagCloudWrap" style="display:none;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:6px;">ETİKETLER</div>
+    <div class="tag-cloud" id="tagCloud"></div>
+  </div>
+
+  <!-- "Bunu mu demek istedin?" -->
+  <div class="did-you-mean" id="didYouMean" style="display:none;"></div>
+
   <div class="results-section">
     <div class="results-title" id="resultsTitle"></div>
     <div id="bookResults"></div>
@@ -2308,15 +2382,72 @@ let acSelected = -1;
 let soundEnabled = true;
 let audioCtx = null;
 
-// ===== NORMALIZE =====
+// Gelişmiş filtre state
+let advFilterOpen = false;
+let activeGenres = new Set(); // çoklu tür
+let pageMin = null, pageMax = null;
+let minRating = 0;
+let activeTag = null;
+
+// Tür renk haritası
+const GENRE_COLORS = {
+  'Roman':      '#c84040',
+  'Şiir':       '#8030c0',
+  'Felsefe':    '#1a4a8a',
+  'Deneme':     '#2a7a5a',
+  'Tarih':      '#8B4513',
+  'Biyografi':  '#c87020',
+  'Bilim':      '#1a6a6a',
+  'Çocuk':      '#c84080',
+  'Klasik':     '#6a4a2a',
+  'Polisiye':   '#2a2a6a',
+  'Korku':      '#3a0a0a',
+  'Mizah':      '#c8a020',
+  'Gezi':       '#2a6a2a',
+  'Psikoloji':  '#6a2a6a',
+  'Siyaset':    '#6a2a2a',
+  'Masal':      '#2a6a8a',
+  'Mitoloji':   '#4a1a6a',
+  'Öykü':       '#c85020',
+  'Hikaye':     '#c85020',
+  'Oyun':       '#206a4a',
+  'Tiyatro':    '#206a4a',
+  'Anı':        '#8a6a2a',
+  'Mektup':     '#4a6a8a',
+  'Günlük':     '#6a8a4a',
+  'Ekonomi':    '#2a4a6a',
+  'Sosyoloji':  '#5a2a5a',
+  'Sanat':      '#8a2a4a',
+  'Müzik':      '#2a5a8a',
+  'Din':        '#6a5a2a',
+  'Tasavvuf':   '#5a4a2a',
+  'Doğa':       '#2a7a2a',
+  'Distopya':   '#3a3a5a',
+  'Fantastik':  '#5a2a8a',
+};
+function getGenreColor(genre) {
+  if (!genre) return null;
+  const genres = genre.split(',').map(g=>g.trim());
+  for (const g of genres) {
+    for (const [key, color] of Object.entries(GENRE_COLORS)) {
+      if (g.toLowerCase().includes(key.toLowerCase())) return color;
+    }
+  }
+  return null;
+}
+
+// ===== NORMALIZE — Türkçe duyarsız =====
 function normalize(str) {
   if (!str) return '';
-  return str.toLowerCase()
-    .replace(/İ/g,'i').replace(/I/g,'ı')
-    .replace(/Ğ/g,'ğ').replace(/Ü/g,'ü').replace(/Ş/g,'ş').replace(/Ö/g,'ö').replace(/Ç/g,'ç')
+  return str
+    .replace(/İ/g,'i').replace(/I/g,'i').replace(/ı/g,'i')
+    .replace(/Ğ/g,'g').replace(/ğ/g,'g')
+    .replace(/Ü/g,'u').replace(/ü/g,'u')
+    .replace(/Ş/g,'s').replace(/ş/g,'s')
+    .replace(/Ö/g,'o').replace(/ö/g,'o')
+    .replace(/Ç/g,'c').replace(/ç/g,'c')
     .replace(/â/g,'a').replace(/î/g,'i').replace(/û/g,'u')
-    .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s')
-    .replace(/ö/g,'o').replace(/ç/g,'c').replace(/ı/g,'i');
+    .toLowerCase();
 }
 
 // ===== FUZZY MATCH =====
@@ -2335,7 +2466,26 @@ async function fetchBooks() {
     const res = await api('books?order=id.asc');
     if (!res.ok) throw new Error('Bağlantı hatası');
     books = await res.json();
+    // Puan ortalamalarını arka planda yükle
+    fetchBookRatings();
   } catch(e) { books = []; console.error(e); }
+}
+
+async function fetchBookRatings() {
+  try {
+    const res = await api('reviews?select=book_id,rating&rating=not.is.null');
+    if (!res.ok) return;
+    const rows = await res.json();
+    const sums = {}, counts = {};
+    rows.forEach(r => {
+      if (!r.rating) return;
+      sums[r.book_id] = (sums[r.book_id] || 0) + parseFloat(r.rating);
+      counts[r.book_id] = (counts[r.book_id] || 0) + 1;
+    });
+    Object.keys(sums).forEach(id => {
+      bookRatings[parseInt(id)] = sums[id] / counts[id];
+    });
+  } catch(e) {}
 }
 
 async function fetchQuotes() {
@@ -4704,6 +4854,116 @@ function buildFilters() {
   ).join('');
   const newChip = `<button class="filter-chip${filterNewActive ? ' active' : ''}" id="filterNew" onclick="setFilterNew(this)" style="border-color:#1a5a1a;color:${filterNewActive?'#fff':'#2a7a2a'};">⚡ Bu Hafta</button>`;
   document.getElementById('filterRow').innerHTML = genreChips + newChip;
+
+  // Çoklu tür chip'leri doldur
+  const mgWrap = document.getElementById('multiGenreWrap');
+  if (mgWrap) {
+    mgWrap.innerHTML = [...genreSet].sort((a,b)=>a.localeCompare(b,'tr')).map(g => {
+      const color = getGenreColor(g);
+      const isActive = activeGenres.has(g);
+      const style = color && isActive ? `background:${color};border-color:${color};color:#fff;`
+                  : color ? `border-color:${color};color:${color};` : '';
+      return `<button class="multi-genre-chip ${isActive?'active':''}" onclick="toggleGenre('${g}')" style="${style}">${g}</button>`;
+    }).join('');
+  }
+
+  // Etiket bulutu doldur
+  buildTagCloud();
+}
+
+function buildTagCloud() {
+  const tagCount = {};
+  books.filter(b => b.tags && b.genre !== 'gizli-raf').forEach(b => {
+    b.tags.split(',').map(t=>t.trim()).filter(Boolean).forEach(t => { tagCount[t] = (tagCount[t]||0)+1; });
+  });
+  const tags = Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  const wrap = document.getElementById('tagCloudWrap');
+  const cloud = document.getElementById('tagCloud');
+  if (!tags.length || !wrap || !cloud) return;
+  const max = tags[0][1];
+  cloud.innerHTML = tags.map(([tag, count]) => {
+    const size = (0.68 + (count/max)*0.5).toFixed(2);
+    const isActive = activeTag === tag;
+    return `<span class="cloud-tag ${isActive?'active':''}" style="font-size:${size}rem;" onclick="setTagFilter('${tag}')">#${tag}</span>`;
+  }).join('');
+  wrap.style.display = 'block';
+}
+
+function toggleGenre(g) {
+  if (activeGenres.has(g)) { activeGenres.delete(g); }
+  else { activeGenres.add(g); }
+  buildFilters();
+  doSearch();
+}
+
+function setTagFilter(tag) {
+  activeTag = (activeTag === tag) ? null : tag;
+  buildTagCloud();
+  doSearch();
+}
+
+function setRatingFilter(val) {
+  minRating = val;
+  document.querySelectorAll('.rating-filter-star').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.val) === val);
+  });
+  doSearch();
+}
+
+function toggleAdvFilter() {
+  advFilterOpen = !advFilterOpen;
+  document.getElementById('advFilterPanel').classList.toggle('open', advFilterOpen);
+  document.getElementById('advFilterBtn').classList.toggle('active', advFilterOpen);
+  if (advFilterOpen) buildFilters();
+}
+
+function clearAdvFilters() {
+  activeGenres.clear();
+  minRating = 0;
+  activeTag = null;
+  const pageMin = document.getElementById('pageMin');
+  const pageMax = document.getElementById('pageMax');
+  if (pageMin) pageMin.value = '';
+  if (pageMax) pageMax.value = '';
+  document.getElementById('advFilterClear').style.display = 'none';
+  document.getElementById('advFilterSummary').textContent = '';
+  buildFilters();
+  doSearch();
+}
+
+function updateAdvFilterSummary() {
+  const parts = [];
+  if (activeGenres.size > 0) parts.push([...activeGenres].join(' + '));
+  const pMin = parseInt(document.getElementById('pageMin')?.value) || null;
+  const pMax = parseInt(document.getElementById('pageMax')?.value) || null;
+  if (pMin || pMax) parts.push(`${pMin||'?'}–${pMax||'?'} sayfa`);
+  if (minRating > 0) parts.push(`★${minRating}+`);
+  if (activeTag) parts.push(`#${activeTag}`);
+  const summary = document.getElementById('advFilterSummary');
+  const clearBtn = document.getElementById('advFilterClear');
+  if (summary) summary.textContent = parts.length ? '› ' + parts.join(' · ') : '';
+  if (clearBtn) clearBtn.style.display = parts.length ? 'inline' : 'none';
+}
+
+// "Bunu mu demek istedin?" — en yakın başlık bul
+function findClosestBook(q) {
+  const nq = normalize(q);
+  let best = null, bestScore = 0;
+  books.filter(b => b.genre !== 'gizli-raf').forEach(b => {
+    const title = normalize(b.title);
+    const author = normalize(b.author||'');
+    // Levenshtein yerine basit: ortak karakter oranı
+    let score = 0;
+    for (let i = 0; i < Math.min(nq.length, title.length); i++) {
+      if (nq[i] === title[i]) score++;
+    }
+    score = score / Math.max(nq.length, title.length);
+    // Kelime benzerliği de kontrol et
+    const words = nq.split(/\s+/);
+    words.forEach(w => { if (w.length > 2 && (title.includes(w)||author.includes(w))) score += 0.3; });
+    if (score > bestScore && score > 0.3) { bestScore = score; best = b.title; }
+  });
+  return best;
 }
 
 function setFilter(g, el) {
@@ -4748,57 +5008,58 @@ function doSearch() {
   const q = (document.getElementById('searchInput').value || '').trim();
   const titleEl = document.getElementById('resultsTitle');
   const container = document.getElementById('bookResults');
+  const pMin = parseInt(document.getElementById('pageMin')?.value) || null;
+  const pMax = parseInt(document.getElementById('pageMax')?.value) || null;
 
-  if (!q && activeFilter === 'Tümü') {
+  if (!q && activeFilter === 'Tümü' && activeGenres.size === 0 && !pMin && !pMax && minRating === 0 && !activeTag) {
     if (!books.length) { container.innerHTML = ''; titleEl.textContent = ''; return; }
-    const shuffled = [...books].sort(() => Math.random() - 0.5).slice(0, 3);
+    const shuffled = [...books].filter(b=>b.genre!=='gizli-raf').sort(() => Math.random() - 0.5).slice(0, 3);
     titleEl.textContent = 'bugün için üç öneri';
     try {
       container.innerHTML = shuffled.map(renderBookCard).join('');
     } catch(err) {
-      console.error('renderBookCard hatası:', err);
-      container.innerHTML = shuffled.map(b => `<div class="book-card" onclick="openDetail(${b.id})">
-        <div class="book-info">
-          <div class="book-title">${b.title}</div>
-          <div class="book-author">${b.author}</div>
-          <div class="book-meta"><span class="badge-shelf">📍 Raf ${b.shelf||'?'}</span></div>
-        </div></div>`).join('');
+      container.innerHTML = shuffled.map(b => `<div class="book-card" onclick="openDetail(${b.id})"><div class="book-info"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div></div></div>`).join('');
     }
     return;
   }
 
-  // Terminal tarama animasyonu
   showTerminal(terminalMsg('scanning'), '#2a7a2a');
   setTimeout(() => {
     let filtered = books.filter(b => {
-      if (b.genre === 'gizli-raf') return false; // gizli raf normal aramada çıkmaz
+      if (b.genre === 'gizli-raf') return false;
       const match = !q || fuzzyMatch(b.title + ' ' + b.author + ' ' + (b.publisher||'') + ' ' + (b.tags||'') + ' ' + (b.isbn||''), q);
-      const genreOk = activeFilter === 'Tümü' || (b.genre || '').split(',').map(g=>g.trim()).includes(activeFilter);
+      const genreOk = activeFilter === 'Tümü' || (b.genre||'').split(',').map(g=>g.trim()).includes(activeFilter);
+      const multiGenreOk = activeGenres.size === 0 || [...activeGenres].every(g => (b.genre||'').split(',').map(x=>x.trim()).includes(g));
       const newOk = !filterNewActive || isNewBook(b);
-      return match && genreOk && newOk;
+      const pages = parseInt(b.pages) || 0;
+      const pageOk = (!pMin || pages >= pMin) && (!pMax || pages <= pMax);
+      const rating = bookRatings[b.id] || 0;
+      const ratingOk = minRating === 0 || rating >= minRating;
+      const tagOk = !activeTag || (b.tags||'').split(',').map(t=>t.trim()).includes(activeTag);
+      return match && genreOk && multiGenreOk && newOk && pageOk && ratingOk && tagOk;
     });
-    if (!filtered.length) {
-      if (q) { missedSearchLog[q] = (missedSearchLog[q] || 0) + 1; }
+
+    const didYouMeanEl = document.getElementById('didYouMean');
+    if (!filtered.length && q && q.length >= 3) {
+      const suggestion = findClosestBook(q);
+      if (suggestion && didYouMeanEl) {
+        didYouMeanEl.style.display = 'block';
+        didYouMeanEl.innerHTML = `> Bunu mu demek istedin? <span onclick="document.getElementById('searchInput').value='${suggestion.replace(/'/g,"\'")}';doSearch()">"${suggestion}"</span>`;
+      }
+      if (q) missedSearchLog[q] = (missedSearchLog[q] || 0) + 1;
       showTerminal(terminalMsg('notFound'), '#1a5a1a');
       const notifyHtml = currentUser
-        ? `<div class="notify-box"><p>Bu kitap sistemde yok. Eklendiğinde sana haber verelim mi?</p><button class="btn-notify" onclick="subscribeNotify('${q.replace(/'/g,"\\'")}')">★ Haberdar Et</button></div>`
-        : `<div class="notify-box"><p>Bu kitap sistemde yok. Eklendiğinde haberdar olmak için e-postanı bırak:</p><div class="notify-row"><input class="notify-input" id="notifyEmail" placeholder="email@example.com" type="email"><button class="btn-notify" onclick="subscribeNotifyGuest('${q.replace(/'/g,"\\'")}')">Haberdar Et</button></div></div>`;
+        ? `<div class="notify-box"><p>Bu kitap sistemde yok.</p><button class="btn-notify" onclick="subscribeNotify('${q.replace(/'/g,"\'")}')">★ Haberdar Et</button></div>`
+        : `<div class="notify-box"><p>Bu kitap sistemde yok.</p><div class="notify-row"><input class="notify-input" id="notifyEmail" placeholder="email@example.com" type="email"><button class="btn-notify" onclick="subscribeNotifyGuest('${q.replace(/'/g,"\'")}')">Haberdar Et</button></div></div>`;
       container.innerHTML = '<div style="text-align:center;padding:32px 20px 8px;font-family:Courier Prime,monospace;"><div style="color:#1a5a1a;font-size:0.85rem;letter-spacing:2px;line-height:2">> ' + terminalMsg('notFound') + '<br><span style="color:#0d3a0d;font-size:0.72rem">sector: ' + (q||'unknown') + '</span></div></div>' + notifyHtml;
       return;
-    }
+    } else if (didYouMeanEl) { didYouMeanEl.style.display = 'none'; }
+
     showTerminal(terminalMsg('found') + ' ' + filtered.length + ' records.', '#39ff14');
-    try {
-      container.innerHTML = filtered.map(renderBookCard).join('');
-    } catch(err) {
-      console.error('renderBookCard hatası:', err);
-      container.innerHTML = filtered.map(b => `<div class="book-card" onclick="openDetail(${b.id})">
-        <div class="book-info">
-          <div class="book-title">${b.title}</div>
-          <div class="book-author">${b.author}</div>
-          <div class="book-meta"><span class="badge-shelf">📍 Raf ${b.shelf||'?'}</span></div>
-        </div></div>`).join('');
-    }
-    if (q) { searchLog[q] = (searchLog[q] || 0) + 1; }
+    try { container.innerHTML = filtered.map(renderBookCard).join(''); }
+    catch(err) { container.innerHTML = filtered.map(b => `<div class="book-card" onclick="openDetail(${b.id})"><div class="book-info"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div></div></div>`).join(''); }
+    if (q) searchLog[q] = (searchLog[q] || 0) + 1;
+    updateAdvFilterSummary();
   }, 280);
 }
 
@@ -4840,7 +5101,9 @@ function renderBookCard(b) {
   const readState = (readingList && readingList[b.id]) || null;
   const wantBtn = `<button class="btn-readlist ${readState==='want'?'active-want':''}" onclick="event.stopPropagation();toggleReadList(${b.id},'want')">${readState==='want'?'✓ Okuyacağım':'+ Okuyacağım'}</button>`;
   const doneBtn = `<button class="btn-readlist ${readState==='done'?'active-read':''}" onclick="event.stopPropagation();toggleReadList(${b.id},'done')">${readState==='done'?'✓ Okudum':'Okudum'}</button>`;
-  return `<div class="book-card ${b.nora_pick ? 'nora-pick' : ''}" onclick="openDetail(${b.id})">
+  const genreColor = getGenreColor(b.genre);
+  const borderStyle = genreColor ? `border-left:5px solid ${genreColor};` : '';
+  return `<div class="book-card ${b.nora_pick ? 'nora-pick' : ''}" style="${borderStyle}" onclick="openDetail(${b.id})">
     <div class="book-spine">${b.cover_url ? `<img src="${b.cover_url}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='${icon}'">` : icon}</div>
     <div class="book-info">
       ${noraBadge}
@@ -4851,7 +5114,7 @@ function renderBookCard(b) {
         <span class="badge-shelf">📍 Raf ${b.shelf || '?'}</span>
         ${statusBadge}
         ${b.pages ? `<span style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">${b.pages} sf.</span>` : ''}
-        ${b.genre ? `<span class="badge-tag">${b.genre}</span>` : ''}
+        ${b.genre ? `<span class="badge-tag" style="${genreColor?`color:${genreColor};border-color:${genreColor};background:${genreColor}18;`:''}">${b.genre}</span>` : ''}
         ${tagBadges}
       </div>
       <div class="read-actions">${wantBtn}${doneBtn}</div>
