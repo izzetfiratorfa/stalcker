@@ -1572,17 +1572,18 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
   </div>
 
   <!-- Etiket Bulutu -->
-  <div class="tag-cloud-wrap" id="tagCloudWrap" style="display:none;">
-    <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:6px;">ETİKETLER</div>
-    <div class="tag-cloud" id="tagCloud"></div>
-  </div>
-
   <!-- "Bunu mu demek istedin?" -->
   <div class="did-you-mean" id="didYouMean" style="display:none;"></div>
 
   <div class="results-section">
     <div class="results-title" id="resultsTitle"></div>
     <div id="bookResults"></div>
+  </div>
+
+  <!-- Etiket Bulutu — sayfa altı -->
+  <div class="tag-cloud-wrap" id="tagCloudWrap" style="display:none;border-top:1px dashed var(--border);margin-top:8px;padding-top:16px;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;padding:0 20px;">ETİKETLER</div>
+    <div class="tag-cloud" id="tagCloud" style="padding:0 20px 40px;"></div>
   </div>
 </div>
 
@@ -5964,6 +5965,124 @@ async function fetchByIsbnManual() {
   await fillBookFromISBN(isbn);
 }
 
+// Türkçe başlık büyük harf — her kelimenin ilk harfi büyük, Türkçe karakterler korunur
+function toTurkishTitleCase(str) {
+  if (!str) return '';
+  // Türkçe'de küçük harf kalacak bağlaçlar/edatlar
+  const exceptions = new Set(['ve','ile','veya','ya','de','da','ki','mı','mi','mu','mü','bir','bu','şu','o','ne','her','hiç','için','gibi','kadar','göre','karşı','rağmen','beri','itibaren','doğru','dek','değil','ama','fakat','lakin','ancak','oysa','hâlbuki','yani','üzere','aracılığıyla']);
+
+  return str.split(' ').map((word, i) => {
+    if (!word) return word;
+    // Parantez, tire vb. temizle
+    const lower = word.toLowerCase()
+      .replace(/i/g, 'i').replace(/ı/g, 'ı'); // koru
+
+    // İlk kelime her zaman büyük, diğerleri exception değilse büyük
+    if (i > 0 && exceptions.has(lower)) return lower;
+
+    // Türkçe büyük harf: i → İ, ı → I
+    const first = word[0];
+    const rest = word.slice(1).toLowerCase()
+      .replace(/i/g, 'i').replace(/ı/g, 'ı');
+
+    let bigFirst;
+    if (first === 'i' || first === 'İ') bigFirst = 'İ';
+    else if (first === 'ı' || first === 'I') bigFirst = 'I';
+    else bigFirst = first.toUpperCase();
+
+    return bigFirst + rest;
+  }).join(' ');
+}
+
+// ===== AI KİTAP ZENGİNLEŞTİRME =====
+async function enrichWithAI(bookData, statusEl) {
+  try {
+    const existingTitles = books
+      .filter(b => b.genre !== 'gizli-raf' && b.title !== bookData.title)
+      .map(b => b.title)
+      .slice(0, 80)
+      .join(', ');
+
+    const prompt = `Sen bir Türk edebiyat uzmanısın. Aşağıdaki kitap hakkında bilgi ver. SADECE JSON formatında yanıt ver, başka hiçbir şey yazma.
+
+Kitap: "${bookData.title}"
+Yazar: "${bookData.author}"
+Açıklama: "${bookData.description?.substring(0,400) || ''}"
+Kategori: "${bookData.categories}"
+Sayfa: ${bookData.pageCount}
+
+Rafımızda şu kitaplar var (benzer önerilerde bunlardan seç): ${existingTitles}
+
+Şu alanları doldur:
+- genre: Türkçe tür/kategoriler (virgülle, max 3). Örnek: "Roman, Yerli" veya "Şiir, Klasik"
+- tags: Türkçe etiketler (virgülle, max 6). Tematik kelimeler. Örnek: "aşk, savaş, kimlik, kayıp"
+- sim1: Rafımızdaki kitaplardan EN ÇOK benzeyen kitabın adı (varsa, yoksa boş bırak)
+- sim2: Rafımızdaki kitaplardan ORTA DERECEDE benzeyen kitabın adı (varsa)
+- sim3: Rafımızdaki kitaplardan AZ benzeyen ama ilgili kitabın adı (varsa)
+- description_tr: Kitabın 2-3 cümlelik Türkçe özeti (yoksa Google'dan bildiğini yaz)
+
+JSON formatı:
+{"genre":"...","tags":"...","sim1":"...","sim2":"...","sim3":"...","description_tr":"..."}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) throw new Error('API hatası');
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+
+    // JSON temizle ve parse et
+    const clean = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+
+    // Formları doldur
+    if (result.genre) {
+      const genreEl = document.getElementById('fGenre');
+      if (genreEl && !genreEl.value) genreEl.value = result.genre;
+    }
+    if (result.tags) {
+      const tagsEl = document.getElementById('fTags');
+      if (tagsEl && !tagsEl.value) tagsEl.value = result.tags;
+    }
+    if (result.sim1) {
+      const s1 = document.getElementById('fSim1');
+      if (s1 && !s1.value) s1.value = result.sim1;
+    }
+    if (result.sim2) {
+      const s2 = document.getElementById('fSim2');
+      if (s2 && !s2.value) s2.value = result.sim2;
+    }
+    if (result.sim3) {
+      const s3 = document.getElementById('fSim3');
+      if (s3 && !s3.value) s3.value = result.sim3;
+    }
+    if (result.description_tr) {
+      const descEl = document.getElementById('fDescription');
+      if (descEl && !descEl.value) descEl.value = result.description_tr;
+    }
+
+    if (statusEl) {
+      statusEl.textContent = '✓ Tamamlandı — tür, etiket ve benzer kitaplar AI tarafından önerildi';
+      statusEl.style.color = '#2a7a2a';
+      setTimeout(() => statusEl.remove(), 5000);
+    }
+  } catch(e) {
+    console.error('AI zenginleştirme hatası:', e);
+    if (statusEl) {
+      statusEl.textContent = '✓ Bilgiler dolduruldu (AI önerisi alınamadı)';
+      statusEl.style.color = '#9c7a3c';
+      setTimeout(() => statusEl.remove(), 4000);
+    }
+  }
+}
+
 async function fillBookFromISBN(isbn) {
   // Önce Google Books dene, yoksa Open Library
   const statusEl = document.createElement('div');
@@ -5982,7 +6101,7 @@ async function fillBookFromISBN(isbn) {
       const item = gbData.items[0];
       const info = item.volumeInfo;
 
-      if (info.title) document.getElementById('fTitle').value = info.title;
+      if (info.title) document.getElementById('fTitle').value = toTurkishTitleCase(info.title);
 
       if (info.authors && info.authors.length) {
         const af = document.getElementById('authorFields');
@@ -6018,9 +6137,18 @@ async function fillBookFromISBN(isbn) {
       const gbRatingCount = item.volumeInfo?.ratingsCount;
 
       filled = true;
-      statusEl.textContent = `✓ Google Books'tan dolduruldu${gbRating ? ' · ★ ' + gbRating + '/5 (' + (gbRatingCount||0) + ' oy)' : ''}`;
+      statusEl.textContent = `✓ Google Books'tan dolduruldu${gbRating ? ' · ★ ' + gbRating + '/5 (' + (gbRatingCount||0) + ' oy)' : ''} · AI öneri üretiliyor...`;
       statusEl.style.color = '#2a7a2a';
-      setTimeout(() => statusEl.remove(), 4000);
+
+      // AI ile zenginleştir
+      await enrichWithAI({
+        title: info.title,
+        author: (info.authors||[]).join(', '),
+        description: info.description || '',
+        categories: (info.categories||[]).join(', '),
+        publishedDate: info.publishedDate || '',
+        pageCount: info.pageCount || 0
+      }, statusEl);
       return;
     }
   } catch(e) { console.log('Google Books hatası:', e); }
@@ -6032,7 +6160,7 @@ async function fillBookFromISBN(isbn) {
     const key = `ISBN:${isbn}`;
     if (olData[key]) {
       const book = olData[key];
-      if (book.title) document.getElementById('fTitle').value = book.title;
+      if (book.title) document.getElementById('fTitle').value = toTurkishTitleCase(book.title);
       if (book.authors?.length) {
         const af = document.getElementById('authorFields');
         af.innerHTML = '';
@@ -6048,9 +6176,18 @@ async function fillBookFromISBN(isbn) {
         prev.style.display = 'block';
       }
       filled = true;
-      statusEl.textContent = '✓ Open Library\'den dolduruldu.';
+      statusEl.textContent = '✓ Open Library\'den dolduruldu · AI öneri üretiliyor...';
       statusEl.style.color = '#2a7a2a';
-      setTimeout(() => statusEl.remove(), 4000);
+
+      // AI ile zenginleştir
+      await enrichWithAI({
+        title: book.title || '',
+        author: (book.authors||[]).map(a=>a.name).join(', '),
+        description: '',
+        categories: '',
+        publishedDate: book.publish_date || '',
+        pageCount: book.number_of_pages || 0
+      }, statusEl);
       return;
     }
   } catch(e) { console.log('Open Library hatası:', e); }
