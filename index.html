@@ -2632,10 +2632,10 @@ function eeToast(msg) {
 function clearAllEE() {
   EE_THEMES.forEach(c => document.body.classList.remove(c));
   // Samizdat arama sıfırla
-  const si = document.getElementById('samizdatSearchInput');
-  if (si) si.value = '';
-  const ss = document.getElementById('samizdatSearch');
-  if (ss) ss.style.display = 'none';
+  const samSearchInput = document.getElementById('samizdatSearchInput');
+  if (samSearchInput) samSearchInput.value = '';
+  const samSearchPanel = document.getElementById('samizdatSearch');
+  if (samSearchPanel) samSearchPanel.style.display = 'none';
   window._samizdatBooks = [];
 
   if (matrixAnimId) { cancelAnimationFrame(matrixAnimId); matrixAnimId = null; }
@@ -2700,12 +2700,12 @@ function clearAllEE() {
   // samizdat
   const st = document.getElementById('samizdatTerminal');
   if (st) st.classList.remove('open');
-  const ss = document.getElementById('samizdatSpotify');
-  if (ss) ss.style.display = 'none';
-  const ssf = document.getElementById('samizdatSpotifyFrame');
-  if (ssf) { ssf.src = ''; ssf.style.display = 'none'; }
-  const ssw = document.getElementById('samizdatSpotifyWidget');
-  if (ssw) ssw.style.display = 'flex';
+  const ssSpotify = document.getElementById('samizdatSpotify');
+  if (ssSpotify) ssSpotify.style.display = 'none';
+  const ssFrame = document.getElementById('samizdatSpotifyFrame');
+  if (ssFrame) { ssFrame.src = ''; ssFrame.style.display = 'none'; }
+  const ssWidget = document.getElementById('samizdatSpotifyWidget');
+  if (ssWidget) ssWidget.style.display = 'flex';
   const rs = document.getElementById('redStar');
   if (rs) rs.style.display = 'none';
 
@@ -3750,8 +3750,8 @@ function startSamizdat() {
   borgesTimers.push(bookTid);
 
   // Spotify
-  const ss = document.getElementById('samizdatSpotify');
-  if (ss) ss.style.display = 'block';
+  const ssSpotifyEl = document.getElementById('samizdatSpotify');
+  if (ssSpotifyEl) ssSpotifyEl.style.display = 'block';
 
   // Kırmızı yıldız
   const rs = document.getElementById('redStar');
