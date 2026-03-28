@@ -1252,6 +1252,14 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
   <div class="samizdat-line" id="slLine0">&gt; ACCESSING FORBIDDEN_ARCHIVE...</div>
   <div class="samizdat-line" id="slLine1">&gt; DECRYPTING BANNED_BOOKS... [OK]</div>
   <div class="samizdat-line samizdat-quote" id="slLine2">"Fikirler silahlardan daha güçlüdür. Onların silahlara sahip olmasına izin vermeyiz de, neden fikirlere sahip olmalarına izin verelim?" — J. Stalin</div>
+  <div id="samizdatSearch" style="display:none;margin:12px 0 8px;padding:0 4px;">
+    <div style="display:flex;gap:0;border:1px solid #5a2020;background:#0a0000;">
+      <input id="samizdatSearchInput" type="text" placeholder="> arşivi tara..." oninput="filterSamizdatBooks()"
+        style="flex:1;background:transparent;border:none;outline:none;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.78rem;padding:8px 12px;letter-spacing:1px;">
+      <span style="padding:8px 12px;color:#5a2020;font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;align-self:center;">GREP</span>
+    </div>
+    <div id="samizdatCount" style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#5a2020;letter-spacing:1px;margin-top:4px;padding:0 2px;"></div>
+  </div>
   <div class="samizdat-books" id="samizdatBookList"></div>
   <div class="nora-term-close" onclick="closeEasterEgg('samizdat')">&gt; [ KAPAT ]_</div>
 </div>
@@ -2623,6 +2631,12 @@ function eeToast(msg) {
 
 function clearAllEE() {
   EE_THEMES.forEach(c => document.body.classList.remove(c));
+  // Samizdat arama sıfırla
+  const si = document.getElementById('samizdatSearchInput');
+  if (si) si.value = '';
+  const ss = document.getElementById('samizdatSearch');
+  if (ss) ss.style.display = 'none';
+  window._samizdatBooks = [];
 
   if (matrixAnimId) { cancelAnimationFrame(matrixAnimId); matrixAnimId = null; }
   const mc = document.getElementById('matrixCanvas');
@@ -3673,6 +3687,35 @@ function startGrep() {
 
 window._sessionStart = new Date();
 
+function renderSamizdatList(list) {
+  const listEl = document.getElementById('samizdatBookList');
+  const countEl = document.getElementById('samizdatCount');
+  if (!listEl) return;
+  if (countEl) countEl.textContent = `> ${list.length} kayıt bulundu`;
+  listEl.innerHTML = list.map(b =>
+    `<div class="samizdat-book-item" onclick="closeEasterEgg('samizdat');setTimeout(()=>openDetail(${b.id}),300);">
+      <div>
+        <div class="s-title">${b.title}</div>
+        <div class="s-author">${b.author||''}${b.shelf ? ' — Raf ' + b.shelf : ''}${b.genre && b.genre !== 'gizli-raf' ? '' : ''}${b.tags ? ' · ' + b.tags.split(',').slice(0,2).join(', ') : ''}</div>
+      </div>
+      <span style="color:#5a2020;font-size:0.65rem;letter-spacing:2px;">YASAK ▶</span>
+    </div>`
+  ).join('');
+}
+
+function filterSamizdatBooks() {
+  const q = normalize(document.getElementById('samizdatSearchInput')?.value || '');
+  const all = window._samizdatBooks || [];
+  if (!q) { renderSamizdatList(all); return; }
+  const filtered = all.filter(b =>
+    fuzzyMatch(b.title, q) ||
+    fuzzyMatch(b.author||'', q) ||
+    fuzzyMatch(b.tags||'', q) ||
+    fuzzyMatch(b.shelf||'', q)
+  );
+  renderSamizdatList(filtered);
+}
+
 function startSamizdat() {
   const terminal = document.getElementById('samizdatTerminal');
   document.querySelectorAll('.samizdat-line').forEach(el => el.classList.remove('shown'));
@@ -3693,19 +3736,15 @@ function startSamizdat() {
   const bookTid = setTimeout(() => {
     const hidden = books.filter(b => b.genre === 'gizli-raf');
     const listEl = document.getElementById('samizdatBookList');
+    const searchEl = document.getElementById('samizdatSearch');
     if (!listEl) return;
     if (!hidden.length) {
       listEl.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#5a3030;font-size:0.8rem;margin-top:16px;">> arşiv boş. admin panelinden kitap ekle: genre = gizli-raf</div>';
     } else {
-      listEl.innerHTML = hidden.map(b =>
-        `<div class="samizdat-book-item" onclick="closeEasterEgg('samizdat');setTimeout(()=>openDetail(${b.id}),300);">
-          <div>
-            <div class="s-title">${b.title}</div>
-            <div class="s-author">${b.author}${b.shelf ? ' — Raf ' + b.shelf : ''}</div>
-          </div>
-          <span style="color:#5a2020;font-size:0.65rem;letter-spacing:2px;">YASAK ▶</span>
-        </div>`
-      ).join('');
+      // Arama panelini göster
+      if (searchEl) searchEl.style.display = 'block';
+      window._samizdatBooks = hidden;
+      renderSamizdatList(hidden);
     }
   }, 2800);
   borgesTimers.push(bookTid);
