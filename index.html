@@ -1684,6 +1684,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="tab-btn" id="tabIkram" onclick="switchTab('ikram')" style="color:#c8a86b;">İKRAM</button>
       <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:#9c7a3c;">GÜNLÜK</button>
       <button class="tab-btn" id="tabSahaf" onclick="switchTab('sahaf')" style="color:#c8a86b;">SAHAF</button>
+      <button class="tab-btn" id="tabReport" onclick="switchTab('report')" style="color:#1a6a6a;">📊 RAPOR</button>
       <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:#8B4513;">PANO</button>
     </div>
     <div id="panelBooks">
@@ -1949,6 +1950,12 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div id="sahafAdminList" style="display:flex;flex-direction:column;gap:14px;">
         <div style="font-family:'Courier Prime',monospace;color:#888;font-size:0.8rem;">Yükleniyor...</div>
       </div>
+    </div>
+
+    <!-- GÜNLÜK RAPOR PANELİ -->
+    <div id="panelReport" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#1a6a6a;letter-spacing:2px;margin-bottom:20px;">> GÜNLÜK RAPOR — bugünün özeti + arama analitiği</div>
+      <div id="reportContent" style="display:grid;gap:16px;"></div>
     </div>
 
     <!-- PANO MODERASYON PANELİ -->
@@ -5212,7 +5219,11 @@ async function openDetail(id) {
     <div class="detail-shelf-big">RAF ${b.shelf}</div>
     ${b.pages ? `<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:8px;">${b.pages} sayfa</div>` : ''}
     ${passportHtml}
-    ${b.description ? `<div class="detail-description">${b.description.replace(/\n/g,'<br>')}</div>` : ''}
+    ${b.description ? `
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:4px;">
+      <div style="flex:1;"><div class="detail-description">${b.description.replace(/\n/g,'<br>')}</div></div>
+      <button onclick="speakText('${(b.description||'').substring(0,400).replace(/'/g,"\\'").replace(/\n/g,' ')}')" title="Sesli oku" style="flex-shrink:0;background:none;border:1px solid var(--border-dark);padding:6px 10px;cursor:pointer;font-size:1rem;color:var(--ink-faint);margin-top:10px;" id="ttsBtn_${b.id}">🔊</button>
+    </div>` : ''}
     ${(b.pages && parseInt(b.pages) > 0) ? `
     <div class="reading-time-section">
       <div class="reading-time-title">⏱ Tahmini Okuma Süresi</div>
@@ -5713,10 +5724,13 @@ function switchTab(tab) {
   if (tab === 'diary') loadDiaryAdmin();
   if (tab === 'sahaf') loadSahafAdmin();
   if (tab === 'panoadmin') loadPanoAdmin();
+  if (tab === 'report') loadDailyReport();
   document.getElementById('panelSahaf').style.display = tab === 'sahaf' ? 'block' : 'none';
   document.getElementById('panelPanoadmin').style.display = tab === 'panoadmin' ? 'block' : 'none';
+  document.getElementById('panelReport').style.display = tab === 'report' ? 'block' : 'none';
   document.getElementById('tabSahaf').classList.toggle('active', tab === 'sahaf');
   document.getElementById('tabPanoAdmin').classList.toggle('active', tab === 'panoadmin');
+  document.getElementById('tabReport').classList.toggle('active', tab === 'report');
 }
 
 function renderMissedSearches() {
@@ -7373,6 +7387,144 @@ window.addEventListener('load', () => {
   const bookId = params.get('book');
   if (bookId) setTimeout(() => openDetail(parseInt(bookId)), 1500);
 });
+
+// ===== NORA'NIN SESİ — TTS =====
+let ttsUtterance = null;
+let ttsSpeaking = false;
+
+function speakText(text) {
+  if (!('speechSynthesis' in window)) { alert('Tarayıcınız sesli okumayı desteklemiyor.'); return; }
+
+  if (ttsSpeaking) {
+    window.speechSynthesis.cancel();
+    ttsSpeaking = false;
+    document.querySelectorAll('[id^="ttsBtn_"]').forEach(b => b.textContent = '🔊');
+    return;
+  }
+
+  const clean = text.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, ' ').trim();
+  ttsUtterance = new SpeechSynthesisUtterance(clean);
+  ttsUtterance.lang = 'tr-TR';
+  ttsUtterance.rate = 0.9;
+  ttsUtterance.pitch = 1.05;
+
+  // Türkçe ses varsa seç
+  const voices = window.speechSynthesis.getVoices();
+  const trVoice = voices.find(v => v.lang.startsWith('tr'));
+  if (trVoice) ttsUtterance.voice = trVoice;
+
+  ttsUtterance.onstart = () => {
+    ttsSpeaking = true;
+    document.querySelectorAll('[id^="ttsBtn_"]').forEach(b => b.textContent = '⏹');
+  };
+  ttsUtterance.onend = ttsUtterance.onerror = () => {
+    ttsSpeaking = false;
+    document.querySelectorAll('[id^="ttsBtn_"]').forEach(b => b.textContent = '🔊');
+  };
+
+  window.speechSynthesis.speak(ttsUtterance);
+}
+
+// ===== GÜNLÜK RAPOR & ANALİTİK =====
+async function loadDailyReport() {
+  const el = document.getElementById('reportContent');
+  if (!el) return;
+  el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;padding:20px 0;">Yükleniyor...</div>';
+
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric', weekday:'long'});
+  const todayISO = today.toISOString().split('T')[0];
+
+  // Bugünkü ikram kodları
+  let todayIkram = 0;
+  try {
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/coffee_claims?claimed_at=gte.${encodeURIComponent(monthStart)}&select=id`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (r.ok) todayIkram = (await r.json()).length;
+  } catch(e) {}
+
+  // Bugünkü sahaf teklifleri
+  let todaySahaf = 0;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/sahaf_offers?submitted_at=gte.${encodeURIComponent(todayISO)}&select=id`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (r.ok) todaySahaf = (await r.json()).length;
+  } catch(e) {}
+
+  // Pano ilanları
+  let todayPano = 0;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pano_notes?created_at=gte.${encodeURIComponent(todayISO)}&select=id`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (r.ok) todayPano = (await r.json()).length;
+  } catch(e) {}
+
+  // Oturum analitiği (localStorage)
+  const totalSearches = Object.values(searchLog).reduce((a,b)=>a+b,0);
+  const totalMissed = Object.values(missedSearchLog).reduce((a,b)=>a+b,0);
+  const topSearches = Object.entries(searchLog).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topMissed = Object.entries(missedSearchLog).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxS = topSearches[0]?.[1] || 1;
+  const maxM = topMissed[0]?.[1] || 1;
+
+  // Tür dağılımı
+  const genreMap = {};
+  books.forEach(b => (b.genre||'').split(',').map(g=>g.trim()).filter(Boolean).forEach(g => { genreMap[g]=(genreMap[g]||0)+1; }));
+  const topGenres = Object.entries(genreMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxG = topGenres[0]?.[1] || 1;
+
+  const card = (title, content, color='#1a6a6a') => `
+    <div style="background:var(--white);border:1.5px solid var(--border-dark);border-top:4px solid ${color};padding:18px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:14px;">${title}</div>
+      ${content}
+    </div>`;
+
+  const barRow = (label, val, max, color='var(--black)') => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+      <div style="width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-light);">${label}</div>
+      <div style="flex:1;background:var(--border);height:8px;"><div style="width:${Math.round(val/max*100)}%;height:100%;background:${color};"></div></div>
+      <div style="width:28px;text-align:right;color:var(--ink-faint);">${val}</div>
+    </div>`;
+
+  el.innerHTML = card(`📅 ${todayStr}`, `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div style="text-align:center;padding:14px;background:var(--paper);border:1px solid var(--border);">
+        <div style="font-family:'Special Elite',cursive;font-size:1.8rem;color:#9c7a3c;">${todayIkram}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);margin-top:4px;">İkram Kodu</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--paper);border:1px solid var(--border);">
+        <div style="font-family:'Special Elite',cursive;font-size:1.8rem;color:#c8a86b;">${todaySahaf}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);margin-top:4px;">Sahaf Teklifi</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--paper);border:1px solid var(--border);">
+        <div style="font-family:'Special Elite',cursive;font-size:1.8rem;color:#8B4513;">${todayPano}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);margin-top:4px;">Pano İlanı</div>
+      </div>
+    </div>`, '#9c7a3c') +
+
+  card(`🔍 Bu Oturumda Aramalar (${totalSearches} toplam)`,
+    topSearches.length
+      ? topSearches.map(([q,n]) => barRow('"'+q+'"', n, maxS, '#1a6a6a')).join('')
+      : '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.78rem;">Henüz arama yapılmadı.</div>') +
+
+  card(`📭 Bulunamayan Aramalar (${totalMissed} sorgu)`,
+    topMissed.length
+      ? topMissed.map(([q,n]) => barRow('"'+q+'"', n, maxM, '#c84040')).join('') +
+        '<div style="font-family:Courier Prime,monospace;font-size:0.65rem;color:var(--ink-faint);margin-top:12px;letter-spacing:1px;">↑ Bu kitapları eklemek ister misin?</div>'
+      : '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.78rem;">Bulunamayan arama yok.</div>', '#c84040') +
+
+  card(`📚 Kataloğun Özeti`,
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.78rem;padding:10px;background:var(--paper);border:1px solid var(--border);">Toplam: <strong>${books.filter(b=>b.genre!=='gizli-raf').length}</strong> kitap</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.78rem;padding:10px;background:var(--paper);border:1px solid var(--border);">Mevcut: <strong>${books.filter(b=>b.status==='available'&&b.genre!=='gizli-raf').length}</strong> kitap</div>
+    </div>` +
+    topGenres.map(([g,n]) => barRow(g, n, maxG, '#2a7a5a')).join('')) +
+
+  `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);letter-spacing:1px;padding:8px 0;">
+    ℹ Arama verileri bu oturuma aittir, sayfa yenilenince sıfırlanır.
+  </div>`;
+}
 
 // ===== checkBirthdays =====
 // Bugün doğum/ölüm günü olan yazarları kontrol et ve banner göster
