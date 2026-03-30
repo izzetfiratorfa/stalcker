@@ -749,6 +749,34 @@ body.dark .memory-box { background:#111; }
 @media(max-width:600px) { .pano-grid { grid-template-columns:repeat(2,1fr); } .pano-note { margin:8px; } }
 @media(max-width:380px) { .pano-grid { grid-template-columns:1fr; } }
 
+/* ===== MENÜ ===== */
+.menu-view { background:var(--paper);min-height:100vh; }
+.menu-hero { background:var(--black);padding:32px 24px 28px;text-align:center;border-bottom:3px double #333; }
+.menu-hero-title { font-family:'Special Elite',cursive;font-size:2rem;letter-spacing:6px;color:#f5f0e8;margin-bottom:6px; }
+.menu-hero-sub { font-family:'Courier Prime',monospace;font-size:0.72rem;color:#888;letter-spacing:3px;text-transform:uppercase; }
+.menu-wrap { max-width:680px;margin:0 auto;padding:28px 20px 100px; }
+.menu-section { margin-bottom:36px; }
+.menu-section-title { font-family:'Special Elite',cursive;font-size:1.3rem;letter-spacing:4px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:18px; }
+.menu-section-sub { font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);letter-spacing:2px;margin-bottom:16px;margin-top:-10px; }
+.menu-item { display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px dashed var(--border); }
+.menu-item:last-child { border-bottom:none; }
+.menu-item-body { flex:1;min-width:0; }
+.menu-item-name { font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:2px; }
+.menu-item-desc { font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-light);line-height:1.7;margin-bottom:4px; }
+.menu-item-note { font-family:'Courier Prime',monospace;font-size:0.65rem;color:#9c7a3c;font-style:italic;letter-spacing:1px; }
+.menu-item-book { font-family:'Courier Prime',monospace;font-size:0.65rem;color:#6a4a8a;letter-spacing:1px;cursor:pointer;border-bottom:1px dashed #6a4a8a;display:inline; }
+.menu-item-book:hover { color:#8a6ab0; }
+.menu-item-price { font-family:'Special Elite',cursive;font-size:1.1rem;color:var(--ink);white-space:nowrap;padding-top:2px; }
+.menu-gunun { background:linear-gradient(135deg,#1a0e00,#2a1a00);border:1.5px solid #9c7a3c;padding:18px 20px;margin-bottom:28px;position:relative; }
+.menu-gunun-label { font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:3px;color:#9c7a3c;text-transform:uppercase;margin-bottom:8px; }
+.menu-gunun-name { font-family:'Playfair Display',serif;font-size:1.2rem;color:#f5f0e8;font-weight:700;margin-bottom:4px; }
+.menu-gunun-desc { font-family:'Courier Prime',monospace;font-size:0.75rem;color:#b0906a;line-height:1.7; }
+.menu-gunun-price { position:absolute;top:18px;right:20px;font-family:'Special Elite',cursive;font-size:1.3rem;color:#c8a86b; }
+body.dark .menu-section-title { border-color:#444; }
+body.dark .menu-item { border-color:#222; }
+body.dark .menu-item-name { color:#e8e4db; }
+@media(max-width:600px) { .menu-wrap { padding:20px 12px 80px; } .menu-hero { padding:24px 16px 20px; } .menu-hero-title { font-size:1.5rem;letter-spacing:4px; } }
+
 .sahaf-wrap { max-width:640px;margin:0 auto;padding:32px 20px 80px; }
 .sahaf-hero { text-align:center;padding-bottom:24px;border-bottom:2px dashed var(--border);margin-bottom:32px; }
 .sahaf-title { font-family:'Special Elite',cursive;font-size:1.8rem;letter-spacing:4px;margin-bottom:8px; }
@@ -1472,6 +1500,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <button class="btn-mode" id="btnDiary" onclick="showView('diary')" style="color:#9c7a3c;">📔 Günlük</button>
     <button class="btn-mode" id="btnSahaf" onclick="showView('sahaf')" style="color:#c8a86b;">📦 Nora Sahaf</button>
     <button class="btn-mode" id="btnPano" onclick="showView('pano')" style="color:#8B4513;">📌 Pano</button>
+    <button class="btn-mode" id="btnMenu" onclick="showView('menu')" style="color:#2a6a4a;">☕ Menü</button>
+    <button class="btn-mode" id="btnMenu" onclick="showView('menu')" style="color:#9c7a3c;">☕ Menü</button>
     <button class="btn-mode" id="btnWheel" onclick="openWheel()" title="Kitap Çarkı">🎡 Çark</button>
     <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Karanlık mod">◐</button>
     <div class="user-badge" id="userBadge" style="display:none;">
@@ -1694,6 +1724,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="tab-btn" id="tabSahaf" onclick="switchTab('sahaf')" style="color:#c8a86b;">SAHAF</button>
       <button class="tab-btn" id="tabReport" onclick="switchTab('report')" style="color:#1a6a6a;">📊 RAPOR</button>
       <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:#8B4513;">PANO</button>
+      <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#9c7a3c;">☕ MENÜ</button>
     </div>
     <div id="panelBooks">
       <div class="admin-search-row">
@@ -1974,6 +2005,62 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
     </div>
 
+    <!-- MENÜ YÖNETİM PANELİ -->
+    <div id="panelMenuAdmin" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#9c7a3c;letter-spacing:2px;margin-bottom:20px;">> MENÜ YÖNETİMİ — kategoriler ve ürünler. QR ile müşteri sayfasına yönlendirilir.</div>
+
+      <!-- Yeni ürün formu -->
+      <div style="background:var(--paper);border:1px solid var(--ink);padding:20px;margin-bottom:24px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;margin-bottom:16px;">+ YENİ ÜRÜN EKLE</div>
+        <div class="form-grid">
+          <div class="field full">
+            <label>Ana Başlık (Kategori) *
+              <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);"> — örn: Sıcak İçecekler, Soğuk İçecekler, Atıştırmalıklar</span>
+            </label>
+            <input type="text" id="mCategory" placeholder="Sıcak İçecekler" list="mCategoryList">
+            <datalist id="mCategoryList"></datalist>
+          </div>
+          <div class="field full">
+            <label>Alt Başlık <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel — örn: Filtre Kahveler)</span></label>
+            <input type="text" id="mSubtitle" placeholder="Filtre Kahveler">
+          </div>
+          <div class="field full"><label>Ürün Adı *</label><input type="text" id="mName" placeholder="Türk Kahvesi"></div>
+          <div class="field full">
+            <label>İçerik / Açıklama <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel)</span></label>
+            <textarea id="mDesc" placeholder="Geleneksel yöntemle pişirilmiş, isteğe göre köpüklü..." style="width:100%;min-height:55px;resize:vertical;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);box-sizing:border-box;"></textarea>
+          </div>
+          <div class="field"><label>Fiyat *</label><input type="text" id="mPrice" placeholder="₺85"></div>
+          <div class="field">
+            <label>Not <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel — örn: Glutensiz, Vegan)</span></label>
+            <input type="text" id="mNote" placeholder="Sütü oat milk ile değiştirilebilir">
+          </div>
+          <div class="field full">
+            <label>Kitap Eşleştirmesi <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel — rafınızdaki bir kitap)</span></label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="mBookSearch" placeholder="Kitap adı yaz..." oninput="menuBookSearch()" autocomplete="off" style="flex:1;">
+              <input type="hidden" id="mBookId">
+            </div>
+            <div id="mBookResults" style="display:none;border:1px solid var(--ink);background:var(--paper);max-height:150px;overflow-y:auto;font-family:'Courier Prime',monospace;font-size:0.78rem;"></div>
+            <div id="mBookSelected" style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#6a4a8a;margin-top:4px;"></div>
+          </div>
+          <div class="field full" style="display:flex;align-items:center;gap:12px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+              <input type="checkbox" id="mIsGunun" style="width:16px;height:16px;cursor:pointer;accent-color:#9c7a3c;">
+              <span>Günün Özel İçeceği olarak işaretle</span>
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;align-items:center;">
+          <button class="btn-save" onclick="saveMenuItem()">Kaydet</button>
+          <button onclick="clearMenuForm()" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 14px;cursor:pointer;letter-spacing:1px;">Temizle</button>
+          <span id="menuMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;"></span>
+        </div>
+      </div>
+
+      <!-- Mevcut menü listesi -->
+      <div id="menuAdminList"></div>
+    </div>
+
   </div>
 </div>
 <div class="modal-overlay" id="modalOverlay">
@@ -2114,6 +2201,19 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <br>
       <button class="blind-reveal-open" onclick="revealBlindBook()">Kitabı Gör →</button>
       <button class="blind-btn" style="margin-top:12px;font-size:0.8rem;letter-spacing:2px;" onclick="drawBlindBook()">Başka Bir Kitap</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENÜ VIEW -->
+<div class="view" id="viewMenu">
+  <div class="menu-view">
+    <div class="menu-hero">
+      <div class="menu-hero-title">NORA KİTAPLIĞI</div>
+      <div class="menu-hero-sub">İçecek & Yiyecek Menüsü</div>
+    </div>
+    <div class="menu-wrap" id="menuContent">
+      <div style="text-align:center;padding:48px 0;font-family:'Courier Prime',monospace;font-size:0.8rem;color:var(--ink-faint);letter-spacing:2px;">yükleniyor...</div>
     </div>
   </div>
 </div>
@@ -2520,8 +2620,8 @@ function showLoading(id) {
 async function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.add('active');
-  ['btnCustomer','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
-  const btnMap = {customer:'btnCustomer', quotes:'btnQuotes', universe:'btnUniverse', stats:'btnStats', admin:'btnAdmin', profile:'btnProfile', askida:'btnAskida', bagiscilar:'btnAskida', radio:'btnRadio', mood:'btnMood', blind:'btnBlind', diary:'btnDiary', sahaf:'btnSahaf', pano:'btnPano'};
+  ['btnCustomer','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano','btnMenu'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+  const btnMap = {customer:'btnCustomer', quotes:'btnQuotes', universe:'btnUniverse', stats:'btnStats', admin:'btnAdmin', profile:'btnProfile', askida:'btnAskida', bagiscilar:'btnAskida', radio:'btnRadio', mood:'btnMood', blind:'btnBlind', diary:'btnDiary', sahaf:'btnSahaf', pano:'btnPano', menu:'btnMenu'};
   if (btnMap[v]) document.getElementById(btnMap[v]).classList.add('active');
   // dropdown item active state
   ['btnAskidaKitaplar','btnAskidaBagis'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
@@ -2539,6 +2639,7 @@ async function showView(v) {
   if (v === 'diary') { loadDiaryView(); }
   if (v === 'sahaf') { loadSahafOffers(); }
   if (v === 'pano') { loadPanoNotes(); }
+  if (v === 'menu') { loadMenuView(); }
   if (v === 'universe') {
     await fetchBooks();
     // D3 yüklenene kadar bekle (defer ile yükleniyor)
@@ -5764,12 +5865,15 @@ function switchTab(tab) {
   if (tab === 'sahaf') loadSahafAdmin();
   if (tab === 'panoadmin') loadPanoAdmin();
   if (tab === 'report') loadDailyReport();
+  if (tab === 'menuadmin') loadMenuAdmin();
   document.getElementById('panelSahaf').style.display = tab === 'sahaf' ? 'block' : 'none';
   document.getElementById('panelPanoadmin').style.display = tab === 'panoadmin' ? 'block' : 'none';
   document.getElementById('panelReport').style.display = tab === 'report' ? 'block' : 'none';
+  document.getElementById('panelMenuAdmin').style.display = tab === 'menuadmin' ? 'block' : 'none';
   document.getElementById('tabSahaf').classList.toggle('active', tab === 'sahaf');
   document.getElementById('tabPanoAdmin').classList.toggle('active', tab === 'panoadmin');
   document.getElementById('tabReport').classList.toggle('active', tab === 'report');
+  document.getElementById('tabMenuAdmin').classList.toggle('active', tab === 'menuadmin');
 }
 
 function renderMissedSearches() {
@@ -7112,7 +7216,260 @@ async function likePanoNote(id, btn) {
   } catch(e) {}
 }
 
-// PANO MODERASYONu
+// ===== MENÜ SİSTEMİ =====
+async function loadMenuView() {
+  const el = document.getElementById('menuContent');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:48px 0;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);letter-spacing:2px;">yükleniyor...</div>';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?order=sort_order.asc,id.asc&select=*`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (!res.ok) throw new Error('tablo yok');
+    const items = await res.json();
+    renderMenuView(items);
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);">Menü henüz oluşturulmadı.</div>';
+  }
+}
+
+function renderMenuView(items) {
+  const el = document.getElementById('menuContent');
+  if (!el || !items.length) {
+    if (el) el.innerHTML = '<div style="text-align:center;padding:40px;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);">Menüde henüz ürün yok.</div>';
+    return;
+  }
+
+  // Günün özel içeceği
+  const gunun = items.find(i => i.is_gunun);
+  let html = '';
+  if (gunun) {
+    html += `<div class="menu-gunun">
+      <div class="menu-gunun-label">✦ Günün Özel İçeceği</div>
+      <div class="menu-gunun-name">${gunun.name}</div>
+      ${gunun.description ? `<div class="menu-gunun-desc">${gunun.description}</div>` : ''}
+      ${gunun.note ? `<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#9c7a3c;margin-top:6px;font-style:italic;">${gunun.note}</div>` : ''}
+      <div class="menu-gunun-price">${gunun.price || ''}</div>
+    </div>`;
+  }
+
+  // Kategorilere göre grupla
+  const cats = {};
+  items.forEach(i => {
+    const cat = i.category || 'Diğer';
+    if (!cats[cat]) cats[cat] = { sub: {}, items: [] };
+    const sub = i.subtitle || '';
+    if (sub) {
+      if (!cats[cat].sub[sub]) cats[cat].sub[sub] = [];
+      cats[cat].sub[sub].push(i);
+    } else {
+      cats[cat].items.push(i);
+    }
+  });
+
+  Object.entries(cats).forEach(([cat, data]) => {
+    html += `<div class="menu-section">
+      <div class="menu-section-title">${cat}</div>`;
+
+    // Alt başlıksız ürünler
+    data.items.forEach(i => { html += renderMenuItemHTML(i); });
+
+    // Alt başlıklı gruplar
+    Object.entries(data.sub).forEach(([sub, subItems]) => {
+      html += `<div class="menu-section-sub">${sub}</div>`;
+      subItems.forEach(i => { html += renderMenuItemHTML(i); });
+    });
+
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function renderMenuItemHTML(i) {
+  const bookLink = i.book_id
+    ? `<div class="menu-item-book" onclick="showView('customer');setTimeout(()=>openDetail(${i.book_id}),500);">📖 ${i.book_title || 'Kitabı gör'}</div>`
+    : '';
+  return `<div class="menu-item">
+    <div class="menu-item-body">
+      <div class="menu-item-name">${i.name}</div>
+      ${i.description ? `<div class="menu-item-desc">${i.description}</div>` : ''}
+      ${i.note ? `<div class="menu-item-note">* ${i.note}</div>` : ''}
+      ${bookLink}
+    </div>
+    <div class="menu-item-price">${i.price || ''}</div>
+  </div>`;
+}
+
+// Admin — menü yükle
+async function loadMenuAdmin() {
+  // Mevcut kategorileri datalist'e doldur
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?select=category,subtitle&order=id.asc`,
+    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+  if (res.ok) {
+    const rows = await res.json();
+    const cats = [...new Set(rows.map(r => r.category).filter(Boolean))];
+    const dl = document.getElementById('mCategoryList');
+    if (dl) dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+  }
+  renderMenuAdminList();
+}
+
+async function renderMenuAdminList() {
+  const el = document.getElementById('menuAdminList');
+  if (!el) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?order=sort_order.asc,id.asc&select=*`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+    if (!res.ok) throw new Error('Tablo bulunamadı — SQL çalıştır');
+    const items = await res.json();
+    if (!items.length) { el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;">Henüz ürün yok.</div>'; return; }
+
+    // Kategorilere göre grupla
+    const cats = {};
+    items.forEach(i => {
+      const c = i.category || 'Diğer';
+      if (!cats[c]) cats[c] = [];
+      cats[c].push(i);
+    });
+
+    el.innerHTML = Object.entries(cats).map(([cat, catItems]) => `
+      <div style="margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#9c7a3c;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">${cat}</div>
+        ${catItems.map(i => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--border);flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+              <div style="font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700;">${i.name}${i.is_gunun ? ' <span style="color:#9c7a3c;font-size:0.7rem;">✦ Günün</span>' : ''}</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">${i.subtitle ? i.subtitle+' · ' : ''}${i.price || ''}</div>
+              ${i.description ? `<div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-light);margin-top:2px;">${i.description.substring(0,60)}${i.description.length>60?'...':''}</div>` : ''}
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="editMenuItem(${i.id})" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:4px 10px;cursor:pointer;">Düz</button>
+              <button onclick="deleteMenuItem(${i.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:4px 10px;cursor:pointer;">Sil</button>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="font-family:'Courier Prime',monospace;color:#c84040;font-size:0.8rem;">${e.message}<br><br>Şu SQL'i çalıştır:<br><code style="font-size:0.7rem;">CREATE TABLE menu_items (id BIGSERIAL PRIMARY KEY, category TEXT, subtitle TEXT, name TEXT NOT NULL, description TEXT, price TEXT, note TEXT, book_id INT, book_title TEXT, is_gunun BOOLEAN DEFAULT false, sort_order INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW());<br>ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;<br>CREATE POLICY "public_read_menu" ON menu_items FOR SELECT USING (true);<br>CREATE POLICY "public_insert_menu" ON menu_items FOR INSERT WITH CHECK (true);<br>CREATE POLICY "public_update_menu" ON menu_items FOR UPDATE USING (true);<br>CREATE POLICY "public_delete_menu" ON menu_items FOR DELETE USING (true);</code></div>`;
+  }
+}
+
+function menuBookSearch() {
+  const q = normalize(document.getElementById('mBookSearch')?.value || '');
+  const res = document.getElementById('mBookResults');
+  if (!q || q.length < 2) { res.style.display = 'none'; return; }
+  const matches = books.filter(b => b.genre !== 'gizli-raf' && (fuzzyMatch(b.title, q) || fuzzyMatch(b.author||'', q))).slice(0, 6);
+  if (!matches.length) { res.style.display = 'none'; return; }
+  res.innerHTML = matches.map(b => `
+    <div style="padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='var(--black)';this.style.color='var(--white)'"
+      onmouseout="this.style.background='';this.style.color=''"
+      onclick="selectMenuBook(${b.id},'${b.title.replace(/'/g,"\\'")}')">${b.title}${b.author?' — '+b.author:''}</div>`).join('');
+  res.style.display = 'block';
+}
+
+function selectMenuBook(id, title) {
+  document.getElementById('mBookSearch').value = title;
+  document.getElementById('mBookId').value = id;
+  document.getElementById('mBookResults').style.display = 'none';
+  document.getElementById('mBookSelected').textContent = '✓ ' + title;
+}
+
+async function saveMenuItem() {
+  const name = document.getElementById('mName').value.trim();
+  const price = document.getElementById('mPrice').value.trim();
+  if (!name || !price) { const m = document.getElementById('menuMsg'); m.textContent = 'Ad ve fiyat zorunlu.'; m.style.color = '#c84040'; return; }
+
+  const bookId = document.getElementById('mBookId').value;
+  const bookTitle = bookId ? document.getElementById('mBookSearch').value.trim() : null;
+  const isGunun = document.getElementById('mIsGunun').checked;
+
+  // Günün özel ise diğerlerini kaldır
+  if (isGunun) {
+    await fetch(`${SUPABASE_URL}/rest/v1/menu_items?is_gunun=eq.true`,
+      { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_gunun: false }) });
+  }
+
+  const item = {
+    category: document.getElementById('mCategory').value.trim() || 'Genel',
+    subtitle: document.getElementById('mSubtitle').value.trim() || null,
+    name,
+    description: document.getElementById('mDesc').value.trim() || null,
+    price,
+    note: document.getElementById('mNote').value.trim() || null,
+    book_id: bookId ? parseInt(bookId) : null,
+    book_title: bookTitle || null,
+    is_gunun: isGunun,
+    sort_order: 0
+  };
+
+  const editId = document.getElementById('mEditId')?.value;
+  if (editId) {
+    await fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=eq.${editId}`,
+      { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(item) });
+  } else {
+    await fetch(`${SUPABASE_URL}/rest/v1/menu_items`,
+      { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(item) });
+  }
+
+  clearMenuForm();
+  const m = document.getElementById('menuMsg');
+  m.textContent = '✓ Kaydedildi.'; m.style.color = '#2a7a2a';
+  setTimeout(() => m.textContent = '', 2500);
+  renderMenuAdminList();
+}
+
+async function editMenuItem(id) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=eq.${id}&select=*`,
+    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+  if (!res.ok) return;
+  const rows = await res.json();
+  if (!rows.length) return;
+  const i = rows[0];
+  document.getElementById('mCategory').value = i.category || '';
+  document.getElementById('mSubtitle').value = i.subtitle || '';
+  document.getElementById('mName').value = i.name || '';
+  document.getElementById('mDesc').value = i.description || '';
+  document.getElementById('mPrice').value = i.price || '';
+  document.getElementById('mNote').value = i.note || '';
+  document.getElementById('mIsGunun').checked = !!i.is_gunun;
+  if (i.book_id) {
+    document.getElementById('mBookId').value = i.book_id;
+    document.getElementById('mBookSearch').value = i.book_title || '';
+    document.getElementById('mBookSelected').textContent = '✓ ' + (i.book_title || '');
+  }
+  // Gizli edit id alanı
+  let editEl = document.getElementById('mEditId');
+  if (!editEl) {
+    editEl = document.createElement('input');
+    editEl.type = 'hidden'; editEl.id = 'mEditId';
+    document.getElementById('mName').parentElement.appendChild(editEl);
+  }
+  editEl.value = id;
+  document.getElementById('mName').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function deleteMenuItem(id) {
+  if (!confirm('Silinsin mi?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=eq.${id}`,
+    { method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+  renderMenuAdminList();
+}
+
+function clearMenuForm() {
+  ['mCategory','mSubtitle','mName','mDesc','mPrice','mNote','mBookSearch'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('mBookId').value = '';
+  document.getElementById('mBookSelected').textContent = '';
+  document.getElementById('mIsGunun').checked = false;
+  const editEl = document.getElementById('mEditId');
+  if (editEl) editEl.value = '';
+}
+
+// ===== PANO MODERASYONu =====
 async function loadPanoAdmin() {
   const el = document.getElementById('panoAdminList');
   if (!el) return;
