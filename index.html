@@ -757,6 +757,10 @@ body.dark .memory-box { background:#111; }
 .menu-drag-handle { font-size:1.1rem;color:var(--ink-faint);cursor:grab;flex-shrink:0;padding:0 4px;letter-spacing:-2px; }
 .menu-drag-handle:active { cursor:grabbing; }
 
+.menu-cat-sort-item.cat-drag-over { border-top:2px solid #9c7a3c; }
+.menu-section.closed .menu-section-toggle { transform:rotate(-90deg); }
+.menu-section.closed .menu-section-body { max-height:0 !important; }
+
 .menu-cat-btn { display:inline-block;padding:10px 18px;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap; }
 .menu-cat-btn:hover { color:#f5f0e8; }
 .menu-cat-btn.active { color:#f5f0e8;border-bottom-color:#9c7a3c; }
@@ -7365,12 +7369,12 @@ function renderMenuView(items) {
       subItems.forEach(i => { bodyHtml += renderMenuItemHTML(i); });
     });
 
-    html += `<div class="menu-section" id="menuCat_${idx}">
+    html += `<div class="menu-section closed" id="menuCat_${idx}">
       <div class="menu-section-header" onclick="toggleMenuSection(this)">
         <div class="menu-section-title" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">${cat}</div>
         <span class="menu-section-toggle">▾</span>
       </div>
-      <div class="menu-section-body" style="max-height:9999px;">
+      <div class="menu-section-body" style="max-height:0;">
         ${bodyHtml}
       </div>
     </div>`;
@@ -7479,7 +7483,7 @@ async function renderMenuAdminList() {
     const items = await res.json();
     if (!items.length) { el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;">Henüz ürün yok.</div>'; return; }
 
-    // Kategorilere göre grupla, sıra koru
+    // Kategorilere göre grupla, kategori sırasını ilk ürünün sort_order'ından al
     const cats = {};
     const catOrder = [];
     items.forEach(i => {
@@ -7490,11 +7494,16 @@ async function renderMenuAdminList() {
 
     el.innerHTML = `
       <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:12px;">
-        ⠿ Satırları sürükleyerek sırala — değişiklikler otomatik kaydedilir
-      </div>` +
-      catOrder.map(cat => `
-      <div style="margin-bottom:24px;">
-        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#9c7a3c;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">${cat}</div>
+        ⠿ Ürünleri ve kategorileri sürükle-bırak ile sırala — otomatik kaydedilir
+      </div>
+      <div id="menuCatSortList">` +
+      catOrder.map((cat, catIdx) => `
+      <div class="menu-cat-sort-item" draggable="true" data-cat="${encodeURIComponent(cat)}" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);cursor:grab;" class="menu-cat-drag-handle">
+          <span style="font-size:1.1rem;color:var(--ink-faint);letter-spacing:-2px;">⠿</span>
+          <span style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#9c7a3c;text-transform:uppercase;flex:1;">${cat}</span>
+          <span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);">${cats[cat].length} ürün</span>
+        </div>
         <div class="menu-sort-list" id="sortList_${encodeURIComponent(cat)}" data-category="${cat}">
           ${cats[cat].map(i => `
           <div class="menu-sort-item" draggable="true" data-id="${i.id}" data-sort="${i.sort_order}">
@@ -7519,7 +7528,7 @@ async function renderMenuAdminList() {
             </div>
           </div>`).join('')}
         </div>
-      </div>`).join('');
+      </div>`).join('') + `</div>`;
 
     // Drag & drop başlat
     initMenuDragDrop();
@@ -7530,13 +7539,17 @@ async function renderMenuAdminList() {
 }
 
 let _menuDragSrc = null;
+let _menuCatDragSrc = null;
 
 function initMenuDragDrop() {
+  // Ürün sıralaması
   document.querySelectorAll('.menu-sort-list').forEach(list => {
     list.querySelectorAll('.menu-sort-item').forEach(item => {
       item.addEventListener('dragstart', e => {
         _menuDragSrc = item;
+        _menuCatDragSrc = null;
         e.dataTransfer.effectAllowed = 'move';
+        e.stopPropagation();
         item.style.opacity = '0.4';
       });
       item.addEventListener('dragend', () => {
@@ -7545,42 +7558,110 @@ function initMenuDragDrop() {
       });
       item.addEventListener('dragover', e => {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        if (item !== _menuDragSrc) {
+        e.stopPropagation();
+        if (item !== _menuDragSrc && _menuDragSrc) {
           document.querySelectorAll('.menu-sort-item').forEach(i => i.classList.remove('drag-over'));
           item.classList.add('drag-over');
         }
       });
       item.addEventListener('drop', e => {
         e.preventDefault();
+        e.stopPropagation();
         if (!_menuDragSrc || _menuDragSrc === item) return;
         const list = item.closest('.menu-sort-list');
         if (!list || !list.contains(_menuDragSrc)) return;
-        // Hedefe göre önüne/arkasına yerleştir
         const allItems = [...list.querySelectorAll('.menu-sort-item')];
         const srcIdx = allItems.indexOf(_menuDragSrc);
         const tgtIdx = allItems.indexOf(item);
-        if (srcIdx < tgtIdx) {
-          list.insertBefore(_menuDragSrc, item.nextSibling);
-        } else {
-          list.insertBefore(_menuDragSrc, item);
-        }
+        if (srcIdx < tgtIdx) list.insertBefore(_menuDragSrc, item.nextSibling);
+        else list.insertBefore(_menuDragSrc, item);
         item.classList.remove('drag-over');
         saveMenuOrder(list);
       });
     });
   });
+
+  // Kategori sıralaması
+  const catList = document.getElementById('menuCatSortList');
+  if (!catList) return;
+  document.querySelectorAll('.menu-cat-sort-item').forEach(catItem => {
+    catItem.addEventListener('dragstart', e => {
+      if (e.target.closest('.menu-sort-item')) return; // ürün sürükleniyorsa iptal
+      _menuCatDragSrc = catItem;
+      _menuDragSrc = null;
+      e.dataTransfer.effectAllowed = 'move';
+      catItem.style.opacity = '0.4';
+    });
+    catItem.addEventListener('dragend', () => {
+      catItem.style.opacity = '1';
+      document.querySelectorAll('.menu-cat-sort-item').forEach(i => i.classList.remove('cat-drag-over'));
+    });
+    catItem.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (_menuCatDragSrc && catItem !== _menuCatDragSrc) {
+        document.querySelectorAll('.menu-cat-sort-item').forEach(i => i.classList.remove('cat-drag-over'));
+        catItem.classList.add('cat-drag-over');
+      }
+    });
+    catItem.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!_menuCatDragSrc || _menuCatDragSrc === catItem) return;
+      const allCats = [...catList.querySelectorAll('.menu-cat-sort-item')];
+      const srcIdx = allCats.indexOf(_menuCatDragSrc);
+      const tgtIdx = allCats.indexOf(catItem);
+      if (srcIdx < tgtIdx) catList.insertBefore(_menuCatDragSrc, catItem.nextSibling);
+      else catList.insertBefore(_menuCatDragSrc, catItem);
+      catItem.classList.remove('cat-drag-over');
+      saveAllMenuOrder();
+    });
+  });
+}
+
+async function saveAllMenuOrder() {
+  // Tüm kategorilerin yeni sırasına göre sort_order güncelle
+  // Kategori bazlı: catIdx * 1000 + itemIdx
+  const catItems = [...document.querySelectorAll('.menu-cat-sort-item')];
+  const updates = [];
+  catItems.forEach((catEl, catIdx) => {
+    const items = [...catEl.querySelectorAll('.menu-sort-item')];
+    items.forEach((itemEl, itemIdx) => {
+      updates.push({ id: parseInt(itemEl.dataset.id), sort_order: catIdx * 1000 + itemIdx });
+    });
+  });
+
+  const indicator = document.createElement('div');
+  indicator.style.cssText = 'font-family:Courier Prime,monospace;font-size:0.65rem;color:#9c7a3c;margin-bottom:8px;';
+  indicator.textContent = '↻ kaydediliyor...';
+  document.getElementById('menuAdminList')?.prepend(indicator);
+
+  try {
+    await Promise.all(updates.map(u =>
+      fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=eq.${u.id}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sort_order: u.sort_order })
+      })
+    ));
+    indicator.textContent = '✓ sıra kaydedildi';
+    indicator.style.color = '#2a7a2a';
+  } catch(e) {
+    indicator.textContent = '✗ hata';
+    indicator.style.color = '#c84040';
+  }
+  setTimeout(() => indicator.remove(), 2000);
 }
 
 async function saveMenuOrder(list) {
+  // Sadece tek bir kategorinin ürün sırası değişti
+  const catEl = list.closest('.menu-cat-sort-item');
+  const catIdx = catEl ? [...document.querySelectorAll('.menu-cat-sort-item')].indexOf(catEl) : 0;
   const items = [...list.querySelectorAll('.menu-sort-item')];
-  const updates = items.map((el, idx) => ({ id: parseInt(el.dataset.id), sort_order: idx }));
+  const updates = items.map((el, idx) => ({ id: parseInt(el.dataset.id), sort_order: catIdx * 1000 + idx }));
 
-  // Gösterge
   const indicator = document.createElement('span');
   indicator.style.cssText = 'font-family:Courier Prime,monospace;font-size:0.65rem;color:#9c7a3c;margin-left:8px;';
   indicator.textContent = '↻ kaydediliyor...';
-  list.parentElement.querySelector('[data-category]')?.before(indicator);
+  list.closest('.menu-cat-sort-item')?.querySelector('.menu-cat-drag-handle')?.append(indicator);
 
   try {
     await Promise.all(updates.map(u =>
