@@ -5872,23 +5872,31 @@ function renderStats() {
 }
 
 function switchTab(tab) {
-  const panels = ['Books','Stats','Quotes','Askida','Missed','Gizli','Yazarlar','Gunun','Spotify','Ikram','Diary','Sahaf','Panoadmin','Report','MenuAdmin'];
-  panels.forEach(p => {
-    const el = document.getElementById('panel' + p);
-    if (el) el.style.display = (tab === p.toLowerCase()) ? 'block' : 'none';
-  });
-  // özel eşleşmeler
-  const panelPano = document.getElementById('panelPanoadmin');
-  if (panelPano) panelPano.style.display = tab === 'panoadmin' ? 'block' : 'none';
+  try {
+    const panelMap = {
+      'books':'panelBooks','stats':'panelStats','quotes':'panelQuotes',
+      'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
+      'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
+      'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin'
+    };
+    Object.entries(panelMap).forEach(([key, panelId]) => {
+      const el = document.getElementById(panelId);
+      if (el) el.style.display = (tab === key) ? 'block' : 'none';
+    });
 
-  const tabs = ['Books','Stats','Quotes','Askida','Missed','Gizli','Yazarlar','Gunun','Spotify','Ikram','Diary','Sahaf','PanoAdmin','Report','MenuAdmin'];
-  tabs.forEach(t => {
-    const el = document.getElementById('tab' + t);
-    if (el) el.classList.toggle('active', tab === t.toLowerCase());
-  });
-  // özel eşleşmeler
-  const tabPano = document.getElementById('tabPanoAdmin');
-  if (tabPano) tabPano.classList.toggle('active', tab === 'panoadmin');
+    const tabMap = {
+      'books':'tabBooks','stats':'tabStats','quotes':'tabQuotes',
+      'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
+      'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
+      'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin'
+    };
+    Object.entries(tabMap).forEach(([key, tabId]) => {
+      const el = document.getElementById(tabId);
+      if (el) el.classList.toggle('active', tab === key);
+    });
+  } catch(e) { console.warn('switchTab hata:', e); }
 
   if (tab === 'stats') renderStatsPanel();
   if (tab === 'quotes') renderAdminQuotes();
