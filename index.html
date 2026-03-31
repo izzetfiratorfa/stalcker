@@ -757,6 +757,17 @@ body.dark .memory-box { background:#111; }
 .menu-drag-handle { font-size:1.1rem;color:var(--ink-faint);cursor:grab;flex-shrink:0;padding:0 4px;letter-spacing:-2px; }
 .menu-drag-handle:active { cursor:grabbing; }
 
+.menu-cat-btn { display:inline-block;padding:10px 18px;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap; }
+.menu-cat-btn:hover { color:#f5f0e8; }
+.menu-cat-btn.active { color:#f5f0e8;border-bottom-color:#9c7a3c; }
+.menu-section-header { display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 0;user-select:none; }
+.menu-section-header:hover .menu-section-title { opacity:0.8; }
+.menu-section-toggle { font-family:'Courier Prime',monospace;font-size:0.9rem;color:var(--ink-faint);transition:transform 0.2s;flex-shrink:0;margin-left:12px; }
+.menu-section.closed .menu-section-toggle { transform:rotate(-90deg); }
+.menu-section-body { overflow:hidden;transition:max-height 0.3s ease; }
+.menu-section.closed .menu-section-body { max-height:0 !important; }
+body.dark .menu-cat-btn.active { color:#f5f0e8;border-bottom-color:#9c7a3c; }
+
 .menu-view { background:var(--paper);min-height:100vh; }
 .menu-hero { background:var(--black);padding:32px 24px 28px;text-align:center;border-bottom:3px double #333; }
 .menu-hero-title { font-family:'Special Elite',cursive;font-size:2rem;letter-spacing:6px;color:#f5f0e8;margin-bottom:6px; }
@@ -2316,6 +2327,10 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <div class="menu-hero">
       <div class="menu-hero-title">Nora Menü</div>
       <div class="menu-hero-sub" id="menuHeroSub">Kitaplar eşliğinde</div>
+    </div>
+    <!-- Sabit kategori nav -->
+    <div id="menuCatNav" style="display:none;position:sticky;top:0;z-index:50;background:var(--black);border-bottom:1px solid #333;overflow-x:auto;white-space:nowrap;padding:0;-webkit-overflow-scrolling:touch;">
+      <div id="menuCatNavInner" style="display:inline-flex;gap:0;padding:0;"></div>
     </div>
     <div id="menuSpecialWrap" style="display:none;"></div>
     <div id="menuContent"></div>
@@ -7302,7 +7317,7 @@ function renderMenuView(items) {
   const gunun = visibleItems.find(i => i.is_gunun);
   let html = '';
   if (gunun) {
-    html += `<div class="menu-gunun">
+    html += `<div class="menu-gunun" style="margin:16px 20px;">
       <div class="menu-gunun-label">✦ Günün Özel İçeceği</div>
       <div class="menu-gunun-name">${gunun.name}</div>
       ${gunun.description ? `<div class="menu-gunun-desc">${gunun.description}</div>` : ''}
@@ -7315,11 +7330,12 @@ function renderMenuView(items) {
     </div>`;
   }
 
-  // Kategorilere göre grupla
+  // Kategorilere göre grupla, sıra koru
   const cats = {};
+  const catOrder = [];
   visibleItems.forEach(i => {
     const cat = i.category || 'Diğer';
-    if (!cats[cat]) cats[cat] = { sub: {}, items: [] };
+    if (!cats[cat]) { cats[cat] = { sub: {}, items: [] }; catOrder.push(cat); }
     const sub = i.subtitle || '';
     if (sub) {
       if (!cats[cat].sub[sub]) cats[cat].sub[sub] = [];
@@ -7329,23 +7345,72 @@ function renderMenuView(items) {
     }
   });
 
-  Object.entries(cats).forEach(([cat, data]) => {
-    html += `<div class="menu-section">
-      <div class="menu-section-title">${cat}</div>`;
+  // Kategori nav güncelle
+  const nav = document.getElementById('menuCatNav');
+  const navInner = document.getElementById('menuCatNavInner');
+  if (nav && navInner && catOrder.length > 1) {
+    navInner.innerHTML = catOrder.map((cat, idx) =>
+      `<button class="menu-cat-btn${idx===0?' active':''}" onclick="menuScrollTo('menuCat_${idx}', this)">${cat}</button>`
+    ).join('');
+    nav.style.display = 'block';
+  }
 
-    // Alt başlıksız ürünler
-    data.items.forEach(i => { html += renderMenuItemHTML(i); });
-
-    // Alt başlıklı gruplar
+  // Accordion bölümleri
+  catOrder.forEach((cat, idx) => {
+    const data = cats[cat];
+    let bodyHtml = '';
+    data.items.forEach(i => { bodyHtml += renderMenuItemHTML(i); });
     Object.entries(data.sub).forEach(([sub, subItems]) => {
-      html += `<div class="menu-section-sub">${sub}</div>`;
-      subItems.forEach(i => { html += renderMenuItemHTML(i); });
+      bodyHtml += `<div class="menu-section-sub">${sub}</div>`;
+      subItems.forEach(i => { bodyHtml += renderMenuItemHTML(i); });
     });
 
-    html += '</div>';
+    html += `<div class="menu-section" id="menuCat_${idx}">
+      <div class="menu-section-header" onclick="toggleMenuSection(this)">
+        <div class="menu-section-title" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">${cat}</div>
+        <span class="menu-section-toggle">▾</span>
+      </div>
+      <div class="menu-section-body" style="max-height:9999px;">
+        ${bodyHtml}
+      </div>
+    </div>`;
   });
 
   el.innerHTML = html;
+}
+
+function toggleMenuSection(header) {
+  const section = header.closest('.menu-section');
+  if (!section) return;
+  const body = section.querySelector('.menu-section-body');
+  const isOpen = !section.classList.contains('closed');
+  if (isOpen) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      section.classList.add('closed');
+      body.style.maxHeight = '0';
+    });
+  } else {
+    section.classList.remove('closed');
+    body.style.maxHeight = body.scrollHeight + 9999 + 'px';
+    setTimeout(() => { body.style.maxHeight = '9999px'; }, 320);
+  }
+}
+
+function menuScrollTo(id, btn) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  // Kapalıysa aç
+  if (target.classList.contains('closed')) {
+    const header = target.querySelector('.menu-section-header');
+    if (header) toggleMenuSection(header);
+  }
+  const navH = document.getElementById('menuCatNav')?.offsetHeight || 44;
+  const top = target.getBoundingClientRect().top + window.scrollY - navH - 8;
+  window.scrollTo({ top, behavior: 'smooth' });
+  // Aktif nav butonu
+  document.querySelectorAll('.menu-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 }
 
 function renderMenuItemHTML(i) {
