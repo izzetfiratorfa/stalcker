@@ -2076,7 +2076,14 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
             <label>İçerik / Açıklama <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel)</span></label>
             <textarea id="mDesc" placeholder="Geleneksel yöntemle pişirilmiş, isteğe göre köpüklü..." style="width:100%;min-height:55px;resize:vertical;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);box-sizing:border-box;"></textarea>
           </div>
-          <div class="field"><label>Fiyat *</label><input type="text" id="mPrice" placeholder="₺85"></div>
+          <div class="field">
+            <label>Fiyat <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(Küçük veya tek boy)</span></label>
+            <input type="text" id="mPriceS" placeholder="₺65">
+          </div>
+          <div class="field">
+            <label>Fiyat <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(Büyük — doldurmazsan görünmez)</span></label>
+            <input type="text" id="mPriceL" placeholder="₺75">
+          </div>
           <div class="field">
             <label>Not <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel — örn: Glutensiz, Vegan)</span></label>
             <input type="text" id="mNote" placeholder="Sütü oat milk ile değiştirilebilir">
@@ -7298,7 +7305,11 @@ function renderMenuView(items) {
       <div class="menu-gunun-name">${gunun.name}</div>
       ${gunun.description ? `<div class="menu-gunun-desc">${gunun.description}</div>` : ''}
       ${gunun.note ? `<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#9c7a3c;margin-top:6px;font-style:italic;">${gunun.note}</div>` : ''}
-      <div class="menu-gunun-price">${gunun.price || ''}</div>
+      <div class="menu-gunun-price">${
+        gunun.price && gunun.price.includes('|')
+          ? (() => { const p=gunun.price.split('|'); return `<span style="font-size:0.8rem;opacity:0.7;">K </span>${p[0].replace('K:','')} <span style="font-size:0.8rem;opacity:0.7;">/ B </span>${p[1].replace('B:','')}`; })()
+          : (gunun.price || '')
+      }</div>
     </div>`;
   }
 
@@ -7339,6 +7350,23 @@ function renderMenuItemHTML(i) {
   const bookLink = i.book_id
     ? `<div class="menu-item-book" onclick="showView('customer');setTimeout(()=>openDetail(${i.book_id}),500);">📖 ${i.book_title || 'Kitabı gör'}</div>`
     : '';
+
+  // Fiyat gösterimi
+  let priceHtml = '';
+  if (i.price && i.price.includes('|')) {
+    const parts = i.price.split('|');
+    const small = (parts[0]||'').replace('K:','').trim();
+    const large = (parts[1]||'').replace('B:','').trim();
+    priceHtml = `<div class="menu-item-price" style="text-align:right;line-height:1.6;">
+      <div style="font-size:0.7rem;color:var(--ink-faint);font-family:'Courier Prime',monospace;letter-spacing:1px;">K</div>
+      <div>${small}</div>
+      <div style="font-size:0.7rem;color:var(--ink-faint);font-family:'Courier Prime',monospace;letter-spacing:1px;margin-top:4px;">B</div>
+      <div>${large}</div>
+    </div>`;
+  } else {
+    priceHtml = `<div class="menu-item-price">${i.price || ''}</div>`;
+  }
+
   return `<div class="menu-item">
     <div class="menu-item-body">
       <div class="menu-item-name">${i.name}</div>
@@ -7346,7 +7374,7 @@ function renderMenuItemHTML(i) {
       ${i.note ? `<div class="menu-item-note">* ${i.note}</div>` : ''}
       ${bookLink}
     </div>
-    <div class="menu-item-price">${i.price || ''}</div>
+    ${priceHtml}
   </div>`;
 }
 
@@ -7520,7 +7548,10 @@ function selectMenuBook(id, title) {
 
 async function saveMenuItem() {
   const name = document.getElementById('mName').value.trim();
-  const price = document.getElementById('mPrice').value.trim();
+  const priceS = document.getElementById('mPriceS').value.trim();
+  const priceL = document.getElementById('mPriceL').value.trim();
+  // Fiyatı birleştir: sadece küçük varsa tek fiyat, ikisi de varsa "K:x / B:y" formatı
+  const price = priceS && priceL ? `K:${priceS}|B:${priceL}` : (priceS || priceL || '');
   if (!name) { const m = document.getElementById('menuMsg'); m.textContent = 'Ürün adı zorunlu.'; m.style.color = '#c84040'; return; }
 
   const bookId = document.getElementById('mBookId').value;
@@ -7587,7 +7618,15 @@ async function editMenuItem(id) {
   document.getElementById('mSubtitle').value = i.subtitle || '';
   document.getElementById('mName').value = i.name || '';
   document.getElementById('mDesc').value = i.description || '';
-  document.getElementById('mPrice').value = i.price || '';
+  // Fiyatı küçük/büyük olarak ayır
+  if (i.price && i.price.includes('|')) {
+    const parts = i.price.split('|');
+    document.getElementById('mPriceS').value = (parts[0]||'').replace('K:','');
+    document.getElementById('mPriceL').value = (parts[1]||'').replace('B:','');
+  } else {
+    document.getElementById('mPriceS').value = i.price || '';
+    document.getElementById('mPriceL').value = '';
+  }
   document.getElementById('mNote').value = i.note || '';
   document.getElementById('mIsGunun').checked = !!i.is_gunun;
   if (i.book_id) {
@@ -7618,7 +7657,7 @@ function clearMenuForm() {
   if (sel) sel.value = '';
   const newEl = document.getElementById('mCategoryNew');
   if (newEl) { newEl.value = ''; newEl.style.display = 'none'; }
-  ['mSubtitle','mName','mDesc','mPrice','mNote','mBookSearch'].forEach(id => {
+  ['mSubtitle','mName','mDesc','mPriceS','mPriceL','mNote','mBookSearch'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('mBookId').value = '';
