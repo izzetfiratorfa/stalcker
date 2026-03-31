@@ -5864,28 +5864,24 @@ function renderStats() {
 }
 
 function switchTab(tab) {
-  document.getElementById('panelBooks').style.display = tab === 'books' ? 'block' : 'none';
-  document.getElementById('panelStats').style.display = tab === 'stats' ? 'block' : 'none';
-  document.getElementById('panelQuotes').style.display = tab === 'quotes' ? 'block' : 'none';
-  document.getElementById('panelAskida').style.display = tab === 'askida' ? 'block' : 'none';
-  document.getElementById('panelMissed').style.display = tab === 'missed' ? 'block' : 'none';
-  document.getElementById('panelGizli').style.display = tab === 'gizli' ? 'block' : 'none';
-  document.getElementById('panelYazarlar').style.display = tab === 'yazarlar' ? 'block' : 'none';
-  document.getElementById('panelGunun').style.display = tab === 'gunun' ? 'block' : 'none';
-  document.getElementById('panelSpotify').style.display = tab === 'spotify' ? 'block' : 'none';
-  document.getElementById('panelIkram').style.display = tab === 'ikram' ? 'block' : 'none';
-  document.getElementById('panelDiary').style.display = tab === 'diary' ? 'block' : 'none';
-  document.getElementById('tabBooks').classList.toggle('active', tab === 'books');
-  document.getElementById('tabStats').classList.toggle('active', tab === 'stats');
-  document.getElementById('tabQuotes').classList.toggle('active', tab === 'quotes');
-  document.getElementById('tabAskida').classList.toggle('active', tab === 'askida');
-  document.getElementById('tabMissed').classList.toggle('active', tab === 'missed');
-  document.getElementById('tabGizli').classList.toggle('active', tab === 'gizli');
-  document.getElementById('tabYazarlar').classList.toggle('active', tab === 'yazarlar');
-  document.getElementById('tabGunun').classList.toggle('active', tab === 'gunun');
-  document.getElementById('tabSpotify').classList.toggle('active', tab === 'spotify');
-  document.getElementById('tabIkram').classList.toggle('active', tab === 'ikram');
-  document.getElementById('tabDiary').classList.toggle('active', tab === 'diary');
+  const panels = ['Books','Stats','Quotes','Askida','Missed','Gizli','Yazarlar','Gunun','Spotify','Ikram','Diary','Sahaf','Panoadmin','Report','MenuAdmin'];
+  panels.forEach(p => {
+    const el = document.getElementById('panel' + p);
+    if (el) el.style.display = (tab === p.toLowerCase()) ? 'block' : 'none';
+  });
+  // özel eşleşmeler
+  const panelPano = document.getElementById('panelPanoadmin');
+  if (panelPano) panelPano.style.display = tab === 'panoadmin' ? 'block' : 'none';
+
+  const tabs = ['Books','Stats','Quotes','Askida','Missed','Gizli','Yazarlar','Gunun','Spotify','Ikram','Diary','Sahaf','PanoAdmin','Report','MenuAdmin'];
+  tabs.forEach(t => {
+    const el = document.getElementById('tab' + t);
+    if (el) el.classList.toggle('active', tab === t.toLowerCase());
+  });
+  // özel eşleşmeler
+  const tabPano = document.getElementById('tabPanoAdmin');
+  if (tabPano) tabPano.classList.toggle('active', tab === 'panoadmin');
+
   if (tab === 'stats') renderStatsPanel();
   if (tab === 'quotes') renderAdminQuotes();
   if (tab === 'askida') loadAdminAskida();
@@ -5900,14 +5896,6 @@ function switchTab(tab) {
   if (tab === 'panoadmin') loadPanoAdmin();
   if (tab === 'report') loadDailyReport();
   if (tab === 'menuadmin') loadMenuAdmin();
-  document.getElementById('panelSahaf').style.display = tab === 'sahaf' ? 'block' : 'none';
-  document.getElementById('panelPanoadmin').style.display = tab === 'panoadmin' ? 'block' : 'none';
-  document.getElementById('panelReport').style.display = tab === 'report' ? 'block' : 'none';
-  document.getElementById('panelMenuAdmin').style.display = tab === 'menuadmin' ? 'block' : 'none';
-  document.getElementById('tabSahaf').classList.toggle('active', tab === 'sahaf');
-  document.getElementById('tabPanoAdmin').classList.toggle('active', tab === 'panoadmin');
-  document.getElementById('tabReport').classList.toggle('active', tab === 'report');
-  document.getElementById('tabMenuAdmin').classList.toggle('active', tab === 'menuadmin');
 }
 
 function renderMissedSearches() {
