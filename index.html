@@ -1536,7 +1536,6 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <button class="btn-mode" id="btnDiary" onclick="showView('diary')" style="color:#9c7a3c;">📔 Günlük</button>
     <button class="btn-mode" id="btnSahaf" onclick="showView('sahaf')" style="color:#c8a86b;">📦 Nora Sahaf</button>
     <button class="btn-mode" id="btnPano" onclick="showView('pano')" style="color:#8B4513;">📌 Pano</button>
-    <button class="btn-mode" id="btnMenu" onclick="showView('menu')" style="color:#2a6a4a;">☕ Menü</button>
     <button class="btn-mode" id="btnMenu" onclick="showView('menu')" style="color:#9c7a3c;">☕ Menü</button>
     <button class="btn-mode" id="btnWheel" onclick="openWheel()" title="Kitap Çarkı">🎡 Çark</button>
     <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Karanlık mod">◐</button>
@@ -1759,7 +1758,6 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:#9c7a3c;">GÜNLÜK</button>
       <button class="tab-btn" id="tabSahaf" onclick="switchTab('sahaf')" style="color:#c8a86b;">SAHAF</button>
       <button class="tab-btn" id="tabReport" onclick="switchTab('report')" style="color:#1a6a6a;">📊 RAPOR</button>
-      <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#2a6a4a;">☕ MENÜ</button>
       <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:#8B4513;">PANO</button>
       <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#9c7a3c;">☕ MENÜ</button>
     </div>
@@ -2035,74 +2033,6 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     </div>
 
     <!-- MENÜ YÖNETİM PANELİ -->
-    <div id="panelMenuadmin" style="display:none;">
-      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#2a6a4a;letter-spacing:2px;margin-bottom:20px;">> MENÜ YÖNETİMİ — kategori ve ürün ekle, düzenle, sil.</div>
-
-      <!-- Günün Özel İçeceği -->
-      <div style="background:var(--paper);border:1.5px solid #9c7a3c;padding:18px;margin-bottom:20px;">
-        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#9c7a3c;margin-bottom:14px;">✦ GÜNÜN ÖZEL İÇECEĞİ</div>
-        <div class="form-grid">
-          <div class="field"><label>İçecek Adı</label><input type="text" id="mSpecialName" placeholder="Örn: Hasat Filtre"></div>
-          <div class="field"><label>Fiyat</label><input type="text" id="mSpecialPrice" placeholder="₺85"></div>
-          <div class="field full"><label>Açıklama</label><input type="text" id="mSpecialDesc" placeholder="Etiyopya Yirgacheffe, tahin aromalı..."></div>
-          <div class="field full"><label>Not <span style="font-weight:normal;font-size:0.72rem;color:var(--ink-faint)">(opsiyonel)</span></label><input type="text" id="mSpecialNote" placeholder="Sınırlı sayıda, bugüne özel"></div>
-          <div class="field full"><label>Kitap Eşleştirmesi <span style="font-weight:normal;font-size:0.72rem;color:var(--ink-faint)">(opsiyonel)</span></label><input type="text" id="mSpecialPairing" placeholder="Dalgalar — Virginia Woolf ile harika"></div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:8px;align-items:center;">
-          <button class="btn-save" onclick="saveMenuSpecial()">Kaydet</button>
-          <button onclick="clearMenuSpecial()" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:6px 12px;cursor:pointer;">Kaldır</button>
-          <span id="mSpecialMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;"></span>
-        </div>
-      </div>
-
-      <!-- Kategori Ekle -->
-      <div style="background:var(--paper);border:1.5px solid var(--border-dark);padding:18px;margin-bottom:20px;">
-        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:14px;">+ YENİ KATEGORİ</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-          <div class="field" style="margin-bottom:0;flex:1;min-width:160px;"><label>Kategori Adı *</label><input type="text" id="mCatName" placeholder="Filtre Kahveler"></div>
-          <div class="field" style="margin-bottom:0;width:70px;"><label>İkon</label><input type="text" id="mCatIcon" placeholder="☕" maxlength="4"></div>
-          <div class="field" style="margin-bottom:0;flex:1;min-width:160px;"><label>Alt Başlık <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint)">(opsiyonel)</span></label><input type="text" id="mCatSub" placeholder="Tek köken, günlük kavrum"></div>
-          <button class="btn-save" style="margin-bottom:0;" onclick="saveMenuCategory()">Ekle</button>
-        </div>
-        <span id="mCatMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;display:block;margin-top:8px;"></span>
-      </div>
-
-      <!-- Ürün Ekle -->
-      <div style="background:var(--paper);border:1.5px solid var(--border-dark);padding:18px;margin-bottom:20px;">
-        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:14px;">+ YENİ ÜRÜN</div>
-        <div class="form-grid">
-          <div class="field"><label>Kategori *</label>
-            <select id="mItemCat" style="width:100%;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
-              <option value="">Seç...</option>
-            </select>
-          </div>
-          <div class="field"><label>Ürün Adı *</label><input type="text" id="mItemName" placeholder="V60 Filtre"></div>
-          <div class="field"><label>Fiyat</label><input type="text" id="mItemPrice" placeholder="₺75"></div>
-          <div class="field"><label>Alt Fiyat <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint)">(büyük boy vs.)</span></label><input type="text" id="mItemPriceSub" placeholder="Büyük ₺90"></div>
-          <div class="field full"><label>İçerik / Açıklama</label><input type="text" id="mItemDesc" placeholder="Etiyopya, çiçeksi notalar, orta kavrum"></div>
-          <div class="field full"><label>Not</label><input type="text" id="mItemNote" placeholder="Süt eklenebilir, vegan seçenek mevcut"></div>
-          <div class="field full"><label>Kitap Eşleştirmesi</label><input type="text" id="mItemPairing" placeholder="Kafka ile sabah ritüeli"></div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:8px;align-items:center;">
-          <button class="btn-save" onclick="saveMenuItem()">Ekle</button>
-          <span id="mItemMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;"></span>
-        </div>
-      </div>
-
-      <!-- Mevcut Menü -->
-      <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:12px;">MEVCUT MENÜ</div>
-      <div id="menuAdminList"></div>
-    </div>
-
-    <!-- PANO MODERASYON PANELİ -->
-    <div id="panelPanoadmin" style="display:none;">
-      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#8B4513;letter-spacing:2px;margin-bottom:20px;">> PANO MODERASYONu — bekleyen ilanları onayla veya reddet.</div>
-      <div id="panoAdminList" style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-family:'Courier Prime',monospace;color:#888;font-size:0.8rem;">Yükleniyor...</div>
-      </div>
-    </div>
-
-    <!-- MENÜ YÖNETİM PANELİ -->
     <div id="panelMenuAdmin" style="display:none;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#9c7a3c;letter-spacing:2px;margin-bottom:20px;">> MENÜ YÖNETİMİ — kategoriler ve ürünler. QR ile müşteri sayfasına yönlendirilir.</div>
 
@@ -2303,17 +2233,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 </div>
 
 <!-- MENÜ VIEW -->
-<div class="view" id="viewMenu">
-  <div class="menu-view">
-    <div class="menu-hero">
-      <div class="menu-hero-title">NORA KİTAPLIĞI</div>
-      <div class="menu-hero-sub">İçecek & Yiyecek Menüsü</div>
-    </div>
-    <div class="menu-wrap" id="menuContent">
-      <div style="text-align:center;padding:48px 0;font-family:'Courier Prime',monospace;font-size:0.8rem;color:var(--ink-faint);letter-spacing:2px;">yükleniyor...</div>
-    </div>
-  </div>
-</div>
+
 
 <!-- İLAN PANOSU VIEW -->
 <div class="view" id="viewPano">
@@ -5983,7 +5903,7 @@ function switchTab(tab) {
   document.getElementById('panelSahaf').style.display = tab === 'sahaf' ? 'block' : 'none';
   document.getElementById('panelPanoadmin').style.display = tab === 'panoadmin' ? 'block' : 'none';
   document.getElementById('panelReport').style.display = tab === 'report' ? 'block' : 'none';
-  document.getElementById('panelMenuadmin').style.display = tab === 'menuadmin' ? 'block' : 'none';
+  document.getElementById('panelMenuAdmin').style.display = tab === 'menuadmin' ? 'block' : 'none';
   document.getElementById('tabSahaf').classList.toggle('active', tab === 'sahaf');
   document.getElementById('tabPanoAdmin').classList.toggle('active', tab === 'panoadmin');
   document.getElementById('tabReport').classList.toggle('active', tab === 'report');
