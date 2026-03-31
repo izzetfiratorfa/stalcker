@@ -7290,14 +7290,16 @@ async function loadMenuView() {
 }
 
 function renderMenuView(items) {
+  // Müşteri görünümünde "mevcut değil" olanları tamamen gizle
+  const visibleItems = items.filter(i => i.is_available !== false);
   const el = document.getElementById('menuContent');
-  if (!el || !items.length) {
+  if (!el || !visibleItems.length) {
     if (el) el.innerHTML = '<div style="text-align:center;padding:40px;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);">Menüde henüz ürün yok.</div>';
     return;
   }
 
   // Günün özel içeceği
-  const gunun = items.find(i => i.is_gunun);
+  const gunun = visibleItems.find(i => i.is_gunun);
   let html = '';
   if (gunun) {
     html += `<div class="menu-gunun">
@@ -7315,7 +7317,7 @@ function renderMenuView(items) {
 
   // Kategorilere göre grupla
   const cats = {};
-  items.forEach(i => {
+  visibleItems.forEach(i => {
     const cat = i.category || 'Diğer';
     if (!cats[cat]) cats[cat] = { sub: {}, items: [] };
     const sub = i.subtitle || '';
@@ -7347,30 +7349,26 @@ function renderMenuView(items) {
 }
 
 function renderMenuItemHTML(i) {
-  const unavailable = i.is_available === false;
-  const bookLink = i.book_id && !unavailable
+  const bookLink = i.book_id
     ? `<div class="menu-item-book" onclick="showView('customer');setTimeout(()=>openDetail(${i.book_id}),500);">📖 ${i.book_title || 'Kitabı gör'}</div>`
     : '';
 
   // Fiyat gösterimi
   let priceHtml = '';
-  if (unavailable) {
-    priceHtml = `<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#c84040;letter-spacing:1px;white-space:nowrap;padding-top:4px;">şu an<br>bulunmuyor</div>`;
-  } else if (i.price && i.price.includes('|')) {
+  if (i.price && i.price.includes('|')) {
     const parts = i.price.split('|');
     const small = (parts[0]||'').replace('K:','').trim();
     const large = (parts[1]||'').replace('B:','').trim();
-    priceHtml = `<div class="menu-item-price" style="text-align:right;line-height:1.6;">
-      <div style="font-size:0.7rem;color:var(--ink-faint);font-family:'Courier Prime',monospace;letter-spacing:1px;">K</div>
-      <div>${small}</div>
-      <div style="font-size:0.7rem;color:var(--ink-faint);font-family:'Courier Prime',monospace;letter-spacing:1px;margin-top:4px;">B</div>
-      <div>${large}</div>
+    priceHtml = `<div class="menu-item-price" style="text-align:right;white-space:nowrap;">
+      <span style="font-size:0.65rem;color:var(--ink-faint);font-family:'Courier Prime',monospace;letter-spacing:1px;">K </span>${small}
+      <span style="color:var(--border-dark);margin:0 4px;">/</span>
+      <span style="font-size:0.65rem;color:var(--ink-faint);font-family:'Courier Prime',monospace;letter-spacing:1px;">B </span>${large}
     </div>`;
   } else {
     priceHtml = `<div class="menu-item-price">${i.price || ''}</div>`;
   }
 
-  return `<div class="menu-item" style="${unavailable ? 'opacity:0.5;' : ''}">
+  return `<div class="menu-item">
     <div class="menu-item-body">
       <div class="menu-item-name">${i.name}</div>
       ${i.description ? `<div class="menu-item-desc">${i.description}</div>` : ''}
@@ -7443,9 +7441,13 @@ async function renderMenuAdminList() {
               <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">${i.subtitle ? i.subtitle+' · ' : ''}${i.price || ''}</div>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">
-              <button onclick="toggleMenuAvailable(${i.id}, ${i.is_available === false})"
-                style="background:none;border:1px solid ${i.is_available === false ? '#c84040' : '#2a7a2a'};color:${i.is_available === false ? '#c84040' : '#2a7a2a'};font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">
-                ${i.is_available === false ? '✗ YOK' : '✓ MEVCUT'}
+              <button onclick="setMenuAvailable(${i.id}, true)"
+                style="background:${i.is_available !== false ? 'var(--black)' : 'none'};border:1px solid #2a7a2a;color:${i.is_available !== false ? '#fff' : '#2a7a2a'};font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">
+                ✓ Mevcut
+              </button>
+              <button onclick="setMenuAvailable(${i.id}, false)"
+                style="background:${i.is_available === false ? '#c84040' : 'none'};border:1px solid #c84040;color:${i.is_available === false ? '#fff' : '#c84040'};font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">
+                ✗ Mevcut Değil
               </button>
               <button onclick="editMenuItem(${i.id})" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">DÜZENLE</button>
               <button onclick="deleteMenuItem(${i.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">SİL</button>
@@ -7652,13 +7654,11 @@ async function editMenuItem(id) {
   document.getElementById('mName').scrollIntoView({ behavior: 'smooth' });
 }
 
-async function toggleMenuAvailable(id, currentlyUnavailable) {
-  // currentlyUnavailable=true ise şu an yok, mevcut yapacağız
-  const newVal = !currentlyUnavailable; // true=mevcut, false=yok
+async function setMenuAvailable(id, available) {
   await fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=eq.${id}`, {
     method: 'PATCH',
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ is_available: newVal })
+    body: JSON.stringify({ is_available: available })
   });
   renderMenuAdminList();
 }
