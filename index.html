@@ -7347,13 +7347,16 @@ function renderMenuView(items) {
 }
 
 function renderMenuItemHTML(i) {
-  const bookLink = i.book_id
+  const unavailable = i.is_available === false;
+  const bookLink = i.book_id && !unavailable
     ? `<div class="menu-item-book" onclick="showView('customer');setTimeout(()=>openDetail(${i.book_id}),500);">📖 ${i.book_title || 'Kitabı gör'}</div>`
     : '';
 
   // Fiyat gösterimi
   let priceHtml = '';
-  if (i.price && i.price.includes('|')) {
+  if (unavailable) {
+    priceHtml = `<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#c84040;letter-spacing:1px;white-space:nowrap;padding-top:4px;">şu an<br>bulunmuyor</div>`;
+  } else if (i.price && i.price.includes('|')) {
     const parts = i.price.split('|');
     const small = (parts[0]||'').replace('K:','').trim();
     const large = (parts[1]||'').replace('B:','').trim();
@@ -7367,7 +7370,7 @@ function renderMenuItemHTML(i) {
     priceHtml = `<div class="menu-item-price">${i.price || ''}</div>`;
   }
 
-  return `<div class="menu-item">
+  return `<div class="menu-item" style="${unavailable ? 'opacity:0.5;' : ''}">
     <div class="menu-item-body">
       <div class="menu-item-name">${i.name}</div>
       ${i.description ? `<div class="menu-item-desc">${i.description}</div>` : ''}
@@ -7439,7 +7442,11 @@ async function renderMenuAdminList() {
               </div>
               <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">${i.subtitle ? i.subtitle+' · ' : ''}${i.price || ''}</div>
             </div>
-            <div style="display:flex;gap:6px;flex-shrink:0;">
+            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">
+              <button onclick="toggleMenuAvailable(${i.id}, ${i.is_available === false})"
+                style="background:none;border:1px solid ${i.is_available === false ? '#c84040' : '#2a7a2a'};color:${i.is_available === false ? '#c84040' : '#2a7a2a'};font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">
+                ${i.is_available === false ? '✗ YOK' : '✓ MEVCUT'}
+              </button>
               <button onclick="editMenuItem(${i.id})" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">DÜZENLE</button>
               <button onclick="deleteMenuItem(${i.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">SİL</button>
             </div>
@@ -7643,6 +7650,17 @@ async function editMenuItem(id) {
   }
   editEl.value = id;
   document.getElementById('mName').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function toggleMenuAvailable(id, currentlyUnavailable) {
+  // currentlyUnavailable=true ise şu an yok, mevcut yapacağız
+  const newVal = !currentlyUnavailable; // true=mevcut, false=yok
+  await fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_available: newVal })
+  });
+  renderMenuAdminList();
 }
 
 async function deleteMenuItem(id) {
