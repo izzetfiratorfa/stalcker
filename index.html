@@ -750,6 +750,13 @@ body.dark .memory-box { background:#111; }
 @media(max-width:380px) { .pano-grid { grid-template-columns:1fr; } }
 
 /* ===== MENÜ ===== */
+.menu-sort-list { display:flex;flex-direction:column;gap:0; }
+.menu-sort-item { display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px dashed var(--border);cursor:default;transition:background 0.1s;user-select:none; }
+.menu-sort-item:hover { background:var(--paper); }
+.menu-sort-item.drag-over { border-top:2px solid #9c7a3c;background:var(--paper); }
+.menu-drag-handle { font-size:1.1rem;color:var(--ink-faint);cursor:grab;flex-shrink:0;padding:0 4px;letter-spacing:-2px; }
+.menu-drag-handle:active { cursor:grabbing; }
+
 .menu-view { background:var(--paper);min-height:100vh; }
 .menu-hero { background:var(--black);padding:32px 24px 28px;text-align:center;border-bottom:3px double #333; }
 .menu-hero-title { font-family:'Special Elite',cursive;font-size:2rem;letter-spacing:6px;color:#f5f0e8;margin-bottom:6px; }
@@ -776,6 +783,35 @@ body.dark .menu-section-title { border-color:#444; }
 body.dark .menu-item { border-color:#222; }
 body.dark .menu-item-name { color:#e8e4db; }
 @media(max-width:600px) { .menu-wrap { padding:20px 12px 80px; } .menu-hero { padding:24px 16px 20px; } .menu-hero-title { font-size:1.5rem;letter-spacing:4px; } }
+
+/* ===== MENÜ ===== */
+.menu-view { max-width:680px;margin:0 auto;padding:32px 20px 80px; }
+.menu-hero { text-align:center;padding-bottom:24px;border-bottom:2px dashed var(--border);margin-bottom:32px; }
+.menu-hero-title { font-family:'Special Elite',cursive;font-size:2rem;letter-spacing:5px;margin-bottom:6px; }
+.menu-hero-sub { font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-faint);letter-spacing:2px; }
+.menu-special { background:linear-gradient(135deg,#f5f0e8,#ede8dc);border:1.5px solid #9c7a3c;padding:18px 20px;margin-bottom:28px;position:relative;overflow:hidden; }
+body.dark .menu-special { background:linear-gradient(135deg,#1a1710,#12100a);border-color:#6a5020; }
+.menu-special-label { font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:3px;color:#9c7a3c;text-transform:uppercase;margin-bottom:6px; }
+.menu-special-name { font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:4px; }
+.menu-special-desc { font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-faint);line-height:1.7;margin-bottom:8px; }
+.menu-special-price { font-family:'Special Elite',cursive;font-size:1.4rem;color:#9c7a3c; }
+.menu-special-note { font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);font-style:italic;margin-top:6px; }
+.menu-category { margin-bottom:28px; }
+.menu-cat-title { font-family:'Special Elite',cursive;font-size:1.1rem;letter-spacing:3px;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:14px;display:flex;align-items:center;gap:10px; }
+.menu-cat-icon { font-size:1.2rem; }
+.menu-item { display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--border);gap:16px; }
+.menu-item:last-child { border-bottom:none; }
+.menu-item-left { flex:1;min-width:0; }
+.menu-item-name { font-family:'Playfair Display',serif;font-weight:700;font-size:0.95rem;margin-bottom:2px; }
+.menu-item-desc { font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);line-height:1.6; }
+.menu-item-note { font-family:'Courier Prime',monospace;font-size:0.65rem;color:#9c7a3c;margin-top:4px;font-style:italic; }
+.menu-item-pairing { font-family:'Courier Prime',monospace;font-size:0.65rem;color:#2a6a4a;margin-top:4px; }
+.menu-item-right { text-align:right;flex-shrink:0; }
+.menu-item-price { font-family:'Special Elite',cursive;font-size:1.1rem;color:var(--ink); }
+.menu-item-sub { font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);margin-top:2px; }
+.menu-qr-section { margin-top:32px;border-top:2px dashed var(--border);padding-top:24px;text-align:center; }
+.menu-qr-title { font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:12px; }
+body.dark .menu-cat-title { border-color:#333; }
 
 .sahaf-wrap { max-width:640px;margin:0 auto;padding:32px 20px 80px; }
 .sahaf-hero { text-align:center;padding-bottom:24px;border-bottom:2px dashed var(--border);margin-bottom:32px; }
@@ -1723,6 +1759,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:#9c7a3c;">GÜNLÜK</button>
       <button class="tab-btn" id="tabSahaf" onclick="switchTab('sahaf')" style="color:#c8a86b;">SAHAF</button>
       <button class="tab-btn" id="tabReport" onclick="switchTab('report')" style="color:#1a6a6a;">📊 RAPOR</button>
+      <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#2a6a4a;">☕ MENÜ</button>
       <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:#8B4513;">PANO</button>
       <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#9c7a3c;">☕ MENÜ</button>
     </div>
@@ -1997,6 +2034,66 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div id="reportContent" style="display:grid;gap:16px;"></div>
     </div>
 
+    <!-- MENÜ YÖNETİM PANELİ -->
+    <div id="panelMenuadmin" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#2a6a4a;letter-spacing:2px;margin-bottom:20px;">> MENÜ YÖNETİMİ — kategori ve ürün ekle, düzenle, sil.</div>
+
+      <!-- Günün Özel İçeceği -->
+      <div style="background:var(--paper);border:1.5px solid #9c7a3c;padding:18px;margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#9c7a3c;margin-bottom:14px;">✦ GÜNÜN ÖZEL İÇECEĞİ</div>
+        <div class="form-grid">
+          <div class="field"><label>İçecek Adı</label><input type="text" id="mSpecialName" placeholder="Örn: Hasat Filtre"></div>
+          <div class="field"><label>Fiyat</label><input type="text" id="mSpecialPrice" placeholder="₺85"></div>
+          <div class="field full"><label>Açıklama</label><input type="text" id="mSpecialDesc" placeholder="Etiyopya Yirgacheffe, tahin aromalı..."></div>
+          <div class="field full"><label>Not <span style="font-weight:normal;font-size:0.72rem;color:var(--ink-faint)">(opsiyonel)</span></label><input type="text" id="mSpecialNote" placeholder="Sınırlı sayıda, bugüne özel"></div>
+          <div class="field full"><label>Kitap Eşleştirmesi <span style="font-weight:normal;font-size:0.72rem;color:var(--ink-faint)">(opsiyonel)</span></label><input type="text" id="mSpecialPairing" placeholder="Dalgalar — Virginia Woolf ile harika"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;align-items:center;">
+          <button class="btn-save" onclick="saveMenuSpecial()">Kaydet</button>
+          <button onclick="clearMenuSpecial()" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:6px 12px;cursor:pointer;">Kaldır</button>
+          <span id="mSpecialMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;"></span>
+        </div>
+      </div>
+
+      <!-- Kategori Ekle -->
+      <div style="background:var(--paper);border:1.5px solid var(--border-dark);padding:18px;margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:14px;">+ YENİ KATEGORİ</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="field" style="margin-bottom:0;flex:1;min-width:160px;"><label>Kategori Adı *</label><input type="text" id="mCatName" placeholder="Filtre Kahveler"></div>
+          <div class="field" style="margin-bottom:0;width:70px;"><label>İkon</label><input type="text" id="mCatIcon" placeholder="☕" maxlength="4"></div>
+          <div class="field" style="margin-bottom:0;flex:1;min-width:160px;"><label>Alt Başlık <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint)">(opsiyonel)</span></label><input type="text" id="mCatSub" placeholder="Tek köken, günlük kavrum"></div>
+          <button class="btn-save" style="margin-bottom:0;" onclick="saveMenuCategory()">Ekle</button>
+        </div>
+        <span id="mCatMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;display:block;margin-top:8px;"></span>
+      </div>
+
+      <!-- Ürün Ekle -->
+      <div style="background:var(--paper);border:1.5px solid var(--border-dark);padding:18px;margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:14px;">+ YENİ ÜRÜN</div>
+        <div class="form-grid">
+          <div class="field"><label>Kategori *</label>
+            <select id="mItemCat" style="width:100%;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
+              <option value="">Seç...</option>
+            </select>
+          </div>
+          <div class="field"><label>Ürün Adı *</label><input type="text" id="mItemName" placeholder="V60 Filtre"></div>
+          <div class="field"><label>Fiyat</label><input type="text" id="mItemPrice" placeholder="₺75"></div>
+          <div class="field"><label>Alt Fiyat <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint)">(büyük boy vs.)</span></label><input type="text" id="mItemPriceSub" placeholder="Büyük ₺90"></div>
+          <div class="field full"><label>İçerik / Açıklama</label><input type="text" id="mItemDesc" placeholder="Etiyopya, çiçeksi notalar, orta kavrum"></div>
+          <div class="field full"><label>Not</label><input type="text" id="mItemNote" placeholder="Süt eklenebilir, vegan seçenek mevcut"></div>
+          <div class="field full"><label>Kitap Eşleştirmesi</label><input type="text" id="mItemPairing" placeholder="Kafka ile sabah ritüeli"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;align-items:center;">
+          <button class="btn-save" onclick="saveMenuItem()">Ekle</button>
+          <span id="mItemMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;"></span>
+        </div>
+      </div>
+
+      <!-- Mevcut Menü -->
+      <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:12px;">MEVCUT MENÜ</div>
+      <div id="menuAdminList"></div>
+    </div>
+
     <!-- PANO MODERASYON PANELİ -->
     <div id="panelPanoadmin" style="display:none;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#8B4513;letter-spacing:2px;margin-bottom:20px;">> PANO MODERASYONu — bekleyen ilanları onayla veya reddet.</div>
@@ -2263,6 +2360,22 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <input id="panoAuthor" placeholder="İsmin veya takma adın (opsiyonel)">
     <button class="pano-modal-send" onclick="submitPanoNote()">Panoyu As 📌</button>
     <div id="panoMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;margin-top:8px;color:#2a7a2a;"></div>
+  </div>
+</div>
+
+<!-- MENÜ VIEW -->
+<div class="view" id="viewMenu">
+  <div class="menu-view">
+    <div class="menu-hero">
+      <div class="menu-hero-title">Nora Menü</div>
+      <div class="menu-hero-sub" id="menuHeroSub">Kitaplar eşliğinde</div>
+    </div>
+    <div id="menuSpecialWrap" style="display:none;"></div>
+    <div id="menuContent"></div>
+    <div class="menu-qr-section">
+      <div class="menu-qr-title">Bu menüyü paylaş</div>
+      <div id="menuQR" style="display:inline-block;"></div>
+    </div>
   </div>
 </div>
 
@@ -2639,6 +2752,7 @@ async function showView(v) {
   if (v === 'diary') { loadDiaryView(); }
   if (v === 'sahaf') { loadSahafOffers(); }
   if (v === 'pano') { loadPanoNotes(); }
+  if (v === 'menu') { loadMenuView(); }
   if (v === 'menu') { loadMenuView(); }
   if (v === 'universe') {
     await fetchBooks();
@@ -5869,7 +5983,7 @@ function switchTab(tab) {
   document.getElementById('panelSahaf').style.display = tab === 'sahaf' ? 'block' : 'none';
   document.getElementById('panelPanoadmin').style.display = tab === 'panoadmin' ? 'block' : 'none';
   document.getElementById('panelReport').style.display = tab === 'report' ? 'block' : 'none';
-  document.getElementById('panelMenuAdmin').style.display = tab === 'menuadmin' ? 'block' : 'none';
+  document.getElementById('panelMenuadmin').style.display = tab === 'menuadmin' ? 'block' : 'none';
   document.getElementById('tabSahaf').classList.toggle('active', tab === 'sahaf');
   document.getElementById('tabPanoAdmin').classList.toggle('active', tab === 'panoadmin');
   document.getElementById('tabReport').classList.toggle('active', tab === 'report');
@@ -7324,33 +7438,116 @@ async function renderMenuAdminList() {
     const items = await res.json();
     if (!items.length) { el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;">Henüz ürün yok.</div>'; return; }
 
-    // Kategorilere göre grupla
+    // Kategorilere göre grupla, sıra koru
     const cats = {};
+    const catOrder = [];
     items.forEach(i => {
       const c = i.category || 'Diğer';
-      if (!cats[c]) cats[c] = [];
+      if (!cats[c]) { cats[c] = []; catOrder.push(c); }
       cats[c].push(i);
     });
 
-    el.innerHTML = Object.entries(cats).map(([cat, catItems]) => `
-      <div style="margin-bottom:20px;">
-        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#9c7a3c;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">${cat}</div>
-        ${catItems.map(i => `
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--border);flex-wrap:wrap;">
-            <div style="flex:1;min-width:200px;">
-              <div style="font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700;">${i.name}${i.is_gunun ? ' <span style="color:#9c7a3c;font-size:0.7rem;">✦ Günün</span>' : ''}</div>
-              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">${i.subtitle ? i.subtitle+' · ' : ''}${i.price || ''}</div>
-              ${i.description ? `<div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-light);margin-top:2px;">${i.description.substring(0,60)}${i.description.length>60?'...':''}</div>` : ''}
+    el.innerHTML = `
+      <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:12px;">
+        ⠿ Satırları sürükleyerek sırala — değişiklikler otomatik kaydedilir
+      </div>` +
+      catOrder.map(cat => `
+      <div style="margin-bottom:24px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#9c7a3c;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">${cat}</div>
+        <div class="menu-sort-list" id="sortList_${encodeURIComponent(cat)}" data-category="${cat}">
+          ${cats[cat].map(i => `
+          <div class="menu-sort-item" draggable="true" data-id="${i.id}" data-sort="${i.sort_order}">
+            <span class="menu-drag-handle" title="Sürükle">⠿</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Playfair Display',serif;font-size:0.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${i.name}${i.is_gunun ? ' <span style="color:#9c7a3c;font-size:0.65rem;">✦</span>' : ''}
+              </div>
+              <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">${i.subtitle ? i.subtitle+' · ' : ''}${i.price || ''}</div>
             </div>
-            <div style="display:flex;gap:6px;">
-              <button onclick="editMenuItem(${i.id})" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:4px 10px;cursor:pointer;">Düz</button>
-              <button onclick="deleteMenuItem(${i.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:4px 10px;cursor:pointer;">Sil</button>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button onclick="editMenuItem(${i.id})" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">DÜZENLE</button>
+              <button onclick="deleteMenuItem(${i.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;letter-spacing:1px;">SİL</button>
             </div>
           </div>`).join('')}
+        </div>
       </div>`).join('');
+
+    // Drag & drop başlat
+    initMenuDragDrop();
+
   } catch(e) {
     el.innerHTML = `<div style="font-family:'Courier Prime',monospace;color:#c84040;font-size:0.8rem;">${e.message}<br><br>Şu SQL'i çalıştır:<br><code style="font-size:0.7rem;">CREATE TABLE menu_items (id BIGSERIAL PRIMARY KEY, category TEXT, subtitle TEXT, name TEXT NOT NULL, description TEXT, price TEXT, note TEXT, book_id INT, book_title TEXT, is_gunun BOOLEAN DEFAULT false, sort_order INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW());<br>ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;<br>CREATE POLICY "public_read_menu" ON menu_items FOR SELECT USING (true);<br>CREATE POLICY "public_insert_menu" ON menu_items FOR INSERT WITH CHECK (true);<br>CREATE POLICY "public_update_menu" ON menu_items FOR UPDATE USING (true);<br>CREATE POLICY "public_delete_menu" ON menu_items FOR DELETE USING (true);</code></div>`;
   }
+}
+
+let _menuDragSrc = null;
+
+function initMenuDragDrop() {
+  document.querySelectorAll('.menu-sort-list').forEach(list => {
+    list.querySelectorAll('.menu-sort-item').forEach(item => {
+      item.addEventListener('dragstart', e => {
+        _menuDragSrc = item;
+        e.dataTransfer.effectAllowed = 'move';
+        item.style.opacity = '0.4';
+      });
+      item.addEventListener('dragend', () => {
+        item.style.opacity = '1';
+        document.querySelectorAll('.menu-sort-item').forEach(i => i.classList.remove('drag-over'));
+      });
+      item.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (item !== _menuDragSrc) {
+          document.querySelectorAll('.menu-sort-item').forEach(i => i.classList.remove('drag-over'));
+          item.classList.add('drag-over');
+        }
+      });
+      item.addEventListener('drop', e => {
+        e.preventDefault();
+        if (!_menuDragSrc || _menuDragSrc === item) return;
+        const list = item.closest('.menu-sort-list');
+        if (!list || !list.contains(_menuDragSrc)) return;
+        // Hedefe göre önüne/arkasına yerleştir
+        const allItems = [...list.querySelectorAll('.menu-sort-item')];
+        const srcIdx = allItems.indexOf(_menuDragSrc);
+        const tgtIdx = allItems.indexOf(item);
+        if (srcIdx < tgtIdx) {
+          list.insertBefore(_menuDragSrc, item.nextSibling);
+        } else {
+          list.insertBefore(_menuDragSrc, item);
+        }
+        item.classList.remove('drag-over');
+        saveMenuOrder(list);
+      });
+    });
+  });
+}
+
+async function saveMenuOrder(list) {
+  const items = [...list.querySelectorAll('.menu-sort-item')];
+  const updates = items.map((el, idx) => ({ id: parseInt(el.dataset.id), sort_order: idx }));
+
+  // Gösterge
+  const indicator = document.createElement('span');
+  indicator.style.cssText = 'font-family:Courier Prime,monospace;font-size:0.65rem;color:#9c7a3c;margin-left:8px;';
+  indicator.textContent = '↻ kaydediliyor...';
+  list.parentElement.querySelector('[data-category]')?.before(indicator);
+
+  try {
+    await Promise.all(updates.map(u =>
+      fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=eq.${u.id}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sort_order: u.sort_order })
+      })
+    ));
+    indicator.textContent = '✓ sıra kaydedildi';
+    indicator.style.color = '#2a7a2a';
+  } catch(e) {
+    indicator.textContent = '✗ hata';
+    indicator.style.color = '#c84040';
+  }
+  setTimeout(() => indicator.remove(), 2000);
 }
 
 function menuBookSearch() {
@@ -7920,6 +8117,235 @@ async function loadDailyReport() {
   `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);letter-spacing:1px;padding:8px 0;">
     ℹ Arama verileri bu oturuma aittir, sayfa yenilenince sıfırlanır.
   </div>`;
+}
+
+// ===== MENÜ SİSTEMİ =====
+// Veri yapısı: settings tablosunda 'menu_special', 'menu_categories', 'menu_items' key'leri
+
+async function loadMenuView() {
+  try {
+    const res = await api('settings?key=in.(menu_special,menu_categories,menu_items)&select=*');
+    if (!res.ok) return;
+    const rows = await res.json();
+    const data = {};
+    rows.forEach(r => { try { data[r.key] = JSON.parse(r.value); } catch(e) {} });
+    renderMenuView(data.menu_special || null, data.menu_categories || [], data.menu_items || []);
+  } catch(e) {}
+}
+
+function renderMenuView(special, categories, items) {
+  // Günün özel içeceği
+  const specialWrap = document.getElementById('menuSpecialWrap');
+  if (specialWrap) {
+    if (special && special.name) {
+      specialWrap.style.display = 'block';
+      specialWrap.innerHTML = `
+        <div class="menu-special">
+          <div class="menu-special-label">✦ Günün Özel İçeceği</div>
+          <div class="menu-special-name">${special.name}</div>
+          ${special.desc ? `<div class="menu-special-desc">${special.desc}</div>` : ''}
+          ${special.price ? `<div class="menu-special-price">${special.price}</div>` : ''}
+          ${special.note ? `<div class="menu-special-note">${special.note}</div>` : ''}
+          ${special.pairing ? `<div class="menu-item-pairing">📖 ${special.pairing}</div>` : ''}
+        </div>`;
+    } else {
+      specialWrap.style.display = 'none';
+    }
+  }
+
+  // Kategoriler ve ürünler
+  const content = document.getElementById('menuContent');
+  if (!content) return;
+  if (!categories.length) {
+    content.innerHTML = '<div style="font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);text-align:center;padding:40px 0;">Menü henüz hazırlanmadı.</div>';
+    return;
+  }
+  content.innerHTML = categories.map(cat => {
+    const catItems = items.filter(i => i.catId === cat.id);
+    return `
+      <div class="menu-category">
+        <div class="menu-cat-title">
+          <span class="menu-cat-icon">${cat.icon || '☕'}</span>
+          <span>${cat.name}</span>
+          ${cat.sub ? `<span style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">${cat.sub}</span>` : ''}
+        </div>
+        ${catItems.length ? catItems.map(item => `
+          <div class="menu-item">
+            <div class="menu-item-left">
+              <div class="menu-item-name">${item.name}</div>
+              ${item.desc ? `<div class="menu-item-desc">${item.desc}</div>` : ''}
+              ${item.note ? `<div class="menu-item-note">${item.note}</div>` : ''}
+              ${item.pairing ? `<div class="menu-item-pairing">📖 ${item.pairing}</div>` : ''}
+            </div>
+            <div class="menu-item-right">
+              ${item.price ? `<div class="menu-item-price">${item.price}</div>` : ''}
+              ${item.priceSub ? `<div class="menu-item-sub">${item.priceSub}</div>` : ''}
+            </div>
+          </div>`).join('') : '<div style="font-family:Courier Prime,monospace;font-size:0.75rem;color:var(--ink-faint);padding:8px 0;">Henüz ürün eklenmedi.</div>'}
+      </div>`;
+  }).join('');
+
+  // QR kodu üret
+  const qrEl = document.getElementById('menuQR');
+  if (qrEl && window.QRCode) {
+    qrEl.innerHTML = '';
+    new QRCode(qrEl, {
+      text: window.location.href.split('?')[0] + '?view=menu',
+      width: 100, height: 100,
+      colorDark: '#0a0a0a', colorLight: '#f5f0e8',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }
+}
+
+// ===== Admin Menü =====
+async function loadMenuAdmin() {
+  try {
+    const res = await api('settings?key=in.(menu_special,menu_categories,menu_items)&select=*');
+    if (!res.ok) return;
+    const rows = await res.json();
+    const data = {};
+    rows.forEach(r => { try { data[r.key] = JSON.parse(r.value); } catch(e) {} });
+
+    const special = data.menu_special || {};
+    const categories = data.menu_categories || [];
+    const items = data.menu_items || [];
+
+    // Günün özelini doldur
+    if (special.name) {
+      document.getElementById('mSpecialName').value = special.name || '';
+      document.getElementById('mSpecialPrice').value = special.price || '';
+      document.getElementById('mSpecialDesc').value = special.desc || '';
+      document.getElementById('mSpecialNote').value = special.note || '';
+      document.getElementById('mSpecialPairing').value = special.pairing || '';
+    }
+
+    // Kategori dropdown
+    const catSel = document.getElementById('mItemCat');
+    if (catSel) {
+      catSel.innerHTML = '<option value="">Seç...</option>' +
+        categories.map(c => `<option value="${c.id}">${c.icon||''} ${c.name}</option>`).join('');
+    }
+
+    // Admin listesi
+    renderMenuAdminList(categories, items);
+  } catch(e) {}
+}
+
+function renderMenuAdminList(categories, items) {
+  const el = document.getElementById('menuAdminList');
+  if (!el) return;
+  if (!categories.length) { el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#888;font-size:0.8rem;">Henüz kategori yok.</div>'; return; }
+  el.innerHTML = categories.map((cat, ci) => `
+    <div style="border:1.5px solid var(--border-dark);margin-bottom:14px;">
+      <div style="background:var(--black);color:var(--white);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:'Courier Prime',monospace;font-size:0.78rem;letter-spacing:2px;">${cat.icon||''} ${cat.name} ${cat.sub?'· '+cat.sub:''}</span>
+        <button onclick="deleteMenuCategory('${cat.id}')" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:2px 8px;cursor:pointer;">Sil</button>
+      </div>
+      ${items.filter(i=>i.catId===cat.id).map(item => `
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div>
+            <div style="font-weight:700;font-size:0.88rem;">${item.name}</div>
+            ${item.desc ? `<div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">${item.desc}</div>` : ''}
+            ${item.pairing ? `<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#2a6a4a;">📖 ${item.pairing}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+            <span style="font-family:'Special Elite',cursive;font-size:1rem;">${item.price||''}</span>
+            <button onclick="deleteMenuItem('${item.id}')" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:2px 8px;cursor:pointer;">Sil</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+async function getMenuData() {
+  const res = await api('settings?key=in.(menu_categories,menu_items)&select=*');
+  const rows = res.ok ? await res.json() : [];
+  const data = {};
+  rows.forEach(r => { try { data[r.key] = JSON.parse(r.value); } catch(e) {} });
+  return { categories: data.menu_categories || [], items: data.menu_items || [] };
+}
+
+async function saveMenuSetting(key, value) {
+  const val = JSON.stringify(value);
+  const check = await api(`settings?key=eq.${key}`);
+  const exists = check.ok && (await check.json()).length > 0;
+  if (exists) {
+    await api(`settings?key=eq.${key}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ value: val }) });
+  } else {
+    await api('settings', { method: 'POST', headers: {'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({ key, value: val }) });
+  }
+}
+
+async function saveMenuSpecial() {
+  const special = {
+    name: document.getElementById('mSpecialName').value.trim(),
+    price: document.getElementById('mSpecialPrice').value.trim(),
+    desc: document.getElementById('mSpecialDesc').value.trim(),
+    note: document.getElementById('mSpecialNote').value.trim(),
+    pairing: document.getElementById('mSpecialPairing').value.trim()
+  };
+  await saveMenuSetting('menu_special', special);
+  const m = document.getElementById('mSpecialMsg');
+  m.textContent = '> Kaydedildi.'; setTimeout(() => m.textContent = '', 2500);
+}
+
+async function clearMenuSpecial() {
+  await saveMenuSetting('menu_special', {});
+  ['mSpecialName','mSpecialPrice','mSpecialDesc','mSpecialNote','mSpecialPairing'].forEach(id => document.getElementById(id).value = '');
+  const m = document.getElementById('mSpecialMsg');
+  m.textContent = '> Kaldırıldı.'; m.style.color = '#c84040'; setTimeout(() => { m.textContent = ''; m.style.color = '#2a7a2a'; }, 2500);
+}
+
+async function saveMenuCategory() {
+  const name = document.getElementById('mCatName').value.trim();
+  if (!name) return;
+  const { categories, items } = await getMenuData();
+  const newCat = { id: 'cat_' + Date.now(), name, icon: document.getElementById('mCatIcon').value.trim() || '☕', sub: document.getElementById('mCatSub').value.trim() };
+  categories.push(newCat);
+  await saveMenuSetting('menu_categories', categories);
+  document.getElementById('mCatName').value = '';
+  document.getElementById('mCatIcon').value = '';
+  document.getElementById('mCatSub').value = '';
+  const m = document.getElementById('mCatMsg');
+  m.textContent = '> Kategori eklendi.'; setTimeout(() => m.textContent = '', 2500);
+  await loadMenuAdmin();
+}
+
+async function saveMenuItem() {
+  const catId = document.getElementById('mItemCat').value;
+  const name = document.getElementById('mItemName').value.trim();
+  if (!catId || !name) { alert('Kategori ve ürün adı zorunlu.'); return; }
+  const { categories, items } = await getMenuData();
+  const newItem = {
+    id: 'item_' + Date.now(),
+    catId,
+    name,
+    price: document.getElementById('mItemPrice').value.trim(),
+    priceSub: document.getElementById('mItemPriceSub').value.trim(),
+    desc: document.getElementById('mItemDesc').value.trim(),
+    note: document.getElementById('mItemNote').value.trim(),
+    pairing: document.getElementById('mItemPairing').value.trim()
+  };
+  items.push(newItem);
+  await saveMenuSetting('menu_items', items);
+  ['mItemName','mItemPrice','mItemPriceSub','mItemDesc','mItemNote','mItemPairing'].forEach(id => document.getElementById(id).value = '');
+  const m = document.getElementById('mItemMsg');
+  m.textContent = '> Ürün eklendi.'; setTimeout(() => m.textContent = '', 2500);
+  await loadMenuAdmin();
+}
+
+async function deleteMenuCategory(catId) {
+  if (!confirm('Kategori ve içindeki tüm ürünler silinecek. Emin misin?')) return;
+  const { categories, items } = await getMenuData();
+  await saveMenuSetting('menu_categories', categories.filter(c => c.id !== catId));
+  await saveMenuSetting('menu_items', items.filter(i => i.catId !== catId));
+  await loadMenuAdmin();
+}
+
+async function deleteMenuItem(itemId) {
+  const { categories, items } = await getMenuData();
+  await saveMenuSetting('menu_items', items.filter(i => i.id !== itemId));
+  renderMenuAdminList(categories, items.filter(i => i.id !== itemId));
 }
 
 // ===== checkBirthdays =====
