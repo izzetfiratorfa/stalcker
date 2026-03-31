@@ -2049,11 +2049,23 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;margin-bottom:16px;">+ YENİ ÜRÜN EKLE</div>
         <div class="form-grid">
           <div class="field full">
-            <label>Ana Başlık (Kategori) *
-              <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);"> — örn: Sıcak İçecekler, Soğuk İçecekler, Atıştırmalıklar</span>
-            </label>
-            <input type="text" id="mCategory" placeholder="Sıcak İçecekler" list="mCategoryList">
-            <datalist id="mCategoryList"></datalist>
+            <label>Ana Başlık (Kategori) *</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="mCategory" style="flex:1;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
+                <option value="">— Seç —</option>
+                <option value="Espresso Bazlı Sıcak Kahveler">Espresso Bazlı Sıcak Kahveler</option>
+                <option value="Diğer Kahveler">Diğer Kahveler</option>
+                <option value="Espresso Bazlı Soğuk Kahveler">Espresso Bazlı Soğuk Kahveler</option>
+                <option value="Diğer Soğuk Kahveler">Diğer Soğuk Kahveler</option>
+                <option value="Sıcak İçecekler">Sıcak İçecekler</option>
+                <option value="Soğuk İçecekler">Soğuk İçecekler</option>
+                <option value="Yiyecekler">Yiyecekler</option>
+                <option value="Tatlılar">Tatlılar</option>
+                <option value="Yemekler">Yemekler</option>
+                <option value="__yeni__">+ Yeni kategori ekle...</option>
+              </select>
+            </div>
+            <input type="text" id="mCategoryNew" placeholder="Yeni kategori adını yaz..." style="display:none;margin-top:6px;width:100%;box-sizing:border-box;">
           </div>
           <div class="field full">
             <label>Alt Başlık <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel — örn: Filtre Kahveler)</span></label>
@@ -7339,16 +7351,27 @@ function renderMenuItemHTML(i) {
 }
 
 // Admin — menü yükle
-async function loadMenuAdmin() {
-  // Mevcut kategorileri datalist'e doldur
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?select=category,subtitle&order=id.asc`,
-    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-  if (res.ok) {
-    const rows = await res.json();
-    const cats = [...new Set(rows.map(r => r.category).filter(Boolean))];
-    const dl = document.getElementById('mCategoryList');
-    if (dl) dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+// Kategori select değişince yeni kategori alanını göster/gizle
+document.addEventListener('DOMContentLoaded', () => {
+  const catSel = document.getElementById('mCategory');
+  if (catSel) {
+    catSel.addEventListener('change', () => {
+      const newEl = document.getElementById('mCategoryNew');
+      if (newEl) newEl.style.display = catSel.value === '__yeni__' ? 'block' : 'none';
+    });
   }
+});
+
+function getSelectedCategory() {
+  const sel = document.getElementById('mCategory');
+  if (!sel) return '';
+  if (sel.value === '__yeni__') {
+    return (document.getElementById('mCategoryNew')?.value || '').trim();
+  }
+  return sel.value;
+}
+
+async function loadMenuAdmin() {
   renderMenuAdminList();
 }
 
@@ -7512,7 +7535,7 @@ async function saveMenuItem() {
   }
 
   const item = {
-    category: document.getElementById('mCategory').value.trim() || 'Genel',
+    category: getSelectedCategory() || 'Genel',
     subtitle: document.getElementById('mSubtitle').value.trim() || null,
     name,
     description: document.getElementById('mDesc').value.trim() || null,
@@ -7549,7 +7572,18 @@ async function editMenuItem(id) {
   const rows = await res.json();
   if (!rows.length) return;
   const i = rows[0];
-  document.getElementById('mCategory').value = i.category || '';
+  const sel = document.getElementById('mCategory');
+  if (sel) {
+    // Mevcut değer option'lar arasında var mı?
+    const exists = [...sel.options].some(o => o.value === (i.category || ''));
+    if (exists) {
+      sel.value = i.category || '';
+    } else {
+      sel.value = '__yeni__';
+      const newEl = document.getElementById('mCategoryNew');
+      if (newEl) { newEl.style.display = 'block'; newEl.value = i.category || ''; }
+    }
+  }
   document.getElementById('mSubtitle').value = i.subtitle || '';
   document.getElementById('mName').value = i.name || '';
   document.getElementById('mDesc').value = i.description || '';
@@ -7580,7 +7614,11 @@ async function deleteMenuItem(id) {
 }
 
 function clearMenuForm() {
-  ['mCategory','mSubtitle','mName','mDesc','mPrice','mNote','mBookSearch'].forEach(id => {
+  const sel = document.getElementById('mCategory');
+  if (sel) sel.value = '';
+  const newEl = document.getElementById('mCategoryNew');
+  if (newEl) { newEl.value = ''; newEl.style.display = 'none'; }
+  ['mSubtitle','mName','mDesc','mPrice','mNote','mBookSearch'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('mBookId').value = '';
