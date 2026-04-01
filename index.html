@@ -2112,11 +2112,36 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
             <div id="mBookResults" style="display:none;border:1px solid var(--ink);background:var(--paper);max-height:150px;overflow-y:auto;font-family:'Courier Prime',monospace;font-size:0.78rem;"></div>
             <div id="mBookSelected" style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#6a4a8a;margin-top:4px;"></div>
           </div>
-          <div class="field full" style="display:flex;align-items:center;gap:12px;">
+          <div class="field full" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.75rem;">
               <input type="checkbox" id="mIsGunun" style="width:16px;height:16px;cursor:pointer;accent-color:#9c7a3c;">
-              <span>Günün Özel İçeceği olarak işaretle</span>
+              <span>✦ Günün Özel İçeceği</span>
             </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+              <input type="checkbox" id="mIsPopular" style="width:16px;height:16px;cursor:pointer;accent-color:#c87020;">
+              <span>★ Popüler / Önerilen</span>
+            </label>
+          </div>
+          <div class="field full">
+            <label>Alerjen / Özellik <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(virgülle — örn: glutensiz, vegan, laktozsuz, fındıklı)</span></label>
+            <input type="text" id="mAllergens" placeholder="vegan, glutensiz">
+          </div>
+          <div class="field full" style="background:var(--paper);border:1px dashed var(--border-dark);padding:12px;border-radius:2px;">
+            <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:#6a4a8a;margin-bottom:10px;">✦ BUGÜN ÖNERİLEN KOMBİNASYON (opsiyonel)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:0.7rem;">Yiyecek Eşleştirmesi</label>
+                <input type="text" id="mComboFood" placeholder="Yiyecek adı yaz..." oninput="menuComboSearch('food')" autocomplete="off">
+                <input type="hidden" id="mComboFoodId">
+                <div id="mComboFoodResults" style="display:none;border:1px solid var(--ink);background:var(--paper);max-height:120px;overflow-y:auto;font-family:'Courier Prime',monospace;font-size:0.75rem;"></div>
+              </div>
+              <div>
+                <label style="font-size:0.7rem;">Kitap Eşleştirmesi</label>
+                <input type="text" id="mComboBook" placeholder="Kitap adı yaz..." oninput="menuComboSearch('book')" autocomplete="off">
+                <input type="hidden" id="mComboBookId">
+                <div id="mComboBookResults" style="display:none;border:1px solid var(--ink);background:var(--paper);max-height:120px;overflow-y:auto;font-family:'Courier Prime',monospace;font-size:0.75rem;"></div>
+              </div>
+            </div>
           </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:8px;align-items:center;">
@@ -2335,6 +2360,15 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <!-- Sabit kategori nav -->
     <div id="menuCatNav" style="display:none;position:sticky;top:0;z-index:50;background:var(--black);border-bottom:1px solid #333;overflow-x:auto;white-space:nowrap;padding:0;-webkit-overflow-scrolling:touch;">
       <div id="menuCatNavInner" style="display:inline-flex;gap:0;padding:0;"></div>
+    </div>
+    <!-- Menü içi arama -->
+    <div style="padding:12px 20px 0;max-width:680px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:0;border:1px solid var(--border-dark);background:var(--paper);">
+        <span style="padding:8px 12px;font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-faint);">🔍</span>
+        <input id="menuSearchInput" type="text" placeholder="Menüde ara..." oninput="filterMenuItems()"
+          style="flex:1;border:none;outline:none;background:transparent;font-family:'Courier Prime',monospace;font-size:0.8rem;padding:8px 8px 8px 0;color:var(--ink);">
+        <button onclick="document.getElementById('menuSearchInput').value='';filterMenuItems()" style="background:none;border:none;padding:8px 12px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-faint);">✕</button>
+      </div>
     </div>
     <div id="menuSpecialWrap" style="display:none;"></div>
     <div id="menuContent"></div>
@@ -7302,6 +7336,7 @@ async function loadMenuView() {
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
     if (!res.ok) throw new Error('tablo yok');
     const items = await res.json();
+    window._menuItemsCache = items;
     renderMenuView(items);
   } catch(e) {
     el.innerHTML = '<div style="text-align:center;padding:40px;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);">Menü henüz oluşturulmadı.</div>';
@@ -7331,6 +7366,29 @@ function renderMenuView(items) {
           ? (() => { const p=gunun.price.split('|'); return `<span style="font-size:0.8rem;opacity:0.7;">K </span>${p[0].replace('K:','')} <span style="font-size:0.8rem;opacity:0.7;">/ B </span>${p[1].replace('B:','')}`; })()
           : (gunun.price || '')
       }</div>
+    </div>`;
+  }
+
+  // Kombine öneri — is_gunun olan veya ilk is_popular
+  const comboItem = visibleItems.find(i => i.is_gunun && (i.combo_food_title || i.combo_book_title))
+    || visibleItems.find(i => i.is_popular && (i.combo_food_title || i.combo_book_title));
+  if (comboItem) {
+    html += `<div style="margin:0 20px 20px;padding:16px 20px;background:linear-gradient(135deg,#0e0a1a,#1a1030);border:1px solid #4a2a8a;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:3px;color:#8a6ab0;margin-bottom:10px;">✦ BUGÜN ÖNERİLEN KOMBİNASYON</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+        <div style="flex:1;min-width:120px;">
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#6a4a8a;letter-spacing:2px;margin-bottom:4px;">İÇECEK</div>
+          <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:#f0ecf8;font-weight:700;">${comboItem.name}</div>
+        </div>
+        ${comboItem.combo_food_title ? `<div style="flex:1;min-width:120px;">
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#6a4a8a;letter-spacing:2px;margin-bottom:4px;">YİYECEK</div>
+          <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:#f0ecf8;font-weight:700;">${comboItem.combo_food_title}</div>
+        </div>` : ''}
+        ${comboItem.combo_book_title ? `<div style="flex:1;min-width:120px;">
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#6a4a8a;letter-spacing:2px;margin-bottom:4px;">KİTAP</div>
+          <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:#f0ecf8;font-weight:700;cursor:pointer;" onclick="showView('customer');setTimeout(()=>openDetail(${comboItem.combo_book_id}),500);">${comboItem.combo_book_title} ↗</div>
+        </div>` : ''}
+      </div>
     </div>`;
   }
 
@@ -7369,12 +7427,12 @@ function renderMenuView(items) {
       subItems.forEach(i => { bodyHtml += renderMenuItemHTML(i); });
     });
 
-    html += `<div class="menu-section closed" id="menuCat_${idx}">
+    html += `<div class="menu-section ${idx === 0 ? '' : 'closed'}" id="menuCat_${idx}">
       <div class="menu-section-header" onclick="toggleMenuSection(this)">
         <div class="menu-section-title" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">${cat}</div>
         <span class="menu-section-toggle">▾</span>
       </div>
-      <div class="menu-section-body" style="max-height:0;">
+      <div class="menu-section-body" style="max-height:${idx === 0 ? '9999px' : '0'};">
         ${bodyHtml}
       </div>
     </div>`;
@@ -7422,7 +7480,29 @@ function renderMenuItemHTML(i) {
     ? `<div class="menu-item-book" onclick="showView('customer');setTimeout(()=>openDetail(${i.book_id}),500);">📖 ${i.book_title || 'Kitabı gör'}</div>`
     : '';
 
-  // Fiyat gösterimi
+  // Alerjen ikonları
+  const allergenMap = {
+    'glutensiz': '🌾✕', 'vegan': '🌱', 'vejetaryen': '🥗',
+    'laktozsuz': '🥛✕', 'fındıklı': '🥜', 'fıstıklı': '🥜',
+    'şekersiz': '🍬✕', 'organik': '🌿', 'baharatlı': '🌶️',
+    'soğuk': '❄️', 'sıcak': '♨️'
+  };
+  let allergenHtml = '';
+  if (i.allergens) {
+    const tags = i.allergens.split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
+    allergenHtml = tags.map(tag => {
+      const icon = allergenMap[tag] || '';
+      return `<span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);border:1px solid var(--border);padding:1px 5px;letter-spacing:0.5px;">${icon ? icon+' ' : ''}${tag}</span>`;
+    }).join(' ');
+    if (allergenHtml) allergenHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${allergenHtml}</div>`;
+  }
+
+  // Popüler rozet
+  const popularBadge = i.is_popular
+    ? `<span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#c87020;letter-spacing:1px;margin-left:6px;">★ POPÜLER</span>`
+    : '';
+
+  // Fiyat
   let priceHtml = '';
   if (i.price && i.price.includes('|')) {
     const parts = i.price.split('|');
@@ -7439,8 +7519,9 @@ function renderMenuItemHTML(i) {
 
   return `<div class="menu-item">
     <div class="menu-item-body">
-      <div class="menu-item-name">${i.name}</div>
+      <div class="menu-item-name">${i.name}${popularBadge}</div>
       ${i.description ? `<div class="menu-item-desc">${i.description}</div>` : ''}
+      ${allergenHtml}
       ${i.note ? `<div class="menu-item-note">* ${i.note}</div>` : ''}
       ${bookLink}
     </div>
@@ -7467,6 +7548,78 @@ function getSelectedCategory() {
     return (document.getElementById('mCategoryNew')?.value || '').trim();
   }
   return sel.value;
+}
+
+function filterMenuItems() {
+  const q = normalize(document.getElementById('menuSearchInput')?.value || '');
+  if (!q) {
+    // Tüm ürünleri göster, arama yoksa normal görünüm
+    document.querySelectorAll('.menu-item').forEach(el => el.style.display = '');
+    document.querySelectorAll('.menu-section').forEach(el => el.style.display = '');
+    return;
+  }
+  let anyVisible = false;
+  document.querySelectorAll('.menu-section').forEach(section => {
+    let sectionHasMatch = false;
+    section.querySelectorAll('.menu-item').forEach(item => {
+      const text = normalize(item.textContent);
+      const match = text.includes(q);
+      item.style.display = match ? '' : 'none';
+      if (match) sectionHasMatch = true;
+    });
+    section.style.display = sectionHasMatch ? '' : 'none';
+    // Eşleşen kategorileri aç
+    if (sectionHasMatch) {
+      section.classList.remove('closed');
+      const body = section.querySelector('.menu-section-body');
+      if (body) body.style.maxHeight = '9999px';
+    }
+    if (sectionHasMatch) anyVisible = true;
+  });
+}
+
+function menuComboSearch(type) {
+  const inputId = type === 'food' ? 'mComboFood' : 'mComboBook';
+  const resultsId = type === 'food' ? 'mComboFoodResults' : 'mComboBookResults';
+  const q = normalize(document.getElementById(inputId)?.value || '');
+  const res = document.getElementById(resultsId);
+  if (!q || q.length < 2) { res.style.display = 'none'; return; }
+
+  let matches;
+  if (type === 'book') {
+    matches = books.filter(b => b.genre !== 'gizli-raf' && (fuzzyMatch(b.title, q) || fuzzyMatch(b.author||'', q))).slice(0, 5);
+    res.innerHTML = matches.map(b =>
+      `<div style="padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--border);"
+        onmouseover="this.style.background='var(--black)';this.style.color='var(--white)'"
+        onmouseout="this.style.background='';this.style.color=''"
+        onclick="selectMenuCombo('book',${b.id},'${b.title.replace(/'/g,"\\'")}')">${b.title}</div>`
+    ).join('');
+  } else {
+    // Yiyecek — menu_items içinden ara
+    matches = (window._menuItemsCache || []).filter(i =>
+      i.category && (i.category.includes('Yiyecek') || i.category.includes('Tost') || i.category.includes('Tatlı') || i.category.includes('Yemek'))
+      && fuzzyMatch(i.name, q)
+    ).slice(0, 5);
+    res.innerHTML = matches.map(m =>
+      `<div style="padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--border);"
+        onmouseover="this.style.background='var(--black)';this.style.color='var(--white)'"
+        onmouseout="this.style.background='';this.style.color=''"
+        onclick="selectMenuCombo('food',${m.id},'${m.name.replace(/'/g,"\\'")}')">${m.name}</div>`
+    ).join('');
+  }
+  res.style.display = matches.length ? 'block' : 'none';
+}
+
+function selectMenuCombo(type, id, title) {
+  if (type === 'book') {
+    document.getElementById('mComboBook').value = title;
+    document.getElementById('mComboBookId').value = id;
+    document.getElementById('mComboBookResults').style.display = 'none';
+  } else {
+    document.getElementById('mComboFood').value = title;
+    document.getElementById('mComboFoodId').value = id;
+    document.getElementById('mComboFoodResults').style.display = 'none';
+  }
 }
 
 async function loadMenuAdmin() {
@@ -7712,6 +7865,12 @@ async function saveMenuItem() {
   const bookId = document.getElementById('mBookId').value;
   const bookTitle = bookId ? document.getElementById('mBookSearch').value.trim() : null;
   const isGunun = document.getElementById('mIsGunun').checked;
+  const isPopular = document.getElementById('mIsPopular')?.checked || false;
+  const allergens = document.getElementById('mAllergens')?.value.trim() || null;
+  const comboBookId = document.getElementById('mComboBookId')?.value || null;
+  const comboBookTitle = comboBookId ? document.getElementById('mComboBook')?.value.trim() : null;
+  const comboFoodId = document.getElementById('mComboFoodId')?.value || null;
+  const comboFoodTitle = comboFoodId ? document.getElementById('mComboFood')?.value.trim() : null;
 
   // Günün özel ise diğerlerini kaldır
   if (isGunun) {
@@ -7730,6 +7889,12 @@ async function saveMenuItem() {
     book_id: bookId ? parseInt(bookId) : null,
     book_title: bookTitle || null,
     is_gunun: isGunun,
+    is_popular: isPopular,
+    allergens: allergens,
+    combo_book_id: comboBookId ? parseInt(comboBookId) : null,
+    combo_book_title: comboBookTitle || null,
+    combo_food_id: comboFoodId ? parseInt(comboFoodId) : null,
+    combo_food_title: comboFoodTitle || null,
     sort_order: 0
   };
 
@@ -7821,12 +7986,16 @@ function clearMenuForm() {
   if (sel) sel.value = '';
   const newEl = document.getElementById('mCategoryNew');
   if (newEl) { newEl.value = ''; newEl.style.display = 'none'; }
-  ['mSubtitle','mName','mDesc','mPriceS','mPriceL','mNote','mBookSearch'].forEach(id => {
+  ['mSubtitle','mName','mDesc','mPriceS','mPriceL','mNote','mBookSearch','mAllergens','mComboFood','mComboBook'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('mBookId').value = '';
+  ['mBookId','mComboBookId','mComboFoodId'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
   document.getElementById('mBookSelected').textContent = '';
   document.getElementById('mIsGunun').checked = false;
+  const popEl = document.getElementById('mIsPopular');
+  if (popEl) popEl.checked = false;
   const editEl = document.getElementById('mEditId');
   if (editEl) editEl.value = '';
 }
