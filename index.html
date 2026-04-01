@@ -2087,9 +2087,14 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
             <input type="text" id="mSubtitle" placeholder="Filtre Kahveler">
           </div>
           <div class="field full"><label>Ürün Adı *</label><input type="text" id="mName" placeholder="Türk Kahvesi"></div>
+          <div class="field full"><label>English Name <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel — EN toggle için)</span></label><input type="text" id="mNameEn" placeholder="Turkish Coffee"></div>
           <div class="field full">
             <label>İçerik / Açıklama <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel)</span></label>
             <textarea id="mDesc" placeholder="Geleneksel yöntemle pişirilmiş, isteğe göre köpüklü..." style="width:100%;min-height:55px;resize:vertical;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);box-sizing:border-box;"></textarea>
+          </div>
+          <div class="field full">
+            <label>English Description <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(opsiyonel)</span></label>
+            <textarea id="mDescEn" placeholder="Traditionally brewed, served with foam on request..." style="width:100%;min-height:40px;resize:vertical;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);box-sizing:border-box;"></textarea>
           </div>
           <div class="field">
             <label>Fiyat <span style="font-weight:normal;font-size:0.7rem;color:var(--ink-faint);">(Küçük veya tek boy)</span></label>
@@ -2354,7 +2359,15 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 <div class="view" id="viewMenu">
   <div class="menu-view">
     <div class="menu-hero">
-      <div class="menu-hero-title">Nora Menü</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+        <div class="menu-hero-title">Nora Menü</div>
+        <div id="menuLangToggle" style="display:flex;gap:0;border:1px solid #444;overflow:hidden;">
+          <button onclick="setMenuLang('tr')" id="menuLangTR"
+            style="background:var(--white);color:#111;border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;padding:5px 12px;cursor:pointer;">TR</button>
+          <button onclick="setMenuLang('en')" id="menuLangEN"
+            style="background:transparent;color:#888;border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;padding:5px 12px;cursor:pointer;">EN</button>
+        </div>
+      </div>
       <div class="menu-hero-sub" id="menuHeroSub">Kitaplar eşliğinde</div>
     </div>
     <!-- Sabit kategori nav -->
@@ -7327,19 +7340,74 @@ async function likePanoNote(id, btn) {
 }
 
 // ===== MENÜ SİSTEMİ =====
+// ===== MENÜ DİL & OFFLİNE =====
+let _menuLang = localStorage.getItem('menuLang') || 'tr';
+const MENU_CACHE_KEY = 'nora_menu_cache';
+const MENU_CACHE_TS_KEY = 'nora_menu_cache_ts';
+const MENU_CACHE_TTL = 60 * 60 * 1000; // 1 saat
+
+function setMenuLang(lang) {
+  _menuLang = lang;
+  localStorage.setItem('menuLang', lang);
+  // Toggle buton görünümü
+  const trBtn = document.getElementById('menuLangTR');
+  const enBtn = document.getElementById('menuLangEN');
+  if (trBtn) { trBtn.style.background = lang === 'tr' ? 'var(--white)' : 'transparent'; trBtn.style.color = lang === 'tr' ? '#111' : '#888'; }
+  if (enBtn) { enBtn.style.background = lang === 'en' ? 'var(--white)' : 'transparent'; enBtn.style.color = lang === 'en' ? '#111' : '#888'; }
+  const heroSub = document.getElementById('menuHeroSub');
+  if (heroSub) heroSub.textContent = lang === 'en' ? 'Alongside books' : 'Kitaplar eşliğinde';
+  // Menüyü yeniden render et
+  if (window._menuItemsCache) renderMenuView(window._menuItemsCache);
+}
+
 async function loadMenuView() {
   const el = document.getElementById('menuContent');
   if (!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:48px 0;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);letter-spacing:2px;">yükleniyor...</div>';
+
+  // Dil toggle başlangıç durumu
+  setMenuLang(_menuLang);
+
+  // Önce offline cache'den göster
+  const cached = localStorage.getItem(MENU_CACHE_KEY);
+  const cachedTs = parseInt(localStorage.getItem(MENU_CACHE_TS_KEY) || '0');
+  const cacheAge = Date.now() - cachedTs;
+
+  if (cached) {
+    try {
+      const items = JSON.parse(cached);
+      window._menuItemsCache = items;
+      renderMenuView(items);
+      // Cache taze ise ağa gitme
+      if (cacheAge < MENU_CACHE_TTL && navigator.onLine) {
+        // Arka planda güncelle
+        refreshMenuCache();
+        return;
+      }
+    } catch(e) {}
+  } else {
+    el.innerHTML = '<div style="text-align:center;padding:48px 0;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);letter-spacing:2px;">yükleniyor...</div>';
+  }
+
+  await refreshMenuCache();
+}
+
+async function refreshMenuCache() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?order=sort_order.asc,id.asc&select=*`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
     if (!res.ok) throw new Error('tablo yok');
     const items = await res.json();
     window._menuItemsCache = items;
+    // Cache'e yaz
+    localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(items));
+    localStorage.setItem(MENU_CACHE_TS_KEY, Date.now().toString());
     renderMenuView(items);
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:40px;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);">Menü henüz oluşturulmadı.</div>';
+    const el = document.getElementById('menuContent');
+    if (el && !el.querySelector('.menu-section')) {
+      const offlineMsg = navigator.onLine ? 'Menü yüklenemedi.' : '📶 Çevrimdışısınız — önbellek gösteriliyor';
+      el.innerHTML = `<div style="text-align:center;padding:40px;font-family:Courier Prime,monospace;font-size:0.8rem;color:var(--ink-faint);">${offlineMsg}</div>`;
+    }
   }
 }
 
@@ -7407,13 +7475,27 @@ function renderMenuView(items) {
     }
   });
 
+  const catTranslations = {
+    'Espresso Bazlı Sıcak Kahveler': 'Hot Espresso Drinks',
+    'Diğer Kahveler': 'Other Coffees',
+    'Espresso Bazlı Soğuk Kahveler': 'Iced Espresso Drinks',
+    'Diğer Soğuk Kahveler': 'Other Iced Coffees',
+    'Sıcak İçecekler': 'Hot Beverages',
+    'Soğuk İçecekler': 'Cold Beverages',
+    'Yiyecekler': 'Food',
+    'Tatlılar': 'Desserts',
+    'Yemekler': 'Meals',
+  };
+  const lang = _menuLang || 'tr';
+
   // Kategori nav güncelle
   const nav = document.getElementById('menuCatNav');
   const navInner = document.getElementById('menuCatNavInner');
   if (nav && navInner && catOrder.length > 1) {
-    navInner.innerHTML = catOrder.map((cat, idx) =>
-      `<button class="menu-cat-btn${idx===0?' active':''}" onclick="menuScrollTo('menuCat_${idx}', this)">${cat}</button>`
-    ).join('');
+    navInner.innerHTML = catOrder.map((cat, idx) => {
+      const label = (lang === 'en' && catTranslations[cat]) ? catTranslations[cat] : cat;
+      return `<button class="menu-cat-btn${idx===0?' active':''}" onclick="menuScrollTo('menuCat_${idx}', this)">${label}</button>`;
+    }).join('');
     nav.style.display = 'block';
   }
 
@@ -7427,9 +7509,10 @@ function renderMenuView(items) {
       subItems.forEach(i => { bodyHtml += renderMenuItemHTML(i); });
     });
 
+    const catLabel = (lang === 'en' && catTranslations[cat]) ? catTranslations[cat] : cat;
     html += `<div class="menu-section ${idx === 0 ? '' : 'closed'}" id="menuCat_${idx}">
       <div class="menu-section-header" onclick="toggleMenuSection(this)">
-        <div class="menu-section-title" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">${cat}</div>
+        <div class="menu-section-title" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">${catLabel}</div>
         <span class="menu-section-toggle">▾</span>
       </div>
       <div class="menu-section-body" style="max-height:${idx === 0 ? '9999px' : '0'};">
@@ -7476,8 +7559,12 @@ function menuScrollTo(id, btn) {
 }
 
 function renderMenuItemHTML(i) {
+  const lang = _menuLang || 'tr';
+  const name = (lang === 'en' && i.name_en) ? i.name_en : i.name;
+  const desc = (lang === 'en' && i.description_en) ? i.description_en : i.description;
+
   const bookLink = i.book_id
-    ? `<div class="menu-item-book" onclick="showView('customer');setTimeout(()=>openDetail(${i.book_id}),500);">📖 ${i.book_title || 'Kitabı gör'}</div>`
+    ? `<div class="menu-item-book" onclick="showView('customer');setTimeout(()=>openDetail(${i.book_id}),500);">📖 ${i.book_title || 'See book'}</div>`
     : '';
 
   // Alerjen ikonları
@@ -7519,8 +7606,8 @@ function renderMenuItemHTML(i) {
 
   return `<div class="menu-item">
     <div class="menu-item-body">
-      <div class="menu-item-name">${i.name}${popularBadge}</div>
-      ${i.description ? `<div class="menu-item-desc">${i.description}</div>` : ''}
+      <div class="menu-item-name">${name}${popularBadge}</div>
+      ${desc ? `<div class="menu-item-desc">${desc}</div>` : ''}
       ${allergenHtml}
       ${i.note ? `<div class="menu-item-note">* ${i.note}</div>` : ''}
       ${bookLink}
@@ -7883,7 +7970,9 @@ async function saveMenuItem() {
     category: getSelectedCategory() || 'Genel',
     subtitle: document.getElementById('mSubtitle').value.trim() || null,
     name,
+    name_en: document.getElementById('mNameEn')?.value.trim() || null,
     description: document.getElementById('mDesc').value.trim() || null,
+    description_en: document.getElementById('mDescEn')?.value.trim() || null,
     price,
     note: document.getElementById('mNote').value.trim() || null,
     book_id: bookId ? parseInt(bookId) : null,
@@ -7937,7 +8026,11 @@ async function editMenuItem(id) {
   }
   document.getElementById('mSubtitle').value = i.subtitle || '';
   document.getElementById('mName').value = i.name || '';
+  const nameEnEl = document.getElementById('mNameEn'); if (nameEnEl) nameEnEl.value = i.name_en || '';
   document.getElementById('mDesc').value = i.description || '';
+  const descEnEl = document.getElementById('mDescEn'); if (descEnEl) descEnEl.value = i.description_en || '';
+  const allergensEl = document.getElementById('mAllergens'); if (allergensEl) allergensEl.value = i.allergens || '';
+  const popularEl = document.getElementById('mIsPopular'); if (popularEl) popularEl.checked = !!i.is_popular;
   // Fiyatı küçük/büyük olarak ayır
   if (i.price && i.price.includes('|')) {
     const parts = i.price.split('|');
@@ -7986,7 +8079,7 @@ function clearMenuForm() {
   if (sel) sel.value = '';
   const newEl = document.getElementById('mCategoryNew');
   if (newEl) { newEl.value = ''; newEl.style.display = 'none'; }
-  ['mSubtitle','mName','mDesc','mPriceS','mPriceL','mNote','mBookSearch','mAllergens','mComboFood','mComboBook'].forEach(id => {
+  ['mSubtitle','mName','mNameEn','mDesc','mDescEn','mPriceS','mPriceL','mNote','mBookSearch','mAllergens','mComboFood','mComboBook'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   ['mBookId','mComboBookId','mComboFoodId'].forEach(id => {
