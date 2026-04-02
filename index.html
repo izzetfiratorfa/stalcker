@@ -121,10 +121,53 @@ body.dark .adv-filter-panel { background:#111;border-color:#333; }
 .results-title { font-size:0.68rem;color:var(--ink-faint);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border); }
 
 /* BOOK CARD */
-.book-card { background:var(--white);border:1.5px solid var(--border-dark);border-left:5px solid var(--ink);padding:16px 18px;margin-bottom:10px;display:flex;gap:16px;align-items:flex-start;box-shadow:3px 3px 0 rgba(0,0,0,0.1);animation:slideUp 0.25s ease;transition:box-shadow 0.15s,transform 0.15s;position:relative;cursor:pointer; }
-.book-card:hover { box-shadow:5px 5px 0 rgba(0,0,0,0.15);transform:translate(-1px,-1px); }
+.book-card { background:var(--white);border:1.5px solid var(--border-dark);border-left:5px solid var(--ink);padding:16px 18px;margin-bottom:10px;display:flex;gap:16px;align-items:flex-start;box-shadow:3px 3px 0 rgba(0,0,0,0.08);animation:slideUp 0.25s ease;transition:box-shadow 0.2s,transform 0.2s,border-color 0.2s;position:relative;cursor:pointer; }
+.book-card:hover { box-shadow:6px 6px 0 rgba(0,0,0,0.13);transform:translate(-2px,-2px); }
 .book-card.nora-pick { border-left:5px solid var(--gold);background:var(--gold-bg); }
+.book-card.nora-pick:hover { border-left-color:var(--gold); }
 .nora-badge { display:inline-flex;align-items:center;gap:4px;background:var(--gold);color:var(--white);padding:2px 8px;font-size:0.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-family:'Courier Prime',monospace;margin-bottom:6px; }
+
+/* Quote card — editorial */
+.quote-card { background:var(--white);border:1px solid var(--border-dark);padding:32px 28px 24px;margin-bottom:18px;position:relative;animation:slideUp 0.3s ease;transition:transform 0.2s,box-shadow 0.2s; }
+.quote-card:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.08); }
+.quote-card::before { content:'\201C';font-family:'Playfair Display',serif;font-size:5rem;color:var(--border-dark);position:absolute;top:-10px;left:20px;line-height:1;opacity:0.5; }
+.quote-text { font-family:'Playfair Display',serif;font-size:1.05rem;line-height:1.8;color:var(--ink);margin-bottom:16px;padding-top:24px; }
+.quote-source { font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);border-top:1px solid var(--border);padding-top:12px;display:flex;justify-content:space-between;align-items:center; }
+.quote-source-book { color:var(--ink-light);font-style:italic;letter-spacing:0.5px;text-transform:none;font-size:0.78rem; }
+
+/* Empty state — terminal */
+.empty-state { text-align:center;padding:64px 20px;color:var(--ink-faint); }
+.empty-state .big-icon { font-size:3rem;margin-bottom:16px;opacity:0.3;display:block; }
+.empty-state .empty-title { font-family:'Courier Prime',monospace;font-size:0.85rem;letter-spacing:3px;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px; }
+.empty-state p { font-size:0.8rem;line-height:1.8;letter-spacing:1px;max-width:280px;margin:0 auto; }
+
+/* Terminal loader */
+@keyframes termCursor { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes termDots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} 100%{content:'.'} }
+.term-loading { text-align:center;padding:56px 20px;font-family:'Courier Prime',monospace;font-size:0.78rem;letter-spacing:3px;color:var(--ink-faint); }
+.term-loading::after { content:'_';animation:termCursor 1s step-end infinite; }
+
+/* Scroll to top */
+#scrollTopBtn { position:fixed;bottom:80px;right:20px;width:40px;height:40px;background:var(--black);color:var(--white);border:none;cursor:pointer;font-size:1rem;display:none;align-items:center;justify-content:center;z-index:200;box-shadow:2px 2px 8px rgba(0,0,0,0.2);transition:opacity 0.2s; }
+#scrollTopBtn:hover { opacity:0.85; }
+
+/* Button success feedback */
+@keyframes btnSuccess { 0%{transform:scale(1)} 50%{transform:scale(0.95)} 100%{transform:scale(1)} }
+.btn-success-flash { animation:btnSuccess 0.3s ease; }
+
+/* Mobil bottom nav */
+#mobileBottomNav { display:none;position:fixed;bottom:0;left:0;right:0;background:var(--black);border-top:1px solid #333;z-index:300;padding:6px 0 env(safe-area-inset-bottom,0); }
+#mobileBottomNav button { flex:1;background:none;border:none;color:#888;cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:1px;text-transform:uppercase;transition:color 0.15s; }
+#mobileBottomNav button span.icon { font-size:1.2rem;line-height:1; }
+#mobileBottomNav button.active { color:var(--white); }
+@media(max-width:600px) {
+  #mobileBottomNav { display:flex; }
+  #scrollTopBtn { bottom:70px; }
+}
+
+/* Profile stat bars */
+.profile-genre-bar { height:6px;background:var(--border);margin-top:4px;overflow:hidden; }
+.profile-genre-bar-fill { height:100%;background:var(--ink);transition:width 0.8s ease; }
 .book-spine { width:42px;height:60px;background:var(--black);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;border:1px solid #333;overflow:hidden; }
 .book-spine img { width:42px;height:60px;object-fit:cover;display:block; }
 .book-info { flex:1; }
@@ -196,9 +239,6 @@ body.dark .daily-book-card { background:linear-gradient(135deg,#1a1710 0%,#12100
 .neighbor-card .n-title { font-family:'Playfair Display',serif;font-size:0.88rem;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.3; }
 .neighbor-card .n-author { font-size:0.72rem;color:var(--ink-faint);font-style:italic; }
 .neighbor-card .n-shelf { font-size:0.65rem;letter-spacing:1px;color:var(--ink-faint);margin-top:5px; }
-.empty-state { text-align:center;padding:56px 20px;color:var(--ink-faint); }
-.empty-state .big-icon { font-size:2.5rem;margin-bottom:14px;opacity:0.5; }
-.empty-state p { font-size:0.85rem;line-height:1.7;letter-spacing:1px; }
 
 /* BOOK DETAIL MODAL */
 .detail-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:flex-end;justify-content:center;padding:0; }
@@ -324,22 +364,22 @@ body.dark .detail-description { border-color:#333; }
 
 /* DARK MODE */
 body.dark {
-  --paper: #0e0e0e;
-  --paper-dark: #1a1a1a;
-  --ink: #e8e4db;
-  --ink-light: #b0aa9f;
-  --ink-faint: #666;
-  --white: #1a1a1a;
-  --black: #f2efe8;
-  --border: #2a2a2a;
-  --border-dark: #444;
+  --paper: #12100d;
+  --paper-dark: #1c1a16;
+  --ink: #e8e2d6;
+  --ink-light: #b8b0a2;
+  --ink-faint: #6a6258;
+  --white: #1e1b16;
+  --black: #ede8de;
+  --border: #2e2a24;
+  --border-dark: #46403a;
   --gold: #c8a030;
-  --gold-bg: #1a1500;
-  --green-bg: #0a1a0a;
-  --red-bg: #1a0a0a;
-  background: #0e0e0e !important;
-  background-image: repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(255,255,255,0.02) 27px,rgba(255,255,255,0.02) 28px) !important;
-  color: #e8e4db;
+  --gold-bg: #1a1400;
+  --green-bg: #0a140a;
+  --red-bg: #140a0a;
+  background: #12100d !important;
+  background-image: repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(255,255,255,0.015) 27px,rgba(255,255,255,0.015) 28px) !important;
+  color: #e8e2d6;
 }
 body.dark header { background:#050505 !important;border-bottom-color:#222; }
 body.dark .logo { color:#c8bfb0; }
@@ -1366,6 +1406,25 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 </div>
 <div id="eeToast"></div>
 
+<!-- Scroll to top -->
+<button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Yukarı">▲</button>
+
+<!-- Mobil bottom nav -->
+<div id="mobileBottomNav">
+  <button onclick="showView('customer')" id="mbnCustomer">
+    <span class="icon">📚</span>Kitaplar
+  </button>
+  <button onclick="showView('menu')" id="mbnMenu">
+    <span class="icon">☕</span>Menü
+  </button>
+  <button onclick="showView('quotes')" id="mbnQuotes">
+    <span class="icon">✦</span>Alıntılar
+  </button>
+  <button onclick="showView('profile')" id="mbnProfile">
+    <span class="icon">◉</span>Profil
+  </button>
+</div>
+
 <!-- İkram Kuponu Modal -->
 <div class="ikram-modal" id="ikramModal" onclick="if(event.target===this)closeIkram()">
   <div id="ikramConfettiWrap" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
@@ -1682,15 +1741,20 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <h2>Nora Quotes</h2>
       <p>sevdiğimiz satırlar</p>
     </div>
-    <div style="text-align:center;margin-bottom:28px;">
+    <div style="text-align:center;margin-bottom:20px;">
       <button class="add-quote-btn" onclick="showRandomQuote()">&#x2726; rastgele alıntı</button>
     </div>
     <div id="randomQuoteBox" style="display:none;background:var(--black);color:var(--white);padding:28px 24px;margin-bottom:28px;position:relative;animation:slideUp 0.3s ease;">
       <div id="randomQuoteText" style="font-family:'Playfair Display',serif;font-size:1.15rem;line-height:1.8;margin-bottom:14px;"></div>
       <div id="randomQuoteSource" style="font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:#888;"></div>
-      <button onclick="showRandomQuote()" style="position:absolute;top:12px;right:12px;background:transparent;border:1px solid #444;color:#888;padding:4px 10px;font-family:'Courier Prime',monospace;font-size:0.7rem;cursor:pointer;letter-spacing:1px;" onmouseover="this.style.color='#fff';this.style.borderColor='#fff'" onmouseout="this.style.color='#888';this.style.borderColor='#444'">&#x21bb; YENI</button>
+      <button onclick="showRandomQuote()" style="position:absolute;top:12px;right:12px;background:transparent;border:1px solid #444;color:#888;padding:4px 10px;font-family:'Courier Prime',monospace;font-size:0.7rem;cursor:pointer;letter-spacing:1px;" onmouseover="this.style.color='#fff';this.style.borderColor='#fff'" onmouseout="this.style.color='#888';this.style.borderColor='#444'">&#x21bb; YENİ</button>
     </div>
-
+    <!-- Arama -->
+    <div style="margin-bottom:20px;">
+      <input type="text" id="quoteSearchInput" placeholder="Alıntılarda ara..." oninput="filterQuotesList()"
+        style="width:100%;box-sizing:border-box;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.82rem;padding:10px 14px;outline:none;transition:border-color 0.15s;">
+    </div>
+    <div id="quotesListEl"></div>
   </div>
 </div>
 
@@ -2735,11 +2799,68 @@ async function fetchQuotes() {
     const res = await api('quotes?order=id.desc');
     if (!res.ok) throw new Error();
     quotes = await res.json();
+    renderQuotesList(quotes);
   } catch(e) { quotes = []; }
 }
 
+function renderQuotesList(list) {
+  const el = document.getElementById('quotesListEl');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><span class="big-icon">✦</span><div class="empty-title">Henüz alıntı yok</div><p>Admin panelinden alıntı ekleyebilirsin.</p></div>';
+    return;
+  }
+  el.innerHTML = list.map(q => `
+    <div class="quote-card">
+      <div class="quote-text">${q.quote_text || ''}</div>
+      <div class="quote-source">
+        <span>${q.author || ''}</span>
+        ${q.book_title ? `<span class="quote-source-book">${q.book_title}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function filterQuotesList() {
+  const q = normalize(document.getElementById('quoteSearchInput')?.value || '');
+  if (!q) { renderQuotesList(quotes); return; }
+  renderQuotesList(quotes.filter(qt =>
+    normalize(qt.quote_text||'').includes(q) ||
+    normalize(qt.author||'').includes(q) ||
+    normalize(qt.book_title||'').includes(q)
+  ));
+}
+
 function showLoading(id) {
-  document.getElementById(id).innerHTML = '<div style="text-align:center;padding:48px;color:var(--ink-faint);font-family:Courier Prime,monospace;letter-spacing:3px;text-transform:uppercase;font-size:0.75rem"><div style="font-size:2rem;margin-bottom:14px;opacity:0.4">📚</div>Yükleniyor...</div>';
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '<div class="term-loading">> ACCESSING NORA ARCHIVE</div>';
+}
+
+function showEmptyState(id, icon, title, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = `<div class="empty-state"><span class="big-icon">${icon}</span><div class="empty-title">${title}</div><p>${msg}</p></div>`;
+}
+
+// Scroll to top
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrollTopBtn');
+  if (btn) btn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+}, { passive: true });
+
+// Mobil bottom nav aktif durumu
+function updateMobileNav(view) {
+  const map = { customer:'mbnCustomer', menu:'mbnMenu', quotes:'mbnQuotes', profile:'mbnProfile' };
+  document.querySelectorAll('#mobileBottomNav button').forEach(b => b.classList.remove('active'));
+  const activeId = map[view];
+  if (activeId) { const el = document.getElementById(activeId); if (el) el.classList.add('active'); }
+}
+
+// Buton success feedback
+function flashBtn(btn) {
+  if (!btn) return;
+  btn.classList.add('btn-success-flash');
+  setTimeout(() => btn.classList.remove('btn-success-flash'), 300);
 }
 
 // ===== VIEWS =====
@@ -2749,6 +2870,8 @@ async function showView(v) {
   ['btnCustomer','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano','btnMenu'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
   const btnMap = {customer:'btnCustomer', quotes:'btnQuotes', universe:'btnUniverse', stats:'btnStats', admin:'btnAdmin', profile:'btnProfile', askida:'btnAskida', bagiscilar:'btnAskida', radio:'btnRadio', mood:'btnMood', blind:'btnBlind', diary:'btnDiary', sahaf:'btnSahaf', pano:'btnPano', menu:'btnMenu'};
   if (btnMap[v]) document.getElementById(btnMap[v]).classList.add('active');
+  updateMobileNav(v);
+  window.scrollTo(0, 0);
   // dropdown item active state
   ['btnAskidaKitaplar','btnAskidaBagis'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
   if (v === 'askida') { const el=document.getElementById('btnAskidaKitaplar'); if(el) el.classList.add('active'); }
@@ -4796,6 +4919,28 @@ async function renderProfile() {
       <div class="profile-stat-box"><strong>${userReviews.length}</strong><span>Yorum</span></div>
       <div class="profile-stat-box"><strong>${badges.filter(b=>b.earned).length}/${badges.length}</strong><span>Rozet</span></div>
     </div>
+    ${(() => {
+      if (!doneBooks.length) return '';
+      const genreMap = {};
+      doneBooks.forEach(b => {
+        (b.genre||'Diğer').split(',').map(g=>g.trim()).forEach(g => { genreMap[g]=(genreMap[g]||0)+1; });
+      });
+      const top = Object.entries(genreMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      const max = top[0]?.[1] || 1;
+      return `<div style="margin-bottom:24px;border:1px solid var(--border-dark);padding:16px 18px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:14px;text-transform:uppercase;">En Çok Okuduğum Türler</div>
+        ${top.map(([g,n]) => `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-family:'Courier Prime',monospace;font-size:0.72rem;margin-bottom:4px;">
+              <span style="color:var(--ink-light);">${g}</span>
+              <span style="color:var(--ink-faint);">${n} kitap</span>
+            </div>
+            <div class="profile-genre-bar">
+              <div class="profile-genre-bar-fill" style="width:${Math.round(n/max*100)}%;background:${['#c84040','#8030c0','#1a4a8a','#2a7a5a','#c87020'][top.indexOf(top.find(t=>t[0]===g))]||'var(--ink)'}"></div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    })()}
     <div class="profile-sec-title">✓ Okuduklarım</div>
     ${doneListHtml}
     <div class="profile-sec-title">+ Okuyacaklarım</div>
