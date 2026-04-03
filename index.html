@@ -1820,7 +1820,10 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
   <div class="admin-wrap">
     <div class="admin-header">
       <div class="admin-title">Kitap Yönetimi <span id="bookCountLabel"></span></div>
-      <button class="btn-add" onclick="openModal()">+ Yeni Kitap Ekle</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-add" onclick="openModal()">+ Yeni Kitap Ekle</button>
+        <button class="btn-add" onclick="openBulkModal()" style="background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);">⊞ Toplu Ekle</button>
+      </div>
     </div>
     <div class="stats-bar" id="statsBar"></div>
     <div style="display:flex;border-bottom:2px solid var(--ink);margin-bottom:18px;">
@@ -2226,6 +2229,62 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
   </div>
 </div>
+<!-- TOPLU KİTAP EKLEME MODAL -->
+<div class="modal-overlay" id="bulkModalOverlay" onclick="if(event.target===this)closeBulkModal()" style="display:none;">
+  <div class="modal" style="position:relative;max-width:960px;width:96vw;max-height:90vh;overflow-y:auto;">
+    <button onclick="closeBulkModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-faint);line-height:1;padding:4px 8px;">✕</button>
+    <h2 style="margin-bottom:4px;">⊞ Toplu Kitap Ekle</h2>
+    <p style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:20px;letter-spacing:1px;">Satır satır doldur veya Excel/Google Sheets'ten kopyalayıp yapıştır.</p>
+
+    <!-- Tab: Form / CSV -->
+    <div style="display:flex;border-bottom:2px solid var(--ink);margin-bottom:20px;">
+      <button id="bulkTabForm" onclick="switchBulkTab('form')" style="padding:8px 20px;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;background:var(--black);color:var(--white);border:none;cursor:pointer;">FORM</button>
+      <button id="bulkTabCsv" onclick="switchBulkTab('csv')" style="padding:8px 20px;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;background:none;color:var(--ink-faint);border:none;cursor:pointer;">CSV / EXCEL YAPIŞTIIR</button>
+    </div>
+
+    <!-- FORM Modu -->
+    <div id="bulkFormPanel">
+      <div style="overflow-x:auto;">
+        <table id="bulkTable" style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--ink);">
+              <th style="padding:6px 8px;text-align:left;letter-spacing:1px;color:var(--ink-faint);min-width:160px;">Kitap Adı *</th>
+              <th style="padding:6px 8px;text-align:left;min-width:130px;">Yazar *</th>
+              <th style="padding:6px 8px;text-align:left;min-width:110px;">Tür</th>
+              <th style="padding:6px 8px;text-align:left;min-width:110px;">Yayınevi</th>
+              <th style="padding:6px 8px;text-align:left;width:60px;">Sayfa</th>
+              <th style="padding:6px 8px;text-align:left;width:55px;">Raf</th>
+              <th style="padding:6px 8px;text-align:left;min-width:120px;">Etiketler</th>
+              <th style="padding:6px 4px;width:30px;"></th>
+            </tr>
+          </thead>
+          <tbody id="bulkTableBody"></tbody>
+        </table>
+      </div>
+      <button onclick="addBulkRow()" style="margin-top:12px;background:none;border:1px dashed var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:6px 16px;cursor:pointer;letter-spacing:1px;width:100%;">+ Satır Ekle</button>
+    </div>
+
+    <!-- CSV Modu -->
+    <div id="bulkCsvPanel" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);margin-bottom:10px;line-height:1.8;">
+        Excel/Google Sheets'te şu sütun sırasını kullan:<br>
+        <strong style="color:var(--ink);">Kitap Adı → Yazar → Tür → Yayınevi → Sayfa → Raf → Etiketler</strong><br>
+        Hücreleri seç, kopyala (Ctrl+C), aşağıya yapıştır (Ctrl+V).
+      </div>
+      <textarea id="bulkCsvInput" placeholder="Buraya yapıştır..." oninput="parseBulkCsv()"
+        style="width:100%;min-height:200px;box-sizing:border-box;font-family:'Courier Prime',monospace;font-size:0.78rem;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);padding:12px;resize:vertical;outline:none;"></textarea>
+      <div id="bulkCsvPreview" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Alt bar -->
+    <div style="display:flex;align-items:center;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+      <button onclick="saveBulkBooks()" style="background:var(--black);color:var(--white);border:none;font-family:'Courier Prime',monospace;font-size:0.75rem;letter-spacing:2px;padding:10px 28px;cursor:pointer;">✓ Tümünü Kaydet</button>
+      <button onclick="clearBulkForm()" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 16px;cursor:pointer;letter-spacing:1px;">Temizle</button>
+      <span id="bulkMsg" style="font-family:'Courier Prime',monospace;font-size:0.72rem;flex:1;"></span>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" style="position:relative;">
     <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-faint);line-height:1;padding:4px 8px;" title="Kapat">✕</button>
@@ -8980,6 +9039,152 @@ async function toggleNora(id) {
 }
 
 // ===== MODAL =====
+// ===== TOPLU KİTAP EKLEME =====
+const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','tags'];
+const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','klasik, çeviri'];
+
+function openBulkModal() {
+  document.getElementById('bulkModalOverlay').style.display = 'flex';
+  if (!document.getElementById('bulkTableBody').children.length) {
+    addBulkRow(); addBulkRow(); addBulkRow();
+  }
+  switchBulkTab('form');
+}
+
+function closeBulkModal() {
+  document.getElementById('bulkModalOverlay').style.display = 'none';
+}
+
+function switchBulkTab(tab) {
+  document.getElementById('bulkFormPanel').style.display = tab === 'form' ? 'block' : 'none';
+  document.getElementById('bulkCsvPanel').style.display = tab === 'csv' ? 'block' : 'none';
+  const fBtn = document.getElementById('bulkTabForm');
+  const cBtn = document.getElementById('bulkTabCsv');
+  fBtn.style.background = tab === 'form' ? 'var(--black)' : 'none';
+  fBtn.style.color = tab === 'form' ? 'var(--white)' : 'var(--ink-faint)';
+  cBtn.style.background = tab === 'csv' ? 'var(--black)' : 'none';
+  cBtn.style.color = tab === 'csv' ? 'var(--white)' : 'var(--ink-faint)';
+}
+
+function addBulkRow(data = {}) {
+  const tbody = document.getElementById('bulkTableBody');
+  const tr = document.createElement('tr');
+  tr.style.borderBottom = '1px solid var(--border)';
+  tr.innerHTML = BULK_FIELDS.map((f, fi) => `
+    <td style="padding:4px;">
+      <input type="${f === 'pages' ? 'number' : 'text'}" data-field="${f}"
+        placeholder="${BULK_PLACEHOLDERS[fi]}"
+        value="${data[f] || ''}"
+        style="width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.75rem;padding:5px 7px;outline:none;"
+        onfocus="this.style.borderColor='var(--ink)'"
+        onblur="this.style.borderColor='var(--border)'">
+    </td>`).join('') +
+    `<td style="padding:4px;text-align:center;">
+      <button onclick="removeBulkRow(this)" style="background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:1rem;padding:2px 6px;" title="Sil">✕</button>
+    </td>`;
+  tbody.appendChild(tr);
+}
+
+function removeBulkRow(btn) {
+  const tbody = document.getElementById('bulkTableBody');
+  if (tbody.children.length <= 1) return;
+  btn.closest('tr').remove();
+}
+
+function getBulkRows() {
+  const rows = [];
+  document.querySelectorAll('#bulkTableBody tr').forEach(tr => {
+    const row = {};
+    tr.querySelectorAll('input[data-field]').forEach(inp => { row[inp.dataset.field] = inp.value.trim(); });
+    rows.push({ el: tr, data: row });
+  });
+  return rows;
+}
+
+function parseBulkCsv() {
+  const raw = document.getElementById('bulkCsvInput').value;
+  const preview = document.getElementById('bulkCsvPreview');
+  if (!raw.trim()) { preview.innerHTML = ''; return; }
+  const rows = raw.trim().split('\n').map(line =>
+    line.split('\t').map(c => c.trim().replace(/^["']|["']$/g, ''))
+  );
+  preview.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#2a7a2a;margin-bottom:8px;">✓ ${rows.length} satır algılandı</div>
+    <div style="overflow-x:auto;max-height:200px;overflow-y:auto;">
+    <table style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.72rem;">
+      <thead><tr style="border-bottom:1px solid var(--ink);">
+        ${['Kitap Adı','Yazar','Tür','Yayınevi','Sayfa','Raf','Etiketler'].map(h =>
+          `<th style="padding:4px 8px;text-align:left;color:var(--ink-faint);">${h}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${rows.map(cols => `<tr style="border-bottom:1px solid var(--border);">
+          ${BULK_FIELDS.map((_, i) => `<td style="padding:4px 8px;color:${cols[0]&&cols[1]?'var(--ink)':'#c84040'};">${cols[i]||'—'}</td>`).join('')}
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+function clearBulkForm() {
+  document.getElementById('bulkTableBody').innerHTML = '';
+  document.getElementById('bulkCsvInput').value = '';
+  document.getElementById('bulkCsvPreview').innerHTML = '';
+  document.getElementById('bulkMsg').textContent = '';
+  addBulkRow(); addBulkRow(); addBulkRow();
+}
+
+async function saveBulkBooks() {
+  const msg = document.getElementById('bulkMsg');
+  const isForm = document.getElementById('bulkFormPanel').style.display !== 'none';
+  let toSave = [];
+
+  if (isForm) {
+    getBulkRows().forEach(({ el, data }) => {
+      el.style.background = '';
+      if (!data.title || !data.author) { el.style.background = '#fff0f0'; return; }
+      toSave.push({ el, data });
+    });
+  } else {
+    const raw = document.getElementById('bulkCsvInput').value;
+    raw.trim().split('\n').forEach(line => {
+      const cols = line.split('\t').map(c => c.trim().replace(/^["']|["']$/g, ''));
+      if (!cols[0] || !cols[1]) return;
+      toSave.push({ el: null, data: {
+        title: cols[0], author: cols[1], genre: cols[2]||'',
+        publisher: cols[3]||'', pages: cols[4]||'', shelf: cols[5]||'', tags: cols[6]||''
+      }});
+    });
+  }
+
+  if (!toSave.length) { msg.textContent = '✗ Geçerli satır yok.'; msg.style.color = '#c84040'; return; }
+  msg.textContent = `↻ ${toSave.length} kitap kaydediliyor...`; msg.style.color = '#9c7a3c';
+
+  let success = 0, fail = 0;
+  for (const { el, data } of toSave) {
+    try {
+      const body = {
+        title: toTurkishTitleCase(data.title),
+        author: data.author,
+        genre: data.genre || null,
+        publisher: data.publisher || null,
+        pages: data.pages ? parseInt(data.pages) : null,
+        shelf: data.shelf || null,
+        tags: data.tags || null,
+        status: 'available'
+      };
+      const res = await api('books', { method: 'POST', body: JSON.stringify(body) });
+      if (!res.ok) throw new Error();
+      if (el) el.style.background = '#f0fff0';
+      success++;
+    } catch(e) {
+      if (el) el.style.background = '#fff0f0';
+      fail++;
+    }
+  }
+
+  msg.textContent = `✓ ${success} kitap eklendi${fail ? ' · ✗ ' + fail + ' hata' : ''}`;
+  msg.style.color = fail ? '#c84040' : '#2a7a2a';
+  await fetchBooks(); renderAdminTable(); renderStats();
+}
+
 function openModal(id = null) {
   editingId = id;
   document.getElementById('modalTitle').textContent = id ? 'Kitabı Düzenle' : 'Yeni Kitap Ekle';
