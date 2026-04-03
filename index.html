@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STAL(C)KER — Kitapların İzini Sür</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root {
@@ -24,6 +23,13 @@
   --red-bg: #f0e8e8;
   --gold: #9c7a3c;
   --gold-bg: #fdf6e3;
+  --font-display: 'Courier Prime', monospace;
+}
+/* Special Elite kaldırıldı — Courier Prime ile değiştirildi */
+@font-face {
+  font-family: 'Special Elite';
+  src: local('Courier Prime'), local('Courier New');
+  font-weight: normal;
 }
 @keyframes slideUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
 @keyframes modalIn { from { opacity:0;transform:scale(0.96) translateY(8px); } to { opacity:1;transform:scale(1) translateY(0); } }
@@ -2924,6 +2930,37 @@ function flashBtn(btn) {
   setTimeout(() => btn.classList.remove('btn-success-flash'), 300);
 }
 
+// ===== D3 LAZY LOAD =====
+let _d3Loading = false;
+function loadD3ThenRender() {
+  const canvas = document.getElementById('universeCanvas');
+  if (window.d3) { renderUniverse(); return; }
+  if (_d3Loading) {
+    // Zaten yükleniyor, bekle
+    const wait = setInterval(() => {
+      if (window.d3) { clearInterval(wait); renderUniverse(); }
+    }, 100);
+    return;
+  }
+  _d3Loading = true;
+  if (canvas) canvas.insertAdjacentHTML('beforebegin',
+    '<div id="d3LoadMsg" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:\'Courier Prime\',monospace;font-size:0.75rem;letter-spacing:3px;color:#39ff14;text-align:center;">> LOADING UNIVERSE ENGINE_</div>');
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js';
+  script.onload = () => {
+    _d3Loading = false;
+    const msg = document.getElementById('d3LoadMsg');
+    if (msg) msg.remove();
+    renderUniverse();
+  };
+  script.onerror = () => {
+    _d3Loading = false;
+    const msg = document.getElementById('d3LoadMsg');
+    if (msg) msg.textContent = '> UNIVERSE ENGINE FAILED — check connection';
+  };
+  document.head.appendChild(script);
+}
+
 // ===== VIEWS =====
 async function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -2950,15 +2987,9 @@ async function showView(v) {
   if (v === 'sahaf') { loadSahafOffers(); }
   if (v === 'pano') { loadPanoNotes(); }
   if (v === 'menu') { loadMenuView(); }
-  if (v === 'menu') { loadMenuView(); }
   if (v === 'universe') {
     await fetchBooks();
-    // D3 yüklenene kadar bekle (defer ile yükleniyor)
-    const waitForD3 = (cb, tries=0) => {
-      if (window.d3 || tries > 20) { cb(); }
-      else { setTimeout(() => waitForD3(cb, tries+1), 100); }
-    };
-    waitForD3(() => renderUniverse());
+    loadD3ThenRender();
   }
 }
 
