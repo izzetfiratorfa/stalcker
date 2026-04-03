@@ -2254,6 +2254,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
               <th style="padding:6px 8px;text-align:left;min-width:110px;">Yayınevi</th>
               <th style="padding:6px 8px;text-align:left;width:60px;">Sayfa</th>
               <th style="padding:6px 8px;text-align:left;width:55px;">Raf</th>
+              <th style="padding:6px 8px;text-align:left;width:60px;">Sene</th>
               <th style="padding:6px 8px;text-align:left;min-width:120px;">Etiketler</th>
               <th style="padding:6px 4px;width:30px;"></th>
             </tr>
@@ -2305,6 +2306,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div class="field"><label>Hazırlayan <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(opsiyonel)</span></label><input type="text" id="fPreparer" placeholder="Derleyen, çeviren, editör…"></div>
       <div class="field"><label>Yayınevi</label><input type="text" id="fPublisher" placeholder="Yayınevi"></div>
       <div class="field"><label>Raf Numarası *</label><input type="text" id="fShelf" placeholder="örn: A-3, B-12"></div>
+      <div class="field"><label>Yayın Yılı</label><input type="number" id="fYear" placeholder="örn: 1984" min="1000" max="2099"></div>
       <div class="field"><label>ISBN <button type="button" onclick="openBarcodeScannerAdmin()" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:1px 6px;cursor:pointer;letter-spacing:1px;margin-left:6px;">📷 Tara</button></label>
         <div style="display:flex;gap:6px;">
           <input type="text" id="fIsbn" placeholder="978-..." style="flex:1;">
@@ -6452,29 +6454,30 @@ async function fetchByIsbnManual() {
 // Türkçe başlık büyük harf — her kelimenin ilk harfi büyük, Türkçe karakterler korunur
 function toTurkishTitleCase(str) {
   if (!str) return '';
-  // Türkçe'de küçük harf kalacak bağlaçlar/edatlar
   const exceptions = new Set(['ve','ile','veya','ya','de','da','ki','mı','mi','mu','mü','bir','bu','şu','o','ne','her','hiç','için','gibi','kadar','göre','karşı','rağmen','beri','itibaren','doğru','dek','değil','ama','fakat','lakin','ancak','oysa','hâlbuki','yani','üzere','aracılığıyla']);
 
-  return str.split(' ').map((word, i) => {
+  // Türkçe locale ile küçük harf
+  function trLower(s) {
+    return s.replace(/İ/g,'i').replace(/I/g,'ı').replace(/Ğ/g,'ğ').replace(/Ü/g,'ü').replace(/Ş/g,'ş').replace(/Ö/g,'ö').replace(/Ç/g,'ç').toLowerCase();
+  }
+
+  // Türkçe locale ile ilk harfi büyük yap
+  function trUpperFirst(ch) {
+    if (ch === 'i') return 'İ';
+    if (ch === 'ı') return 'I';
+    if (ch === 'ğ') return 'Ğ';
+    if (ch === 'ü') return 'Ü';
+    if (ch === 'ş') return 'Ş';
+    if (ch === 'ö') return 'Ö';
+    if (ch === 'ç') return 'Ç';
+    return ch.toUpperCase();
+  }
+
+  return str.split(' ').map((word, idx) => {
     if (!word) return word;
-    // Parantez, tire vb. temizle
-    const lower = word.toLowerCase()
-      .replace(/i/g, 'i').replace(/ı/g, 'ı'); // koru
-
-    // İlk kelime her zaman büyük, diğerleri exception değilse büyük
-    if (i > 0 && exceptions.has(lower)) return lower;
-
-    // Türkçe büyük harf: i → İ, ı → I
-    const first = word[0];
-    const rest = word.slice(1).toLowerCase()
-      .replace(/i/g, 'i').replace(/ı/g, 'ı');
-
-    let bigFirst;
-    if (first === 'i' || first === 'İ') bigFirst = 'İ';
-    else if (first === 'ı' || first === 'I') bigFirst = 'I';
-    else bigFirst = first.toUpperCase();
-
-    return bigFirst + rest;
+    const lower = trLower(word);
+    if (idx > 0 && exceptions.has(lower)) return lower;
+    return trUpperFirst(lower[0]) + lower.slice(1);
   }).join(' ');
 }
 
@@ -9040,8 +9043,8 @@ async function toggleNora(id) {
 
 // ===== MODAL =====
 // ===== TOPLU KİTAP EKLEME =====
-const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','tags'];
-const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','klasik, çeviri'];
+const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','year','tags'];
+const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','1866','klasik, çeviri'];
 
 function openBulkModal() {
   document.getElementById('bulkModalOverlay').style.display = 'flex';
@@ -9072,7 +9075,7 @@ function addBulkRow(data = {}) {
   tr.style.borderBottom = '1px solid var(--border)';
   tr.innerHTML = BULK_FIELDS.map((f, fi) => `
     <td style="padding:4px;">
-      <input type="${f === 'pages' ? 'number' : 'text'}" data-field="${f}"
+      <input type="${(f === 'pages' || f === 'year') ? 'number' : 'text'}" data-field="${f}"
         placeholder="${BULK_PLACEHOLDERS[fi]}"
         value="${data[f] || ''}"
         style="width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.75rem;padding:5px 7px;outline:none;"
@@ -9112,7 +9115,7 @@ function parseBulkCsv() {
     <div style="overflow-x:auto;max-height:200px;overflow-y:auto;">
     <table style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.72rem;">
       <thead><tr style="border-bottom:1px solid var(--ink);">
-        ${['Kitap Adı','Yazar','Tür','Yayınevi','Sayfa','Raf','Etiketler'].map(h =>
+        ${['Kitap Adı','Yazar','Tür','Yayınevi','Sayfa','Raf','Sene','Etiketler'].map(h =>
           `<th style="padding:4px 8px;text-align:left;color:var(--ink-faint);">${h}</th>`).join('')}
       </tr></thead>
       <tbody>
@@ -9149,7 +9152,8 @@ async function saveBulkBooks() {
       if (!cols[0] || !cols[1]) return;
       toSave.push({ el: null, data: {
         title: cols[0], author: cols[1], genre: cols[2]||'',
-        publisher: cols[3]||'', pages: cols[4]||'', shelf: cols[5]||'', tags: cols[6]||''
+        publisher: cols[3]||'', pages: cols[4]||'', shelf: cols[5]||'',
+        year: cols[6]||'', tags: cols[7]||''
       }});
     });
   }
@@ -9162,12 +9166,13 @@ async function saveBulkBooks() {
     try {
       const body = {
         title: toTurkishTitleCase(data.title),
-        author: data.author,
+        author: toTurkishTitleCase(data.author),
         genre: data.genre || null,
         publisher: data.publisher || null,
         pages: data.pages ? parseInt(data.pages) : null,
         shelf: data.shelf || null,
         tags: data.tags || null,
+        year: data.year ? parseInt(data.year) : null,
         status: 'available'
       };
       const res = await api('books', { method: 'POST', body: JSON.stringify(body) });
@@ -9209,6 +9214,7 @@ function openModal(id = null) {
     document.getElementById('fShelf').value = b.shelf;
     document.getElementById('fIsbn').value = b.isbn || '';
     document.getElementById('fPages').value = b.pages || '';
+    document.getElementById('fYear').value = b.year || '';
     document.getElementById('fGenre').value = b.genre || '';
     document.getElementById('fTags').value = b.tags || '';
     document.getElementById('fDescription').value = b.description || '';
@@ -9276,6 +9282,7 @@ async function saveBook() {
     shelf,
     isbn: document.getElementById('fIsbn').value.trim(),
     pages: parseInt(document.getElementById('fPages').value) || null,
+    year: parseInt(document.getElementById('fYear').value) || null,
     genre: document.getElementById('fGenre').value.trim(),
     tags: document.getElementById('fTags').value.trim(),
     description: document.getElementById('fDescription').value.trim(),
