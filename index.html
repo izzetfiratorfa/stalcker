@@ -4889,16 +4889,20 @@ async function fetchDonations() {
 }
 
 async function fetchDistCount() {
-  if (_distSaving) return; // yazma devam ediyor, okuma yapma
+  // localStorage'da daha yeni bir değer varsa onu kullan
+  const lsVal = parseInt(localStorage.getItem(DIST_LS_KEY));
   try {
     const res = await api('settings?key=eq.distributed_count');
     if (res.ok) {
       const rows = await res.json();
-      if (!_distSaving) { // çift kontrol
-        distCount = rows.length ? parseInt(rows[0].value) || 0 : 0;
-      }
+      const dbVal = rows.length ? parseInt(rows[0].value) || 0 : 0;
+      // localStorage değeri DB'den büyükse henüz sync olmamış — onu koru
+      distCount = (!isNaN(lsVal) && lsVal > dbVal) ? lsVal : dbVal;
+      localStorage.setItem(DIST_LS_KEY, String(distCount));
     }
-  } catch(e) { distCount = 0; }
+  } catch(e) {
+    distCount = !isNaN(lsVal) ? lsVal : 0;
+  }
 }
 
 function renderDonationList() {
@@ -5048,8 +5052,11 @@ function setAvailCount(val) {
   saveAvailCountSilent();
 }
 
+const AVAIL_LS_KEY = 'nora_avail_count';
+
 async function saveAvailCountSilent() {
   _availSaving = true;
+  localStorage.setItem(AVAIL_LS_KEY, String(availCount));
   try {
     await api('settings', {
       method: 'POST',
@@ -5063,20 +5070,26 @@ async function saveAvailCountSilent() {
 }
 
 async function fetchAvailCount() {
-  if (_availSaving) return;
+  const lsVal = parseInt(localStorage.getItem(AVAIL_LS_KEY));
   try {
     const res = await api('settings?key=eq.available_count');
     if (res.ok) {
       const rows = await res.json();
-      if (!_availSaving) availCount = rows.length ? parseInt(rows[0].value) || 0 : 0;
+      const dbVal = rows.length ? parseInt(rows[0].value) || 0 : 0;
+      availCount = (!isNaN(lsVal) && lsVal > dbVal) ? lsVal : dbVal;
+      localStorage.setItem(AVAIL_LS_KEY, String(availCount));
     }
-  } catch(e) { availCount = 0; }
+  } catch(e) {
+    availCount = !isNaN(lsVal) ? lsVal : 0;
+  }
 }
 
 let _distSaving = false;
+const DIST_LS_KEY = 'nora_dist_count';
 
 async function saveDistCountSilent() {
   _distSaving = true;
+  localStorage.setItem(DIST_LS_KEY, String(distCount));
   try {
     await api('settings', {
       method: 'POST',
