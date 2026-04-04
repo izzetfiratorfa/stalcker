@@ -1945,6 +1945,23 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         </div>
       </div>
 
+      <!-- Askıdaki Kitap Sayısı (Manuel) -->
+      <div class="askida-admin-form">
+        <h4>Rafta Bekleyen Kitap Sayısı</h4>
+        <p style="font-size:0.78rem;color:var(--ink-faint);margin-bottom:12px;">Askıdaki mevcut kitap sayısını manuel gir — müşteri sayfasındaki "Askıdaki Kitap" kutusuna yansır.</p>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="counter-control">
+            <button class="counter-btn" onclick="changeAvailCount(-1)">−</button>
+            <span class="counter-display" id="adminAvailCountCtrl">0</span>
+            <button class="counter-btn" onclick="changeAvailCount(1)">+</button>
+          </div>
+          <span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);">veya doğrudan yaz:</span>
+          <input type="number" id="adminAvailCountInput" min="0" style="width:80px;border:1.5px solid var(--border-dark);background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:1rem;padding:6px 10px;text-align:center;"
+            onchange="setAvailCount(this.value)">
+        </div>
+        <div id="adminAvailMsg" style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#2a7a2a;margin-top:8px;min-height:16px;"></div>
+      </div>
+
       <!-- Bağış Ekle -->
       <div class="askida-admin-form">
         <h4>+ Yeni Bağış Ekle</h4>
@@ -4842,14 +4859,13 @@ let donations = [];
 let distCount = 0;
 
 async function loadAskidaView() {
-  await Promise.all([fetchDonations(), fetchDistCount(), fetchBooks()]);
-  // İstatistikler
+  await Promise.all([fetchDonations(), fetchDistCount(), fetchAvailCount(), fetchBooks()]);
   const totalDonation = donations.reduce((s, d) => s + (parseFloat(d.amount) || 0), 0);
-  const suspendedBooks = books.filter(b => b.status === 'askida');
   document.getElementById('askidaTotalDonation').textContent = totalDonation.toLocaleString('tr-TR') + ' ₺';
-  document.getElementById('askidaAvailCount').textContent = suspendedBooks.length;
+  document.getElementById('askidaAvailCount').textContent = availCount;
   document.getElementById('askidaDistCount').textContent = distCount;
-  document.getElementById('suspendedCount').textContent = suspendedBooks.length + ' kitap rafta';
+  const sc = document.getElementById('suspendedCount');
+  if (sc) sc.textContent = availCount + ' kitap rafta';
   renderSuspendedGrid();
   renderDistributedCounter();
 }
@@ -4873,11 +4889,14 @@ async function fetchDonations() {
 }
 
 async function fetchDistCount() {
+  if (_distSaving) return; // yazma devam ediyor, okuma yapma
   try {
     const res = await api('settings?key=eq.distributed_count');
     if (res.ok) {
       const rows = await res.json();
-      distCount = rows.length ? parseInt(rows[0].value) || 0 : 0;
+      if (!_distSaving) { // çift kontrol
+        distCount = rows.length ? parseInt(rows[0].value) || 0 : 0;
+      }
     }
   } catch(e) { distCount = 0; }
 }
@@ -4927,15 +4946,13 @@ function renderDistributedCounter() {
 
 // Admin: bağış yönetimi
 async function loadAdminAskida() {
-  await Promise.all([fetchDonations(), fetchDistCount(), fetchBooks()]);
+  await Promise.all([fetchDonations(), fetchDistCount(), fetchAvailCount(), fetchBooks()]);
   renderAdminDonationList();
   // Özet kart
-  const suspendedCount = books.filter(b => b.status === 'askida').length;
   ['adminDistCount','adminDistCountCtrl'].forEach(id => {
     const el = document.getElementById(id); if (el) el.textContent = distCount;
   });
-  const avail = document.getElementById('adminAskidaAvail');
-  if (avail) avail.textContent = suspendedCount;
+  _updateAvailUI();
   const donor = document.getElementById('adminDonorCount');
   if (donor) donor.textContent = donations.length;
   // Bugünün tarihini varsayılan yap
@@ -5005,7 +5022,61 @@ function changeDistCount(delta) {
   saveDistCountSilent();
 }
 
+let availCount = 0;
+let _availSaving = false;
+
+function _updateAvailUI() {
+  ['adminAskidaAvail','adminAvailCountCtrl'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = availCount;
+  });
+  const inp = document.getElementById('adminAvailCountInput');
+  if (inp) inp.value = availCount;
+  // Müşteri tarafı
+  const custEl = document.getElementById('askidaAvailCount');
+  if (custEl) custEl.textContent = availCount;
+}
+
+function changeAvailCount(delta) {
+  availCount = Math.max(0, availCount + delta);
+  _updateAvailUI();
+  saveAvailCountSilent();
+}
+
+function setAvailCount(val) {
+  availCount = Math.max(0, parseInt(val) || 0);
+  _updateAvailUI();
+  saveAvailCountSilent();
+}
+
+async function saveAvailCountSilent() {
+  _availSaving = true;
+  try {
+    await api('settings', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ key: 'available_count', value: String(availCount) })
+    });
+    const msg = document.getElementById('adminAvailMsg');
+    if (msg) { msg.textContent = '✓ Kaydedildi'; setTimeout(() => msg.textContent = '', 1500); }
+  } catch(e) { console.error('saveAvailCount:', e); }
+  finally { _availSaving = false; }
+}
+
+async function fetchAvailCount() {
+  if (_availSaving) return;
+  try {
+    const res = await api('settings?key=eq.available_count');
+    if (res.ok) {
+      const rows = await res.json();
+      if (!_availSaving) availCount = rows.length ? parseInt(rows[0].value) || 0 : 0;
+    }
+  } catch(e) { availCount = 0; }
+}
+
+let _distSaving = false;
+
 async function saveDistCountSilent() {
+  _distSaving = true;
   try {
     await api('settings', {
       method: 'POST',
@@ -5013,6 +5084,7 @@ async function saveDistCountSilent() {
       body: JSON.stringify({ key: 'distributed_count', value: String(distCount) })
     });
   } catch(e) { console.error('saveDistCount:', e); }
+  finally { _distSaving = false; }
 }
 
 async function saveDistCount() {
