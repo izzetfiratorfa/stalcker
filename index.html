@@ -1929,6 +1929,22 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
     <!-- ASKIDA KİTAP ADMIN PANELİ -->
     <div id="panelAskida" style="display:none;">
+      <!-- Askıda Durum Özeti -->
+      <div class="askida-admin-form" style="display:flex;gap:0;padding:0;overflow:hidden;border:1.5px solid var(--border-dark);">
+        <div style="flex:1;padding:18px 16px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:2rem;font-weight:700;color:var(--ink);" id="adminAskidaAvail">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--ink-faint);margin-top:4px;">RAFTA BEKLEYEN</div>
+        </div>
+        <div style="flex:1;padding:18px 16px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:2rem;font-weight:700;color:#2a7a2a;" id="adminDistCount">0</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--ink-faint);margin-top:4px;">DAĞITILAN</div>
+        </div>
+        <div style="flex:1;padding:18px 16px;text-align:center;">
+          <div style="font-family:'Courier Prime',monospace;font-size:2rem;font-weight:700;color:#9c7a3c;" id="adminDonorCount">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--ink-faint);margin-top:4px;">BAĞIŞÇI</div>
+        </div>
+      </div>
+
       <!-- Bağış Ekle -->
       <div class="askida-admin-form">
         <h4>+ Yeni Bağış Ekle</h4>
@@ -1954,12 +1970,11 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <!-- Dağıtım Sayacı -->
       <div class="askida-admin-form">
         <h4>Dağıtılan Kitap Sayacı</h4>
-        <p style="font-size:0.78rem;color:var(--ink-faint);margin-bottom:10px;">Bir öğrenciye kitap verildiğinde sayacı artır.</p>
+        <p style="font-size:0.78rem;color:var(--ink-faint);margin-bottom:10px;">Bir öğrenciye kitap verildiğinde artır — anında kaydedilir.</p>
         <div class="counter-control">
           <button class="counter-btn" onclick="changeDistCount(-1)">−</button>
-          <span class="counter-display" id="adminDistCount">0</span>
+          <span class="counter-display" id="adminDistCountCtrl">0</span>
           <button class="counter-btn" onclick="changeDistCount(1)">+</button>
-          <button class="btn-save" onclick="saveDistCount()" style="margin-left:8px;">Kaydet</button>
         </div>
       </div>
     </div>
@@ -4912,9 +4927,17 @@ function renderDistributedCounter() {
 
 // Admin: bağış yönetimi
 async function loadAdminAskida() {
-  await Promise.all([fetchDonations(), fetchDistCount()]);
+  await Promise.all([fetchDonations(), fetchDistCount(), fetchBooks()]);
   renderAdminDonationList();
-  document.getElementById('adminDistCount').textContent = distCount;
+  // Özet kart
+  const suspendedCount = books.filter(b => b.status === 'askida').length;
+  ['adminDistCount','adminDistCountCtrl'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = distCount;
+  });
+  const avail = document.getElementById('adminAskidaAvail');
+  if (avail) avail.textContent = suspendedCount;
+  const donor = document.getElementById('adminDonorCount');
+  if (donor) donor.textContent = donations.length;
   // Bugünün tarihini varsayılan yap
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('donorDate').value = today;
@@ -4968,12 +4991,16 @@ async function deleteDonation(id) {
 
 function changeDistCount(delta) {
   distCount = Math.max(0, distCount + delta);
-  document.getElementById('adminDistCount').textContent = distCount;
-  // Müşteri tarafını da anında güncelle
-  const el1 = document.getElementById('bagisciDistCount');
-  const el2 = document.getElementById('askidaDistCount');
-  if (el1) el1.textContent = distCount;
-  if (el2) el2.textContent = distCount;
+  // Admin — özet kart + sayaç kontrolü
+  ['adminDistCount','adminDistCountCtrl'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = distCount;
+  });
+  // Müşteri — tüm sayaç elementleri
+  ['askidaDistCount','bagisciDistCount','distributedNum','distributedNum2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = distCount;
+  });
   // Otomatik kaydet
   saveDistCountSilent();
 }
