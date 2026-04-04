@@ -4969,18 +4969,29 @@ async function deleteDonation(id) {
 function changeDistCount(delta) {
   distCount = Math.max(0, distCount + delta);
   document.getElementById('adminDistCount').textContent = distCount;
+  // Müşteri tarafını da anında güncelle
+  const el1 = document.getElementById('bagisciDistCount');
+  const el2 = document.getElementById('askidaDistCount');
+  if (el1) el1.textContent = distCount;
+  if (el2) el2.textContent = distCount;
+  // Otomatik kaydet
+  saveDistCountSilent();
 }
 
-async function saveDistCount() {
+async function saveDistCountSilent() {
   try {
-    // upsert: key varsa güncelle, yoksa ekle
     await api('settings', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({ key: 'distributed_count', value: String(distCount) })
     });
-    alert('Sayaç kaydedildi: ' + distCount);
-  } catch(e) { alert('Kayıt hatası.'); }
+  } catch(e) { console.error('saveDistCount:', e); }
+}
+
+async function saveDistCount() {
+  await saveDistCountSilent();
+  const btn = document.querySelector('[onclick="saveDistCount()"]');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Kaydedildi'; setTimeout(() => btn.textContent = orig, 1500); }
 }
 
 // ===== YENİ EKLENENLER =====
