@@ -1829,6 +1829,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div style="display:flex;gap:8px;">
         <button class="btn-add" onclick="openModal()">+ Yeni Kitap Ekle</button>
         <button class="btn-add" onclick="openBulkModal()" style="background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);">⊞ Toplu Ekle</button>
+        <button onclick="lockAdmin()" title="Çıkış" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">⏻ Çıkış</button>
       </div>
     </div>
     <div class="stats-bar" id="statsBar"></div>
@@ -2864,7 +2865,26 @@ async function fetchBookRatings() {
 async function fetchQuotes() {
   try {
     const res = await api('quotes?order=id.desc');
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('Quotes fetch error:', res.status, err);
+      // RLS hatası — kullanıcıya göster
+      if (res.status === 401 || res.status === 403 || (err.code === '42501')) {
+        const el = document.getElementById('quotesListEl');
+        if (el) el.innerHTML = `<div class="empty-state">
+          <span class="big-icon">🔒</span>
+          <div class="empty-title">Supabase RLS Sorunu</div>
+          <p>Supabase → SQL Editor'da şunu çalıştır:<br><br>
+          <code style="font-size:0.7rem;letter-spacing:0;display:block;margin-top:8px;padding:8px;background:#111;color:#39ff14;">
+          CREATE POLICY "public_read_quotes" ON quotes FOR SELECT USING (true);<br>
+          CREATE POLICY "public_insert_quotes" ON quotes FOR INSERT WITH CHECK (true);<br>
+          CREATE POLICY "public_update_quotes" ON quotes FOR UPDATE USING (true);<br>
+          CREATE POLICY "public_delete_quotes" ON quotes FOR DELETE USING (true);
+          </code></p>
+        </div>`;
+      }
+      throw new Error(res.status);
+    }
     quotes = await res.json();
     renderQuotesList(quotes);
   } catch(e) { quotes = []; }
@@ -2993,11 +3013,57 @@ async function showView(v) {
   }
 }
 
+// ===== ADMIN AUTH =====
+const ADMIN_KEY = 'nora_admin_unlocked';
+let _adminUnlocked = false;
+
 function showAdminLogin() {
-  const pw = prompt('Yönetim şifresi:');
-  if (pw === null) return;
-  if (pw === 'admin123') showView('admin');
-  else alert('Hatalı şifre!');
+  if (_adminUnlocked) { showView('admin'); return; }
+
+  // Admin view'ı geçici overlay ile kapat
+  const overlay = document.createElement('div');
+  overlay.id = 'adminGate';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="font-family:'Courier Prime',monospace;text-align:center;max-width:320px;width:90%;">
+      <div style="font-size:0.65rem;letter-spacing:4px;color:#444;margin-bottom:24px;">NORA YÖNETİM SİSTEMİ</div>
+      <div style="font-size:0.8rem;color:#39ff14;letter-spacing:2px;margin-bottom:20px;">> ERİŞİM KODU_</div>
+      <input id="adminPwInput" type="password" autofocus
+        style="width:100%;box-sizing:border-box;background:#000;border:1px solid #333;color:#39ff14;font-family:'Courier Prime',monospace;font-size:1rem;padding:12px 16px;outline:none;letter-spacing:4px;text-align:center;margin-bottom:12px;"
+        placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')checkAdminPw();if(event.key==='Escape')closeAdminGate()">
+      <div id="adminPwErr" style="font-size:0.65rem;color:#c84040;letter-spacing:2px;min-height:16px;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button onclick="checkAdminPw()" style="background:#39ff14;color:#000;border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:8px 24px;cursor:pointer;">GİRİŞ</button>
+        <button onclick="closeAdminGate()" style="background:transparent;border:1px solid #333;color:#555;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:8px 16px;cursor:pointer;">İPTAL</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('adminPwInput')?.focus(), 100);
+}
+
+function checkAdminPw() {
+  const pw = document.getElementById('adminPwInput')?.value;
+  if (pw === 'admin123') {
+    _adminUnlocked = true;
+    closeAdminGate();
+    showView('admin');
+  } else {
+    const err = document.getElementById('adminPwErr');
+    if (err) { err.textContent = '> HATALI KOD — tekrar deneyin'; }
+    const inp = document.getElementById('adminPwInput');
+    if (inp) { inp.value = ''; inp.focus(); }
+  }
+}
+
+function closeAdminGate() {
+  document.getElementById('adminGate')?.remove();
+}
+
+// Oturum sıfırlama — admin sekmesinden çıkınca
+function lockAdmin() {
+  _adminUnlocked = false;
+  showView('customer');
 }
 
 // ===== AUTOCOMPLETE =====
@@ -5302,40 +5368,110 @@ function goToWheelBook() {
 // ===== SERENDIPITY =====
 function doSerendipity() {
   if (!books.length) return;
-  const b = books[Math.floor(Math.random() * books.length)];
-  const shelfPrefix = b.shelf ? b.shelf.split('-')[0] : null;
-  const neighbor = books.find(x => x.id !== b.id && x.shelf && shelfPrefix && x.shelf.startsWith(shelfPrefix));
 
-  const templates = [
-    () => `Bugün sana ${b.author}’ın yan rafındaki bir kitabı gösteriyorum.`,
-    () => `Raf ${b.shelf}’de seni bekleyen bir kitap var.`,
-    () => neighbor
-      ? `${neighbor.title}’ı okuduysan, hemen yanındaki ${b.title}’ı da sevebilirsin.`
-      : `${b.author} koleksiyonumuzda bekliyor. Belki bugün tanışma vakti?`,
-    () => `Kütüphanedeki ${books.length} kitaptan biri seni seçti: ${b.title}.`,
-    () => `${b.shelf} rafında ${b.author} imzalı bir kitap duruyordu. Seninle tanışmak istedi.`,
-    () => `Bugünkü öneri tesadüf değil: ${b.title}.`,
-    () => `Raf ${b.shelf}’in sessiz sakinlerinden biri: ${b.title}.`,
+  const hour = new Date().getHours();
+  const day = new Date().getDay();
+  const isWeekend = day === 0 || day === 6;
+  const isMorning = hour >= 7 && hour < 12;
+  const isAfternoon = hour >= 12 && hour < 17;
+  const isEvening = hour >= 17 && hour < 22;
+
+  const pool = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'unavailable');
+  if (!pool.length) return;
+
+  const strategies = [
+    // 1. Zamana göre tür öner
+    () => {
+      let targetGenres = [];
+      if (isMorning) targetGenres = ['Şiir','Deneme','Günlük','Kısa Hikaye'];
+      else if (isAfternoon) targetGenres = ['Roman','Tarih','Biyografi'];
+      else if (isEvening) targetGenres = ['Polisiye','Gerilim','Roman'];
+      else targetGenres = ['Felsefe','Mitoloji','Korku','Distopya'];
+      const gp = pool.filter(b => targetGenres.some(g => (b.genre||'').includes(g)));
+      const src = gp.length > 2 ? gp : pool;
+      const b = src[Math.floor(Math.random() * src.length)];
+      const lbl = isMorning ? 'Sabah kahvesiyle' : isAfternoon ? 'Öğleden sonra için' : isEvening ? 'Akşam okuyacak' : 'Gece için';
+      return { book: b, msg: lbl + ': **' + b.title + '**' };
+    },
+
+    // 2. Raf komşusu
+    () => {
+      const b = pool[Math.floor(Math.random() * pool.length)];
+      if (!b.shelf) return null;
+      const prefix = b.shelf.replace(/[0-9]/g,'').trim();
+      const neighbors = pool.filter(x => x.id !== b.id && x.shelf && x.shelf.startsWith(prefix));
+      if (!neighbors.length) return null;
+      const nb = neighbors[Math.floor(Math.random() * neighbors.length)];
+      return { book: nb, msg: '**' + b.title + '**'ın hemen yanında duran: **' + nb.title + '**' };
+    },
+
+    // 3. Kısa kitap — bir kahvelik
+    () => {
+      const short = pool.filter(b => b.pages && b.pages < 200).sort((a,b) => a.pages - b.pages);
+      if (!short.length) return null;
+      const b = short[Math.floor(Math.random() * Math.min(5, short.length))];
+      const mins = Math.round(b.pages / 30);
+      return { book: b, msg: 'Sadece **' + mins + ' dakika**. Bir kahve, bir kitap: **' + b.title + '** (' + b.pages + ' sayfa)' };
+    },
+
+    // 4. Hafta sonu — uzun roman
+    () => {
+      if (!isWeekend) return null;
+      const long = pool.filter(b => b.pages && b.pages > 400).sort((a,b) => b.pages - a.pages);
+      if (!long.length) return null;
+      const b = long[Math.floor(Math.random() * Math.min(5, long.length))];
+      return { book: b, msg: 'Hafta sonu için uzun bir yolculuk: **' + b.title + '** — ' + b.pages + ' sayfa' };
+    },
+
+    // 5. Nora seçimi
+    () => {
+      const picks = pool.filter(b => b.nora_pick);
+      if (!picks.length) return null;
+      const b = picks[Math.floor(Math.random() * picks.length)];
+      return { book: b, msg: 'Nora'nın özel seçimi: **' + b.title + '**' };
+    },
+
+    // 6. Alışılmışın dışı
+    () => {
+      const lastGenre = localStorage.getItem('lastViewedGenre');
+      let filtered = lastGenre ? pool.filter(b => !(b.genre||'').includes(lastGenre)) : pool;
+      if (!filtered.length) filtered = pool;
+      const b = filtered[Math.floor(Math.random() * filtered.length)];
+      const prefix = lastGenre ? lastGenre + ' okuyorsun ama bugün farklı bir şey: ' : 'Alışılmışın dışında: ';
+      return { book: b, msg: prefix + '**' + b.title + '**' };
+    }
   ];
 
-  const msg = templates[Math.floor(Math.random() * templates.length)]();
+  let result = null;
+  const order = strategies.map((_,i) => i).sort(() => Math.random() - 0.5);
+  for (const i of order) {
+    try { result = strategies[i](); } catch(e) {}
+    if (result) break;
+  }
+  if (!result) {
+    const b = pool[Math.floor(Math.random() * pool.length)];
+    result = { book: b, msg: 'Bugünkü tesadüf: **' + b.title + '**' };
+  }
+
+  const { book: b, msg } = result;
+  const formatted = msg.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   const el = document.getElementById('serendipityMsg');
-  el.textContent = msg;
+  el.innerHTML = formatted + (b.author ? '<div style="font-size:0.72rem;margin-top:6px;opacity:0.6;font-style:normal;letter-spacing:1px;">— ' + b.author + (b.shelf ? ' · Raf ' + b.shelf : '') + '</div>' : '');
   el.style.display = 'block';
   el.style.animation = 'none';
   el.offsetHeight;
   el.style.animation = 'slideUp 0.35s ease';
 
-  // Sonuçlarda o kitabı göster
+  if (b.genre) localStorage.setItem('lastViewedGenre', b.genre.split(',')[0].trim());
+
   document.getElementById('searchInput').value = '';
   document.getElementById('autocompleteList').style.display = 'none';
   activeFilter = 'Tümü';
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.textContent === 'Tümü'));
   const container = document.getElementById('bookResults');
-  document.getElementById('resultsTitle').textContent = 'Serendipity seçimi';
+  document.getElementById('resultsTitle').textContent = '✦ Serendipity';
   container.innerHTML = renderBookCard(b);
 }
-
 // ===== ISBN SEARCH =====
 function isbnSearch() {
   const isbn = document.getElementById('isbnInput').value.replace(/[-\s]/g, '').trim();
