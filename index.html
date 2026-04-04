@@ -5402,7 +5402,7 @@ function doSerendipity() {
       const neighbors = pool.filter(x => x.id !== b.id && x.shelf && x.shelf.startsWith(prefix));
       if (!neighbors.length) return null;
       const nb = neighbors[Math.floor(Math.random() * neighbors.length)];
-      return { book: nb, msg: '**' + b.title + '**'ın hemen yanında duran: **' + nb.title + '**' };
+      return { book: nb, msg: '**' + b.title + '**\u2019\u0131n hemen yan\u0131nda duran: **' + nb.title + '**' };
     },
 
     // 3. Kısa kitap — bir kahvelik
@@ -5428,7 +5428,7 @@ function doSerendipity() {
       const picks = pool.filter(b => b.nora_pick);
       if (!picks.length) return null;
       const b = picks[Math.floor(Math.random() * picks.length)];
-      return { book: b, msg: 'Nora'nın özel seçimi: **' + b.title + '**' };
+      return { book: b, msg: 'Nora\u2019n\u0131n özel seçimi: **' + b.title + '**' };
     },
 
     // 6. Alışılmışın dışı
