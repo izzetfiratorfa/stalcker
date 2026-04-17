@@ -10102,12 +10102,36 @@ function renderMessages(msgs, bookId) {
     const btn = document.getElementById('soundToggle');
     if (btn) btn.textContent = '🔇 SES';
   }
+
+  // Hash routing — #menu, #quotes, #askida gibi URL'lerle doğrudan sekmeye aç
+  const hashMap = {
+    '#menu': 'menu',
+    '#quotes': 'quotes',
+    '#askida': 'askida',
+    '#bagiscilar': 'bagiscilar',
+    '#profile': 'profile',
+    '#universe': 'universe',
+    '#mood': 'mood',
+    '#blind': 'blind',
+  };
+  const targetView = hashMap[window.location.hash.toLowerCase()] || 'customer';
+
   showLoading('bookResults');
   await fetchBooks();
   buildFilters();
   doSearch();
-  // Hero alıntısını göster
   showHeroQuote();
+
+  // Hash varsa o sekmeye geç
+  if (targetView !== 'customer') {
+    showView(targetView);
+  }
+
+  // Tarayıcı geri/ileri butonlarını da dinle
+  window.addEventListener('hashchange', () => {
+    const v = hashMap[window.location.hash.toLowerCase()];
+    if (v) showView(v);
+  });
 })();
 </script>
 <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Sayfa sesi">🔊 SES</button>
