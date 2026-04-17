@@ -10095,7 +10095,6 @@ function renderMessages(msgs, bookId) {
 
 // ===== INIT =====
 (async () => {
-  // Ses ayarını yükle
   const savedSound = localStorage.getItem('noraSound');
   if (savedSound === '0') {
     soundEnabled = false;
@@ -10103,7 +10102,6 @@ function renderMessages(msgs, bookId) {
     if (btn) btn.textContent = '🔇 SES';
   }
 
-  // Hash routing — #menu, #quotes, #askida gibi URL'lerle doğrudan sekmeye aç
   const hashMap = {
     '#menu': 'menu',
     '#quotes': 'quotes',
@@ -10114,7 +10112,20 @@ function renderMessages(msgs, bookId) {
     '#mood': 'mood',
     '#blind': 'blind',
   };
-  const targetView = hashMap[window.location.hash.toLowerCase()] || 'customer';
+
+  // Hash'i sayfa yüklenmeden hemen oku
+  const hash = window.location.hash.toLowerCase();
+  const targetView = hashMap[hash] || 'customer';
+
+  // Tüm view'ları gizle, hedef view'ı aktifte tut
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  const targetEl = document.getElementById('view' + targetView.charAt(0).toUpperCase() + targetView.slice(1));
+  if (targetEl) targetEl.classList.add('active');
+
+  // Menü seçiliyse menü butonunu aktif et, yoksa customer
+  const btnMap = { menu:'btnMenu', quotes:'btnQuotes', askida:'btnAskida', bagiscilar:'btnAskida', profile:'btnProfile', universe:'btnUniverse', mood:'btnMood', blind:'btnBlind' };
+  const activeBtn = document.getElementById(btnMap[targetView] || 'btnCustomer');
+  if (activeBtn) activeBtn.classList.add('active');
 
   showLoading('bookResults');
   await fetchBooks();
@@ -10122,12 +10133,13 @@ function renderMessages(msgs, bookId) {
   doSearch();
   showHeroQuote();
 
-  // Hash varsa o sekmeye geç
-  if (targetView !== 'customer') {
-    showView(targetView);
-  }
+  // Hedef view'ı yükle
+  if (targetView === 'menu') loadMenuView();
+  else if (targetView === 'quotes') fetchQuotes();
+  else if (targetView === 'askida') loadAskidaView();
+  else if (targetView === 'bagiscilar') loadBagiscilarView();
+  else if (targetView === 'profile') renderProfile();
 
-  // Tarayıcı geri/ileri butonlarını da dinle
   window.addEventListener('hashchange', () => {
     const v = hashMap[window.location.hash.toLowerCase()];
     if (v) showView(v);
