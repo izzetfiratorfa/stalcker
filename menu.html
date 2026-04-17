@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nora Kitap Evi — Menü</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f2efe8;
+  --ink: #111111;
+  --ink-light: #444444;
+  --ink-faint: #888888;
+  --white: #ffffff;
+  --black: #0a0a0a;
+  --border: #c0bbb0;
+  --border-dark: #888880;
+  --gold: #9c7a3c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Courier Prime', monospace; background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+/* Header */
+.site-header { background: var(--black); border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 52px; position: sticky; top: 0; z-index: 100; }
+.logo { font-family: 'Courier Prime', monospace; color: #f2efe8; font-size: 1rem; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; }
+.lang-toggle { display: flex; gap: 0; border: 1px solid #444; overflow: hidden; }
+.lang-toggle button { background: transparent; color: #888; border: none; font-family: 'Courier Prime', monospace; font-size: 0.65rem; letter-spacing: 2px; padding: 5px 12px; cursor: pointer; transition: all 0.15s; }
+.lang-toggle button.active { background: #f2efe8; color: #111; }
+
+/* Hero */
+.menu-hero { background: var(--black); padding: 32px 24px 28px; text-align: center; border-bottom: 3px double #333; }
+.menu-hero-title { font-family: 'Courier Prime', monospace; font-size: 2rem; letter-spacing: 6px; color: #f5f0e8; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; }
+.menu-hero-sub { font-family: 'Courier Prime', monospace; font-size: 0.72rem; color: #888; letter-spacing: 3px; text-transform: uppercase; }
+
+/* Category nav */
+#menuCatNav { display: none; position: sticky; top: 52px; z-index: 50; background: var(--black); border-bottom: 1px solid #333; overflow-x: auto; white-space: nowrap; padding: 0; -webkit-overflow-scrolling: touch; }
+#menuCatNavInner { display: inline-flex; gap: 0; padding: 0; }
+.menu-cat-btn { display: inline-block; padding: 10px 18px; font-family: 'Courier Prime', monospace; font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: #888; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.menu-cat-btn:hover { color: #f5f0e8; }
+.menu-cat-btn.active { color: #f5f0e8; border-bottom-color: #9c7a3c; }
+
+/* Search */
+.menu-search-wrap { padding: 12px 20px 0; max-width: 680px; margin: 0 auto; }
+.menu-search-row { display: flex; align-items: center; gap: 0; border: 1px solid var(--border-dark); background: var(--paper); }
+.menu-search-row span { padding: 8px 12px; font-size: 0.75rem; color: var(--ink-faint); }
+.menu-search-row input { flex: 1; border: none; outline: none; background: transparent; font-family: 'Courier Prime', monospace; font-size: 0.8rem; padding: 8px 8px 8px 0; color: var(--ink); }
+.menu-search-row button { background: none; border: none; padding: 8px 12px; cursor: pointer; font-family: 'Courier Prime', monospace; font-size: 0.75rem; color: var(--ink-faint); }
+
+/* Wrap */
+.menu-wrap { max-width: 680px; margin: 0 auto; padding: 28px 20px 100px; }
+
+/* Günün özel */
+.menu-gunun { background: linear-gradient(135deg,#1a0e00,#2a1a00); border: 1.5px solid #9c7a3c; padding: 18px 20px; margin-bottom: 28px; position: relative; }
+.menu-gunun-label { font-family: 'Courier Prime', monospace; font-size: 0.62rem; letter-spacing: 3px; color: #9c7a3c; text-transform: uppercase; margin-bottom: 8px; }
+.menu-gunun-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: #f5f0e8; margin-bottom: 4px; }
+.menu-gunun-desc { font-family: 'Courier Prime', monospace; font-size: 0.72rem; color: #a09070; }
+.menu-gunun-price { font-family: 'Courier Prime', monospace; font-size: 0.9rem; color: #9c7a3c; margin-top: 8px; }
+
+/* Sections */
+.menu-section { margin-bottom: 36px; }
+.menu-section-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px 0; user-select: none; }
+.menu-section-title { font-family: 'Courier Prime', monospace; font-size: 1.1rem; letter-spacing: 4px; color: var(--ink); border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 0; flex: 1; font-weight: 700; text-transform: uppercase; }
+.menu-section-toggle { font-family: 'Courier Prime', monospace; font-size: 0.9rem; color: var(--ink-faint); transition: transform 0.2s; flex-shrink: 0; margin-left: 12px; }
+.menu-section.closed .menu-section-toggle { transform: rotate(-90deg); }
+.menu-section-body { overflow: hidden; transition: max-height 0.3s ease; }
+.menu-section.closed .menu-section-body { max-height: 0 !important; }
+
+/* Items */
+.menu-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px dashed var(--border); }
+.menu-item:last-child { border-bottom: none; }
+.menu-item-body { flex: 1; min-width: 0; }
+.menu-item-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.menu-item-desc { font-family: 'Courier Prime', monospace; font-size: 0.72rem; color: var(--ink-light); line-height: 1.7; margin-bottom: 4px; }
+.menu-item-note { font-family: 'Courier Prime', monospace; font-size: 0.65rem; color: #9c7a3c; font-style: italic; letter-spacing: 1px; }
+.menu-item-price { font-family: 'Courier Prime', monospace; font-size: 1.1rem; font-weight: 700; color: var(--ink); white-space: nowrap; padding-top: 2px; }
+
+/* Combo */
+.menu-combo { margin: 0 0 20px; padding: 16px 20px; background: linear-gradient(135deg,#0e0a1a,#1a1030); border: 1px solid #4a2a8a; }
+.menu-combo-label { font-family: 'Courier Prime', monospace; font-size: 0.62rem; letter-spacing: 3px; color: #8a6ab0; margin-bottom: 10px; text-transform: uppercase; }
+.menu-combo-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.menu-combo-col { flex: 1; min-width: 100px; }
+.menu-combo-type { font-family: 'Courier Prime', monospace; font-size: 0.6rem; color: #6a4a8a; letter-spacing: 2px; margin-bottom: 4px; text-transform: uppercase; }
+.menu-combo-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #f0ecf8; font-weight: 700; }
+
+/* Loader */
+.loader { text-align: center; padding: 56px 20px; font-family: 'Courier Prime', monospace; font-size: 0.78rem; letter-spacing: 3px; color: var(--ink-faint); }
+.loader::after { content: '_'; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Footer */
+.menu-footer { text-align: center; padding: 20px; font-family: 'Courier Prime', monospace; font-size: 0.65rem; letter-spacing: 2px; color: var(--ink-faint); border-top: 1px solid var(--border); }
+.menu-footer a { color: var(--ink-faint); text-decoration: none; }
+.menu-footer a:hover { color: var(--ink); }
+
+@media(max-width:600px) {
+  .menu-wrap { padding: 20px 12px 80px; }
+  .menu-hero { padding: 24px 16px 20px; }
+  .menu-hero-title { font-size: 1.5rem; letter-spacing: 4px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="https://izzetfiratorfa.github.io/stalcker/" class="logo">Nora Kitap Evi</a>
+  <div class="lang-toggle">
+    <button id="langTR" class="active" onclick="setLang('tr')">TR</button>
+    <button id="langEN" onclick="setLang('en')">EN</button>
+  </div>
+</header>
+
+<div class="menu-hero">
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+    <div class="menu-hero-title">Nora Menü</div>
+  </div>
+  <div class="menu-hero-sub" id="heroSub">Kitaplar eşliğinde</div>
+</div>
+
+<div id="menuCatNav">
+  <div id="menuCatNavInner"></div>
+</div>
+
+<div class="menu-search-wrap">
+  <div class="menu-search-row">
+    <span>🔍</span>
+    <input id="searchInput" type="text" placeholder="Menüde ara..." oninput="filterItems()">
+    <button onclick="document.getElementById('searchInput').value='';filterItems()">✕</button>
+  </div>
+</div>
+
+<div id="menuContent" class="menu-wrap">
+  <div class="loader">> NORA MENU YÜKLENIYOR</div>
+</div>
+
+<div class="menu-footer">
+  <a href="https://izzetfiratorfa.github.io/stalcker/">← Kitaplığa Dön</a>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://higpqbetbrzjiiyukkjn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpZ3BxYmV0YnJ6amlpeXVra2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMjg3NTYsImV4cCI6MjA4ODgwNDc1Nn0.7Hi8GGAVKdketghJi7BAb9A3jtj27-N-B-XuGn9A7ko';
+const CACHE_KEY = 'nora_menu_cache';
+const CACHE_TS  = 'nora_menu_cache_ts';
+const CACHE_TTL = 60 * 60 * 1000;
+
+let lang = localStorage.getItem('menuLang') || 'tr';
+let _items = [];
+
+const catTranslations = {
+  'Espresso Bazlı Sıcak Kahveler': 'Hot Espresso Drinks',
+  'Diğer Kahveler': 'Other Coffees',
+  'Espresso Bazlı Soğuk Kahveler': 'Iced Espresso Drinks',
+  'Diğer Soğuk Kahveler': 'Other Iced Coffees',
+  'Sıcak İçecekler': 'Hot Beverages',
+  'Soğuk İçecekler': 'Cold Beverages',
+  'Yiyecekler': 'Food',
+  'Tatlılar': 'Desserts',
+  'Yemekler': 'Meals',
+};
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('menuLang', l);
+  document.getElementById('langTR').classList.toggle('active', l === 'tr');
+  document.getElementById('langEN').classList.toggle('active', l === 'en');
+  document.getElementById('heroSub').textContent = l === 'en' ? 'Alongside books' : 'Kitaplar eşliğinde';
+  if (_items.length) render(_items);
+}
+
+function normalize(s) {
+  return (s||'').toLowerCase()
+    .replace(/ş/g,'s').replace(/ğ/g,'g').replace(/ü/g,'u')
+    .replace(/ö/g,'o').replace(/ç/g,'c').replace(/ı/g,'i').replace(/İ/g,'i');
+}
+
+function filterItems() {
+  const q = normalize(document.getElementById('searchInput').value);
+  if (!q) { document.querySelectorAll('.menu-item,.menu-section').forEach(el => el.style.display = ''); return; }
+  document.querySelectorAll('.menu-section').forEach(sec => {
+    let hit = false;
+    sec.querySelectorAll('.menu-item').forEach(item => {
+      const match = normalize(item.textContent).includes(q);
+      item.style.display = match ? '' : 'none';
+      if (match) hit = true;
+    });
+    sec.style.display = hit ? '' : 'none';
+    if (hit) {
+      sec.classList.remove('closed');
+      const body = sec.querySelector('.menu-section-body');
+      if (body) body.style.maxHeight = '9999px';
+    }
+  });
+}
+
+function toggleSection(header) {
+  const sec = header.closest('.menu-section');
+  const body = sec.querySelector('.menu-section-body');
+  const open = !sec.classList.contains('closed');
+  if (open) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => { sec.classList.add('closed'); body.style.maxHeight = '0'; });
+  } else {
+    sec.classList.remove('closed');
+    body.style.maxHeight = body.scrollHeight + 9999 + 'px';
+    setTimeout(() => { body.style.maxHeight = '9999px'; }, 320);
+  }
+}
+
+function scrollTo(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.classList.contains('closed')) {
+    const h = el.querySelector('.menu-section-header');
+    if (h) toggleSection(h);
+  }
+  const navH = (document.getElementById('menuCatNav')?.offsetHeight || 0) + 52;
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navH - 8, behavior: 'smooth' });
+  document.querySelectorAll('.menu-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function itemHTML(i) {
+  const name = (lang === 'en' && i.name_en) ? i.name_en : i.name;
+  const desc = (lang === 'en' && i.description_en) ? i.description_en : i.description;
+
+  const allergenMap = { 'glutensiz':'🌾✕','vegan':'🌱','vejetaryen':'🥗','laktozsuz':'🥛✕','fındıklı':'🥜','fıstıklı':'🥜','şekersiz':'🍬✕','organik':'🌿','baharatlı':'🌶️' };
+  let allergenHtml = '';
+  if (i.allergens) {
+    const tags = i.allergens.split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
+    const inner = tags.map(t => `<span style="font-size:0.6rem;color:var(--ink-faint);border:1px solid var(--border);padding:1px 5px;">${allergenMap[t]?allergenMap[t]+' ':''}${t}</span>`).join(' ');
+    if (inner) allergenHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${inner}</div>`;
+  }
+
+  const badge = i.is_popular ? `<span style="font-size:0.6rem;color:#c87020;letter-spacing:1px;margin-left:6px;">★ POPÜLER</span>` : '';
+
+  let priceHtml = '';
+  if (i.price && i.price.includes('|')) {
+    const [s, b] = i.price.split('|');
+    const sv = s.replace('K:','').trim(), bv = b.replace('B:','').trim();
+    priceHtml = `<div class="menu-item-price" style="text-align:right;white-space:nowrap;font-size:0.9rem;">
+      <span style="font-size:0.6rem;color:var(--ink-faint);">K </span>${sv}
+      <span style="color:var(--border-dark);margin:0 4px;">/</span>
+      <span style="font-size:0.6rem;color:var(--ink-faint);">B </span>${bv}
+    </div>`;
+  } else {
+    priceHtml = `<div class="menu-item-price">${i.price||''}</div>`;
+  }
+
+  return `<div class="menu-item">
+    <div class="menu-item-body">
+      <div class="menu-item-name">${name}${badge}</div>
+      ${desc ? `<div class="menu-item-desc">${desc}</div>` : ''}
+      ${allergenHtml}
+      ${i.note ? `<div class="menu-item-note">* ${i.note}</div>` : ''}
+    </div>
+    ${priceHtml}
+  </div>`;
+}
+
+function render(items) {
+  _items = items;
+  const visible = items.filter(i => i.is_available !== false);
+  const el = document.getElementById('menuContent');
+  if (!el) return;
+
+  let html = '';
+
+  // Günün özel içeceği
+  const gunun = visible.find(i => i.is_gunun);
+  if (gunun) {
+    const pricePart = gunun.price ? `<div class="menu-gunun-price">${gunun.price.replace('|',' / ')}</div>` : '';
+    html += `<div class="menu-gunun">
+      <div class="menu-gunun-label">✦ Günün Özel İçeceği</div>
+      <div class="menu-gunun-name">${gunun.name}</div>
+      ${gunun.description ? `<div class="menu-gunun-desc">${gunun.description}</div>` : ''}
+      ${pricePart}
+    </div>`;
+  }
+
+  // Kombine öneri
+  const combo = visible.find(i => i.is_gunun && (i.combo_food_title || i.combo_book_title))
+    || visible.find(i => i.is_popular && (i.combo_food_title || i.combo_book_title));
+  if (combo) {
+    html += `<div class="menu-combo">
+      <div class="menu-combo-label">✦ Bugün Önerilen Kombinasyon</div>
+      <div class="menu-combo-row">
+        <div class="menu-combo-col"><div class="menu-combo-type">İÇECEK</div><div class="menu-combo-name">${combo.name}</div></div>
+        ${combo.combo_food_title ? `<div class="menu-combo-col"><div class="menu-combo-type">YİYECEK</div><div class="menu-combo-name">${combo.combo_food_title}</div></div>` : ''}
+        ${combo.combo_book_title ? `<div class="menu-combo-col"><div class="menu-combo-type">KİTAP</div><div class="menu-combo-name">${combo.combo_book_title}</div></div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Kategoriler
+  const catOrder = [];
+  const catMap = {};
+  visible.forEach(i => {
+    const cat = i.category || 'Genel';
+    if (!catMap[cat]) { catMap[cat] = []; catOrder.push(cat); }
+    catMap[cat].push(i);
+  });
+
+  // Nav
+  const nav = document.getElementById('menuCatNav');
+  const navInner = document.getElementById('menuCatNavInner');
+  if (catOrder.length > 1) {
+    navInner.innerHTML = catOrder.map((cat, idx) => {
+      const label = (lang === 'en' && catTranslations[cat]) ? catTranslations[cat] : cat;
+      return `<button class="menu-cat-btn${idx===0?' active':''}" onclick="scrollTo('cat_${idx}',this)">${label}</button>`;
+    }).join('');
+    nav.style.display = 'block';
+  }
+
+  catOrder.forEach((cat, idx) => {
+    const label = (lang === 'en' && catTranslations[cat]) ? catTranslations[cat] : cat;
+    const bodyHtml = catMap[cat].map(i => itemHTML(i)).join('');
+    html += `<div class="menu-section ${idx===0?'':'closed'}" id="cat_${idx}">
+      <div class="menu-section-header" onclick="toggleSection(this)">
+        <div class="menu-section-title">${label}</div>
+        <span class="menu-section-toggle">▾</span>
+      </div>
+      <div class="menu-section-body" style="max-height:${idx===0?'9999px':'0'};">
+        ${bodyHtml}
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html || '<div style="text-align:center;padding:48px;color:var(--ink-faint);font-family:Courier Prime,monospace;">Menü henüz eklenmemiş.</div>';
+}
+
+async function load() {
+  // Cache'den göster
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    const ts = parseInt(localStorage.getItem(CACHE_TS)||'0');
+    if (cached && Date.now()-ts < CACHE_TTL) {
+      render(JSON.parse(cached));
+      // Arka planda güncelle
+      fetch(`${SUPABASE_URL}/rest/v1/menu_items?order=sort_order.asc,id.asc&select=*`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY } })
+        .then(r => r.json()).then(items => {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(items));
+          localStorage.setItem(CACHE_TS, Date.now().toString());
+        }).catch(()=>{});
+      return;
+    }
+  } catch(e) {}
+
+  // Ağdan çek
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?order=sort_order.asc,id.asc&select=*`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY } });
+    if (!res.ok) throw new Error();
+    const items = await res.json();
+    localStorage.setItem(CACHE_KEY, JSON.stringify(items));
+    localStorage.setItem(CACHE_TS, Date.now().toString());
+    render(items);
+  } catch(e) {
+    document.getElementById('menuContent').innerHTML =
+      '<div style="text-align:center;padding:48px;color:var(--ink-faint);font-family:Courier Prime,monospace;">Menü yüklenemedi. Lütfen tekrar deneyin.</div>';
+  }
+}
+
+setLang(lang);
+load();
+</script>
+</body>
+</html>
