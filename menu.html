@@ -139,9 +139,6 @@ body { font-family: 'Courier Prime', monospace; background: var(--paper); color:
 <script>
 const SUPABASE_URL = 'https://higpqbetbrzjiiyukkjn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpZ3BxYmV0YnJ6amlpeXVra2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMjg3NTYsImV4cCI6MjA4ODgwNDc1Nn0.7Hi8GGAVKdketghJi7BAb9A3jtj27-N-B-XuGn9A7ko';
-const CACHE_KEY = 'nora_menu_cache';
-const CACHE_TS  = 'nora_menu_cache_ts';
-const CACHE_TTL = 60 * 60 * 1000;
 
 let lang = localStorage.getItem('menuLang') || 'tr';
 let _items = [];
@@ -329,31 +326,11 @@ function render(items) {
 }
 
 async function load() {
-  // Cache'den göster
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    const ts = parseInt(localStorage.getItem(CACHE_TS)||'0');
-    if (cached && Date.now()-ts < CACHE_TTL) {
-      render(JSON.parse(cached));
-      // Arka planda güncelle
-      fetch(`${SUPABASE_URL}/rest/v1/menu_items?order=sort_order.asc,id.asc&select=*`,
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY } })
-        .then(r => r.json()).then(items => {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(items));
-          localStorage.setItem(CACHE_TS, Date.now().toString());
-        }).catch(()=>{});
-      return;
-    }
-  } catch(e) {}
-
-  // Ağdan çek
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?order=sort_order.asc,id.asc&select=*`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY } });
     if (!res.ok) throw new Error();
     const items = await res.json();
-    localStorage.setItem(CACHE_KEY, JSON.stringify(items));
-    localStorage.setItem(CACHE_TS, Date.now().toString());
     render(items);
   } catch(e) {
     document.getElementById('menuContent').innerHTML =
