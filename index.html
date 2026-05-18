@@ -1719,6 +1719,12 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
     </div>
     <div style="margin-top:14px;">
+      <div class="adv-filter-label">Yayınevi</div>
+      <select id="filterPublisher" onchange="doSearch()" style="padding:6px 10px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;width:100%;max-width:320px;">
+        <option value="">Tüm Yayınevleri</option>
+      </select>
+    </div>
+    <div style="margin-top:14px;">
       <div class="adv-filter-label">Çoklu Tür Seçimi <span style="color:#555;text-transform:none;letter-spacing:0;">(birden fazla seçilebilir)</span></div>
       <div class="multi-genre-wrap" id="multiGenreWrap"></div>
     </div>
@@ -1879,6 +1885,9 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <select id="adminFilterNora" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
           <option value="">Tüm Kitaplar</option>
           <option value="1">★ Sadece Nora'nın Önerdikleri</option>
+        </select>
+        <select id="adminFilterPublisher" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="">Tüm Yayınevleri</option>
         </select>
         <span id="adminTableInfo" style="color:var(--ink-faint);margin-left:4px;"></span>
       </div>
@@ -5640,6 +5649,17 @@ function buildFilters() {
 
   // Etiket bulutu doldur
   buildTagCloud();
+
+  // Yayınevi filtresi — müşteri
+  const pubSet = new Set();
+  books.filter(b => b.publisher && b.genre !== 'gizli-raf').forEach(b => pubSet.add(b.publisher.trim()));
+  const pubSel = document.getElementById('filterPublisher');
+  if (pubSel) {
+    const cur = pubSel.value;
+    pubSel.innerHTML = '<option value="">Tüm Yayınevleri</option>' +
+      [...pubSet].sort((a,b) => a.localeCompare(b,'tr')).map(p =>
+        `<option value="${p}" ${cur===p?'selected':''}>${p}</option>`).join('');
+  }
 }
 
 function buildTagCloud() {
@@ -5696,6 +5716,8 @@ function clearAdvFilters() {
   const pageMax = document.getElementById('pageMax');
   if (pageMin) pageMin.value = '';
   if (pageMax) pageMax.value = '';
+  const pubSel = document.getElementById('filterPublisher');
+  if (pubSel) pubSel.value = '';
   document.getElementById('advFilterClear').style.display = 'none';
   document.getElementById('advFilterSummary').textContent = '';
   buildFilters();
@@ -5782,7 +5804,7 @@ function doSearch() {
   const pMin = parseInt(document.getElementById('pageMin')?.value) || null;
   const pMax = parseInt(document.getElementById('pageMax')?.value) || null;
 
-  if (!q && activeFilter === 'Tümü' && activeGenres.size === 0 && !pMin && !pMax && minRating === 0 && !activeTag) {
+  if (!q && activeFilter === 'Tümü' && activeGenres.size === 0 && !pMin && !pMax && minRating === 0 && !activeTag && !document.getElementById('filterPublisher')?.value) {
     if (!books.length) { container.innerHTML = ''; titleEl.textContent = ''; return; }
     const shuffled = [...books].filter(b=>b.genre!=='gizli-raf').sort(() => Math.random() - 0.5).slice(0, 3);
     titleEl.textContent = 'bugün için üç öneri';
@@ -5796,6 +5818,7 @@ function doSearch() {
 
   showTerminal(terminalMsg('scanning'), '#2a7a2a');
   setTimeout(() => {
+    const activePublisher = document.getElementById('filterPublisher')?.value || '';
     let filtered = books.filter(b => {
       if (b.genre === 'gizli-raf') return false;
       const match = !q || fuzzyMatch(b.title + ' ' + b.author + ' ' + (b.publisher||'') + ' ' + (b.tags||'') + ' ' + (b.isbn||''), q);
@@ -5807,7 +5830,8 @@ function doSearch() {
       const rating = bookRatings[b.id] || 0;
       const ratingOk = minRating === 0 || rating >= minRating;
       const tagOk = !activeTag || (b.tags||'').split(',').map(t=>t.trim()).includes(activeTag);
-      return match && genreOk && multiGenreOk && newOk && pageOk && ratingOk && tagOk;
+      const publisherOk = !activePublisher || (b.publisher||'').trim() === activePublisher;
+      return match && genreOk && multiGenreOk && newOk && pageOk && ratingOk && tagOk && publisherOk;
     });
 
     const didYouMeanEl = document.getElementById('didYouMean');
@@ -9166,9 +9190,21 @@ function buildAdminShelfFilter() {
     shelves.map(s=>`<option value="${s}"${s===current?' selected':''}>${s}</option>`).join('');
 }
 
+function buildAdminPublisherFilter() {
+  const sel = document.getElementById('adminFilterPublisher');
+  if (!sel) return;
+  const current = sel.value;
+  const pubSet = new Set();
+  books.forEach(b => { if (b.publisher) pubSet.add(b.publisher.trim()); });
+  const pubs = [...pubSet].sort((a,b) => a.localeCompare(b,'tr'));
+  sel.innerHTML = '<option value="">Tüm Yayınevleri</option>' +
+    pubs.map(p => `<option value="${p}"${p===current?' selected':''}>${p}</option>`).join('');
+}
+
 function renderAdminTable() {
   buildAdminGenreFilter();
   buildAdminShelfFilter();
+  buildAdminPublisherFilter();
   const q = normalize(document.getElementById('adminSearch').value || '');
   const sortField = document.getElementById('adminSortField')?.value || 'title';
   const sortDir = document.getElementById('adminSortDir')?.value || 'asc';
@@ -9176,13 +9212,15 @@ function renderAdminTable() {
   const filterStatus = document.getElementById('adminFilterStatus')?.value || '';
   const filterShelf = document.getElementById('adminFilterShelf')?.value || '';
   const filterNora = document.getElementById('adminFilterNora')?.value || '';
+  const filterPublisher = document.getElementById('adminFilterPublisher')?.value || '';
 
   let filtered = books.filter(b => {
-    if (q && !normalize(b.title).includes(q) && !normalize(b.author||'').includes(q) && !normalize(b.shelf||'').includes(q)) return false;
+    if (q && !normalize(b.title).includes(q) && !normalize(b.author||'').includes(q) && !normalize(b.shelf||'').includes(q) && !normalize(b.publisher||'').includes(q)) return false;
     if (filterGenre && !(b.genre||'').split(',').map(g=>g.trim()).includes(filterGenre)) return false;
     if (filterStatus && b.status !== filterStatus) return false;
     if (filterShelf && (b.shelf||'').trim() !== filterShelf) return false;
     if (filterNora === '1' && !b.nora_pick) return false;
+    if (filterPublisher && (b.publisher||'').trim() !== filterPublisher) return false;
     return true;
   });
 
