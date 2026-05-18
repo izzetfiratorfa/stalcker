@@ -179,7 +179,8 @@ body.dark .adv-filter-panel { background:#111;border-color:#333; }
 .book-info { flex:1; }
 .book-title { font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.3; }
 .book-author { font-size:0.82rem;color:var(--ink-light);margin-bottom:3px;font-style:italic; }
-.book-publisher { font-size:0.73rem;color:var(--ink-faint);margin-bottom:8px;letter-spacing:0.5px; }
+.book-publisher { font-size:0.72rem;color:var(--ink-faint);margin-bottom:6px;letter-spacing:0.5px;font-family:'Courier Prime',monospace; }
+.book-publisher::before { content:'· '; }
 .book-meta { display:flex;gap:6px;flex-wrap:wrap;align-items:center; }
 .badge-shelf { background:var(--black);color:var(--white);padding:3px 10px;font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:'Courier Prime',monospace; }
 .badge-status { padding:3px 10px;font-size:0.72rem;font-weight:700;letter-spacing:1px;font-family:'Courier Prime',monospace;border:1.5px solid; }
@@ -1835,6 +1836,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div style="display:flex;gap:8px;">
         <button class="btn-add" onclick="openModal()">+ Yeni Kitap Ekle</button>
         <button class="btn-add" onclick="openBulkModal()" style="background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);">⊞ Toplu Ekle</button>
+        <button onclick="bulkExportCSV()" title="Tüm kataloğu CSV olarak indir" style="background:none;border:1px solid #2a7a2a;color:#2a7a2a;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">↓ CSV</button>
         <button onclick="lockAdmin()" title="Çıkış" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">⏻ Çıkış</button>
       </div>
     </div>
@@ -1855,6 +1857,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="tab-btn" id="tabReport" onclick="switchTab('report')" style="color:#1a6a6a;">📊 RAPOR</button>
       <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:#8B4513;">PANO</button>
       <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#9c7a3c;">☕ MENÜ</button>
+      <button class="tab-btn" id="tabShelfMap" onclick="switchTab('shelfmap')" style="color:#2a5a8a;">🗺 RAF HARİTASI</button>
     </div>
     <div id="panelBooks">
       <div class="admin-search-row">
@@ -1891,15 +1894,21 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         </select>
         <span id="adminTableInfo" style="color:var(--ink-faint);margin-left:4px;"></span>
       </div>
-      <div id="bulkToolbar" style="display:none;background:var(--black);color:var(--white);padding:10px 16px;margin-bottom:8px;align-items:center;gap:10px;font-family:'Courier Prime',monospace;font-size:0.75rem;flex-wrap:wrap;">
-        <span id="bulkCount">0 kitap seçildi</span>
+      <div id="bulkToolbar" style="display:none;background:var(--black);color:var(--white);padding:10px 16px;margin-bottom:8px;align-items:center;gap:8px;font-family:'Courier Prime',monospace;font-size:0.75rem;flex-wrap:wrap;">
+        <span id="bulkCount" style="color:#9c7a3c;font-weight:700;">0 kitap seçildi</span>
         <div style="flex:1"></div>
-        <button class="bulk-btn" onclick="bulkSetStatus('available')">✓ MEVCUT</button>
-        <button class="bulk-btn" onclick="bulkSetStatus('borrowed')">⏳ ÖDÜNÇTE</button>
-        <button class="bulk-btn" onclick="bulkShelfPrompt()">📍 RAF DEĞİŞTİR</button>
-        <button class="bulk-btn" onclick="bulkToggleNora()">★ NORA SEÇ</button>
-        <button class="bulk-btn bulk-btn-danger" onclick="bulkDelete()">✕ SİL</button>
-        <button class="bulk-btn" onclick="clearSelection()">İPTAL</button>
+        <span style="font-size:0.62rem;color:#555;letter-spacing:1px;">DURUM:</span>
+        <button class="bulk-btn" onclick="bulkSetStatus('available')">✓ Mevcut</button>
+        <button class="bulk-btn" onclick="bulkSetStatus('borrowed')">⏳ Ödünçte</button>
+        <button class="bulk-btn" onclick="bulkSetStatus('askida')">📚 Askıda</button>
+        <span style="font-size:0.62rem;color:#555;letter-spacing:1px;">GÜNCELLE:</span>
+        <button class="bulk-btn" onclick="bulkShelfPrompt()">📍 Raf</button>
+        <button class="bulk-btn" onclick="bulkPublisherPrompt()">🏷 Yayınevi</button>
+        <button class="bulk-btn" onclick="bulkGenrePrompt()">🎭 Tür</button>
+        <button class="bulk-btn" onclick="bulkToggleNora()">★ Nora Seç</button>
+        <button class="bulk-btn" onclick="bulkExportCSV()">↓ CSV</button>
+        <button class="bulk-btn bulk-btn-danger" onclick="bulkDelete()">✕ Sil</button>
+        <button class="bulk-btn" onclick="clearSelection()" style="background:#222;border-color:#444;">İptal</button>
       </div>
       <div class="books-table">
         <div class="table-head">
@@ -2273,6 +2282,20 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
       <!-- Mevcut menü listesi -->
       <div id="menuAdminList"></div>
+    </div>
+
+    <!-- RAF HARİTASI PANELİ -->
+    <div id="panelShelfMap" style="display:none;">
+      <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);">Her kare = 1 kitap · Renk = doluluk oranı</div>
+        <div style="display:flex;gap:8px;align-items:center;font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);">
+          <span style="display:inline-block;width:12px;height:12px;background:#e8f0e8;border:1px solid #2a7a2a;"></span>1–3
+          <span style="display:inline-block;width:12px;height:12px;background:#c8e0c8;border:1px solid #2a7a2a;"></span>4–7
+          <span style="display:inline-block;width:12px;height:12px;background:#2a7a2a;border:1px solid #1a5a1a;"></span>8+
+          <span style="display:inline-block;width:12px;height:12px;background:#e8e8f0;border:1px solid #5a5a9a;"></span>Ödünçte var
+        </div>
+      </div>
+      <div id="shelfMapContent"></div>
     </div>
 
   </div>
@@ -6483,7 +6506,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -6495,7 +6518,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -6517,6 +6540,7 @@ function switchTab(tab) {
   if (tab === 'panoadmin') loadPanoAdmin();
   if (tab === 'report') loadDailyReport();
   if (tab === 'menuadmin') loadMenuAdmin();
+  if (tab === 'shelfmap') renderShelfMap();
 }
 
 function renderMissedSearches() {
@@ -9334,6 +9358,47 @@ function updateBulkToolbar() {
     row.classList.toggle('selected', selectedIds.has(parseInt(row.dataset.id)));
   });
 }
+async function bulkPublisherPrompt() {
+  if (!selectedIds.size) return;
+  const pub = prompt('Yeni yayınevi adı:');
+  if (!pub || !pub.trim()) return;
+  if (!confirm(selectedIds.size + ' kitabın yayınevini "' + pub.trim() + '" yapılsın mı?')) return;
+  const ids = Array.from(selectedIds);
+  await api('books?id=in.(' + ids.join(',') + ')', { method:'PATCH', body:JSON.stringify({publisher: pub.trim()}) });
+  clearSelection(); await fetchBooks(); renderAdminTable(); renderStats();
+}
+
+async function bulkGenrePrompt() {
+  if (!selectedIds.size) return;
+  // Mevcut türleri listele
+  const genreSet = new Set();
+  books.forEach(b => { if (b.genre) b.genre.split(',').map(g=>g.trim()).forEach(g => genreSet.add(g)); });
+  const genreList = [...genreSet].sort((a,b)=>a.localeCompare(b,'tr')).join(', ');
+  const genre = prompt('Yeni tür (mevcut türler: ' + genreList + '):');
+  if (!genre || !genre.trim()) return;
+  if (!confirm(selectedIds.size + ' kitabın türü "' + genre.trim() + '" yapılsın mı?')) return;
+  const ids = Array.from(selectedIds);
+  await api('books?id=in.(' + ids.join(',') + ')', { method:'PATCH', body:JSON.stringify({genre: genre.trim()}) });
+  clearSelection(); await fetchBooks(); renderAdminTable(); renderStats(); buildFilters();
+}
+
+function bulkExportCSV() {
+  const ids = selectedIds.size > 0 ? selectedIds : null;
+  const list = ids ? books.filter(b => ids.has(b.id)) : books.filter(b => b.genre !== 'gizli-raf');
+  const headers = ['ID','Kitap Adı','Yazar','Tür','Yayınevi','Sayfa','Yıl','Raf','Durum','Etiketler','ISBN'];
+  const rows = list.map(b => [
+    b.id, b.title||'', b.author||'', b.genre||'', b.publisher||'',
+    b.pages||'', b.year||'', b.shelf||'', b.status||'', b.tags||'', b.isbn||''
+  ].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'nora-katalog-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  if (ids) clearSelection();
+}
+
 async function bulkSetStatus(status) {
   if (!selectedIds.size) return;
   if (!confirm(selectedIds.size + ' kitabı güncellemek istiyor musunuz?')) return;
@@ -9370,7 +9435,119 @@ async function toggleNora(id) {
 }
 
 // ===== MODAL =====
-// ===== TOPLU KİTAP EKLEME =====
+// ===== RAF HARİTASI =====
+function renderShelfMap() {
+  const el = document.getElementById('shelfMapContent');
+  if (!el) return;
+
+  // Raf prefix'lerine göre grupla (A, B, C... veya A-1, A-2...)
+  const shelfGroups = {};
+  books.filter(b => b.shelf && b.genre !== 'gizli-raf').forEach(b => {
+    const shelf = (b.shelf || '').trim().toUpperCase();
+    // Prefix: ilk harf(ler) + numara grubu
+    const prefix = shelf.replace(/[-\s]?\d+$/, '').trim() || shelf[0] || '?';
+    if (!shelfGroups[prefix]) shelfGroups[prefix] = {};
+    if (!shelfGroups[prefix][shelf]) shelfGroups[prefix][shelf] = [];
+    shelfGroups[prefix][shelf].push(b);
+  });
+
+  // Rafı olmayan kitaplar
+  const noShelf = books.filter(b => !b.shelf && b.genre !== 'gizli-raf');
+
+  const prefixes = Object.keys(shelfGroups).sort((a,b) => a.localeCompare(b,'tr'));
+
+  let html = '';
+
+  // Özet istatistik
+  const totalBooks = books.filter(b => b.genre !== 'gizli-raf').length;
+  const availableCount = books.filter(b => b.status === 'available' && b.genre !== 'gizli-raf').length;
+  const borrowedCount = books.filter(b => b.status === 'borrowed').length;
+  const shelfCount = Object.values(shelfGroups).reduce((s,g) => s + Object.keys(g).length, 0);
+
+  html += `<div style="display:flex;gap:0;margin-bottom:24px;border:1.5px solid var(--border-dark);overflow:hidden;">
+    ${[
+      ['TOPLAM KİTAP', totalBooks, 'var(--ink)'],
+      ['MEVCUT', availableCount, '#2a7a2a'],
+      ['ÖDÜNÇTE', borrowedCount, '#c84040'],
+      ['RAF SAYISI', shelfCount, '#2a5a8a'],
+      ['RAFSIZ', noShelf.length, '#9c7a3c'],
+    ].map(([label,val,color],i,arr) => `
+      <div style="flex:1;padding:14px 12px;text-align:center;${i<arr.length-1?'border-right:1px solid var(--border-dark);':''}">
+        <div style="font-family:'Courier Prime',monospace;font-size:1.6rem;font-weight:700;color:${color};">${val}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">${label}</div>
+      </div>`).join('')}
+  </div>`;
+
+  // Her prefix grubu
+  prefixes.forEach(prefix => {
+    const group = shelfGroups[prefix];
+    const shelves = Object.keys(group).sort((a,b) => {
+      return a.replace(/(\d+)/g, n=>n.padStart(6,'0')).localeCompare(
+             b.replace(/(\d+)/g, n=>n.padStart(6,'0')), 'tr');
+    });
+    const totalInGroup = shelves.reduce((s,sh) => s + group[sh].length, 0);
+
+    html += `<div style="margin-bottom:24px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;letter-spacing:3px;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+        <span style="font-weight:700;">${prefix} BÖLÜMÜ</span>
+        <span style="color:var(--ink-faint);font-size:0.65rem;">${shelves.length} raf · ${totalInGroup} kitap</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+
+    shelves.forEach(shelf => {
+      const booksOnShelf = group[shelf];
+      const count = booksOnShelf.length;
+      const hasBorrowed = booksOnShelf.some(b => b.status === 'borrowed');
+      const hasAskida = booksOnShelf.some(b => b.status === 'askida');
+
+      // Renk — doluluk bazlı
+      let bg, border;
+      if (count <= 3) { bg='#e8f0e8'; border='#2a7a2a'; }
+      else if (count <= 7) { bg='#c8e0c8'; border='#1a6a1a'; }
+      else { bg='#2a7a2a'; border='#1a5a1a'; }
+      const textColor = count > 7 ? '#fff' : '#1a4a1a';
+
+      if (hasBorrowed) { bg='#e8e8f0'; border='#5a5a9a'; }
+
+      // Tooltip için kitap listesi
+      const titles = booksOnShelf.slice(0,5).map(b => b.title).join(', ') + (booksOnShelf.length > 5 ? '...' : '');
+
+      html += `<div onclick="adminFilterByShelf('${shelf}')"
+        title="${shelf}: ${titles}"
+        style="min-width:60px;padding:10px 12px;background:${bg};border:2px solid ${border};cursor:pointer;text-align:center;transition:transform 0.15s;"
+        onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;font-weight:700;color:${textColor};">${shelf}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:1rem;font-weight:700;color:${textColor};margin-top:2px;">${count}</div>
+        ${hasAskida ? '<div style="font-size:0.55rem;color:#9c7a3c;">askıda</div>' : ''}
+        ${hasBorrowed ? '<div style="font-size:0.55rem;color:#5a5a9a;">ödünçte var</div>' : ''}
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  // Rafsızlar
+  if (noShelf.length) {
+    html += `<div style="margin-top:16px;padding:14px;border:1px dashed var(--border-dark);">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;color:#c84040;margin-bottom:8px;">⚠ RAF NUMARASI YOK (${noShelf.length} kitap)</div>
+      ${noShelf.slice(0,10).map(b =>
+        `<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;padding:4px 0;border-bottom:1px dashed var(--border);cursor:pointer;color:var(--ink-light);" onclick="openModal(${b.id})">
+          ${b.title} <span style="color:var(--ink-faint);">— ${b.author||''}</span>
+        </div>`).join('')}
+      ${noShelf.length > 10 ? `<div style="font-size:0.65rem;color:var(--ink-faint);margin-top:6px;">...ve ${noShelf.length-10} kitap daha</div>` : ''}
+    </div>`;
+  }
+
+  el.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--ink-faint);font-family:Courier Prime,monospace;">Raf bilgisi olan kitap yok.</div>';
+}
+
+function adminFilterByShelf(shelf) {
+  // Raflar sekmesine geç ve filtrele
+  switchTab('books');
+  const sel = document.getElementById('adminFilterShelf');
+  if (sel) { sel.value = shelf; adminTableReset(); }
+  document.getElementById('panelBooks')?.scrollIntoView({behavior:'smooth'});
+}
 const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','year','tags'];
 const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','1866','klasik, çeviri'];
 
