@@ -1858,6 +1858,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:#8B4513;">PANO</button>
       <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#9c7a3c;">☕ MENÜ</button>
       <button class="tab-btn" id="tabShelfMap" onclick="switchTab('shelfmap')" style="color:#2a5a8a;">🗺 RAF HARİTASI</button>
+      <button class="tab-btn" id="tabPaso" onclick="switchTab('paso')" style="color:#c87020;">☀ YAZ PASOSU</button>
     </div>
     <div id="panelBooks">
       <div class="admin-search-row">
@@ -2296,6 +2297,73 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         </div>
       </div>
       <div id="shelfMapContent"></div>
+    </div>
+
+    <!-- YAZ PASOSU PANELİ -->
+    <div id="panelPaso" style="display:none;">
+      <div style="display:flex;gap:0;margin-bottom:20px;border:1.5px solid var(--border-dark);overflow:hidden;">
+        <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#c87020;" id="pasoTotalCount">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">TOPLAM PASO</div>
+        </div>
+        <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#2a7a2a;" id="pasoTodayCount">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">BUGÜN GELEN</div>
+        </div>
+        <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#9c7a3c;" id="pasoTotalUses">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">TOPLAM KULLANIM</div>
+        </div>
+        <div style="flex:1;padding:14px;text-align:center;">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#2a5a8a;" id="pasoRevenue">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">GELİR (₺)</div>
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--border-dark);padding:18px;margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:#c87020;margin-bottom:14px;">+ YENİ PASO EKLE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">AD SOYAD *</label>
+            <input type="text" id="pasoName" placeholder="Ahmet Yılmaz" style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">TELEFON *</label>
+            <input type="tel" id="pasoPhone" placeholder="05xxxxxxxxx" maxlength="11" style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">PIN (4 HANE) *</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="pasoPin" placeholder="4823" maxlength="4" inputmode="numeric" style="flex:1;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;letter-spacing:4px;">
+              <button onclick="generatePin()" title="Rastgele PIN" style="background:var(--black);color:var(--white);border:none;padding:8px 12px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.75rem;">↻</button>
+            </div>
+          </div>
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">NOT</label>
+            <input type="text" id="pasoNotes" placeholder="Ödeme tarihi, kanal..." style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="savePaso()" style="background:#c87020;color:#fff;border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:9px 20px;cursor:pointer;">KAYDET</button>
+          <span id="pasoFormMsg" style="font-family:'Courier Prime',monospace;font-size:0.7rem;"></span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span>BUGÜN GELEN MÜŞTERİLER</span>
+          <button onclick="loadPasoPanel()" style="background:none;border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);cursor:pointer;">↻ Yenile</button>
+        </div>
+        <div id="pasoTodayList"></div>
+      </div>
+
+      <div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;display:flex;gap:10px;align-items:center;">
+          <span>TÜM PASO SAHİPLERİ</span>
+          <input type="text" id="pasoSearch" placeholder="Ara..." oninput="filterPasoList()" style="flex:1;max-width:200px;padding:4px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);outline:none;">
+        </div>
+        <div id="pasoAllList"></div>
+      </div>
     </div>
 
   </div>
@@ -6506,7 +6574,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -6518,7 +6586,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -6541,6 +6609,7 @@ function switchTab(tab) {
   if (tab === 'report') loadDailyReport();
   if (tab === 'menuadmin') loadMenuAdmin();
   if (tab === 'shelfmap') renderShelfMap();
+  if (tab === 'paso') loadPasoPanel();
 }
 
 function renderMissedSearches() {
@@ -9435,7 +9504,175 @@ async function toggleNora(id) {
 }
 
 // ===== MODAL =====
-// ===== RAF HARİTASI =====
+// ===== YAZ PASOSU ADMIN =====
+let _pasoAll = [];
+let _pasoUses = [];
+
+function getTodayKeyAdmin() {
+  const now = new Date();
+  const ist = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+  return ist.toISOString().slice(0, 10);
+}
+
+function generatePin() {
+  const pin = String(Math.floor(1000 + Math.random() * 9000));
+  const inp = document.getElementById('pasoPin');
+  if (inp) inp.value = pin;
+}
+
+async function loadPasoPanel() {
+  try {
+    const [passRes, usesRes] = await Promise.all([
+      api('summer_passes?order=purchased_at.desc&select=*'),
+      api('pass_uses?order=used_at.desc&select=*')
+    ]);
+    _pasoAll = passRes.ok ? await passRes.json() : [];
+    _pasoUses = usesRes.ok ? await usesRes.json() : [];
+
+    const todayKey = getTodayKeyAdmin();
+    const todayUses = _pasoUses.filter(u => u.day_key === todayKey);
+
+    // Özet
+    const el = id => document.getElementById(id);
+    if (el('pasoTotalCount')) el('pasoTotalCount').textContent = _pasoAll.filter(p => p.is_active).length;
+    if (el('pasoTodayCount')) el('pasoTodayCount').textContent = todayUses.length;
+    if (el('pasoTotalUses')) el('pasoTotalUses').textContent = _pasoUses.length;
+    if (el('pasoRevenue')) el('pasoRevenue').textContent = (_pasoAll.filter(p=>p.is_active).length * 2500).toLocaleString('tr-TR');
+
+    // Bugün gelenler
+    const todayEl = document.getElementById('pasoTodayList');
+    if (todayEl) {
+      if (!todayUses.length) {
+        todayEl.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.75rem;color:var(--ink-faint);padding:12px 0;">Bugün henüz kimse gelmedi.</div>';
+      } else {
+        todayEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+          <thead><tr style="border-bottom:2px solid var(--ink);">
+            <th style="padding:6px 8px;text-align:left;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">İSİM</th>
+            <th style="padding:6px 8px;text-align:left;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">SAAT</th>
+          </tr></thead>
+          <tbody>${todayUses.map(u => {
+            const ist = new Date(new Date(u.used_at).getTime() + 3*60*60*1000);
+            const time = ist.toTimeString().slice(0,5);
+            return `<tr style="border-bottom:1px dashed var(--border);">
+              <td style="padding:8px 8px;color:var(--ink);">${u.name || '—'}</td>
+              <td style="padding:8px 8px;color:var(--ink-faint);">${time}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+      }
+    }
+
+    renderPasoList();
+  } catch(e) { console.error('loadPasoPanel:', e); }
+}
+
+function renderPasoList(filterQ = '') {
+  const el = document.getElementById('pasoAllList');
+  if (!el) return;
+  const q = normalize(filterQ || document.getElementById('pasoSearch')?.value || '');
+  const list = q
+    ? _pasoAll.filter(p => normalize(p.name).includes(q) || normalize(p.phone||'').includes(q))
+    : _pasoAll;
+
+  if (!list.length) {
+    el.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.75rem;color:var(--ink-faint);padding:12px 0;">Henüz paso kaydı yok.</div>';
+    return;
+  }
+
+  const todayKey = getTodayKeyAdmin();
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+    <thead><tr style="border-bottom:2px solid var(--ink);">
+      <th style="padding:6px 8px;text-align:left;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">İSİM</th>
+      <th style="padding:6px 8px;text-align:left;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">TELEFON</th>
+      <th style="padding:6px 8px;text-align:left;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">PIN</th>
+      <th style="padding:6px 8px;text-align:center;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">TOPLAM</th>
+      <th style="padding:6px 8px;text-align:center;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">BUGÜN</th>
+      <th style="padding:6px 8px;text-align:center;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">DURUM</th>
+      <th style="padding:6px 4px;"></th>
+    </tr></thead>
+    <tbody>${list.map(p => {
+      const uses = _pasoUses.filter(u => u.pass_id === p.id);
+      const usedToday = uses.some(u => u.day_key === todayKey);
+      const statusColor = p.is_active ? '#2a7a2a' : '#c84040';
+      const statusText = p.is_active ? 'AKTİF' : 'PASİF';
+      return `<tr style="border-bottom:1px dashed var(--border);">
+        <td style="padding:8px 8px;color:var(--ink);font-weight:700;">${p.name}</td>
+        <td style="padding:8px 8px;color:var(--ink-faint);">${p.phone||'—'}</td>
+        <td style="padding:8px 8px;color:var(--ink);letter-spacing:3px;">${p.pin}</td>
+        <td style="padding:8px 8px;text-align:center;color:var(--ink);">${uses.length}</td>
+        <td style="padding:8px 8px;text-align:center;">${usedToday ? '<span style="color:#2a7a2a;">✓</span>' : '<span style="color:var(--ink-faint);">—</span>'}</td>
+        <td style="padding:8px 8px;text-align:center;"><span style="color:${statusColor};font-size:0.62rem;letter-spacing:1px;">${statusText}</span></td>
+        <td style="padding:8px 4px;text-align:center;">
+          <button onclick="togglePasoActive(${p.id},${p.is_active})" title="${p.is_active?'Pasife al':'Aktif et'}"
+            style="background:none;border:1px solid var(--border);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:2px 6px;cursor:pointer;">
+            ${p.is_active ? '⏸' : '▶'}
+          </button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+function filterPasoList() {
+  renderPasoList();
+}
+
+async function savePaso() {
+  const name = document.getElementById('pasoName')?.value.trim();
+  const phone = document.getElementById('pasoPhone')?.value.trim().replace(/\D/g,'');
+  const pin = document.getElementById('pasoPin')?.value.trim();
+  const notes = document.getElementById('pasoNotes')?.value.trim();
+  const msgEl = document.getElementById('pasoFormMsg');
+
+  if (!name || !phone || !pin) {
+    if (msgEl) { msgEl.textContent = '✗ Ad, telefon ve PIN zorunlu.'; msgEl.style.color = '#c84040'; }
+    return;
+  }
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+    if (msgEl) { msgEl.textContent = '✗ PIN 4 rakam olmalı.'; msgEl.style.color = '#c84040'; }
+    return;
+  }
+  if (phone.length < 10) {
+    if (msgEl) { msgEl.textContent = '✗ Telefon eksik.'; msgEl.style.color = '#c84040'; }
+    return;
+  }
+
+  if (msgEl) { msgEl.textContent = '↻ Kaydediliyor...'; msgEl.style.color = '#9c7a3c'; }
+
+  try {
+    const res = await api('summer_passes', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ name, phone, pin, notes: notes || null })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      if (err.code === '23505') {
+        if (msgEl) { msgEl.textContent = '✗ Bu telefon zaten kayıtlı.'; msgEl.style.color = '#c84040'; }
+      } else {
+        if (msgEl) { msgEl.textContent = '✗ Kayıt hatası.'; msgEl.style.color = '#c84040'; }
+      }
+      return;
+    }
+    if (msgEl) { msgEl.textContent = '✓ Paso eklendi!'; msgEl.style.color = '#2a7a2a'; }
+    document.getElementById('pasoName').value = '';
+    document.getElementById('pasoPhone').value = '';
+    document.getElementById('pasoPin').value = '';
+    document.getElementById('pasoNotes').value = '';
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 2000);
+    await loadPasoPanel();
+  } catch(e) {
+    if (msgEl) { msgEl.textContent = '✗ Bağlantı hatası.'; msgEl.style.color = '#c84040'; }
+  }
+}
+
+async function togglePasoActive(id, currentActive) {
+  await api('summer_passes?id=eq.' + id, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: !currentActive })
+  });
+  await loadPasoPanel();
+}
 function renderShelfMap() {
   const el = document.getElementById('shelfMapContent');
   if (!el) return;
