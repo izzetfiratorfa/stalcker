@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nora Yaz Pasosu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Courier Prime', monospace;
+  background: #0a0a0a;
+  color: #e8e2d6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  background: #12100d;
+  border: 1px solid #2e2a24;
+  padding: 36px 28px;
+  position: relative;
+}
+
+.logo {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 4px;
+  color: #6a6258;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: #e8e2d6;
+  text-align: center;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  color: #6a6258;
+  text-align: center;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: #6a6258;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2e2a24;
+  color: #e8e2d6;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.1rem;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  letter-spacing: 2px;
+}
+.field input:focus { border-color: #9c7a3c; }
+.field input::placeholder { color: #3a3630; letter-spacing: 1px; font-size: 0.85rem; }
+
+.btn {
+  width: 100%;
+  background: #9c7a3c;
+  color: #0a0a0a;
+  border: none;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s;
+}
+.btn:hover { background: #b8923e; }
+.btn:disabled { background: #3a3630; color: #6a6258; cursor: not-allowed; }
+
+.msg {
+  margin-top: 20px;
+  padding: 16px;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  line-height: 1.8;
+  text-align: center;
+  display: none;
+}
+.msg.success {
+  background: #0a1a0a;
+  border: 1px solid #2a5a2a;
+  color: #6abf6a;
+  display: block;
+}
+.msg.error {
+  background: #1a0a0a;
+  border: 1px solid #5a2a2a;
+  color: #bf6a6a;
+  display: block;
+}
+.msg.warning {
+  background: #1a1400;
+  border: 1px solid #5a4a00;
+  color: #c8a030;
+  display: block;
+}
+
+/* Başarı ekranı */
+.success-screen {
+  display: none;
+  text-align: center;
+}
+.coffee-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: rise 0.6s ease;
+}
+@keyframes rise { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+.success-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: #e8e2d6;
+  margin-bottom: 8px;
+}
+.success-msg {
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  color: #6a6258;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.success-detail {
+  font-size: 0.68rem;
+  color: #4a4640;
+  letter-spacing: 1px;
+  line-height: 2;
+}
+.season-badge {
+  display: inline-block;
+  border: 1px solid #9c7a3c;
+  color: #9c7a3c;
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  padding: 4px 12px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+/* Kota kullanıldı ekranı */
+.used-screen {
+  display: none;
+  text-align: center;
+}
+.used-icon { font-size: 3rem; margin-bottom: 16px; }
+.used-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  color: #c8a030;
+  margin-bottom: 8px;
+}
+.used-msg { font-size: 0.72rem; color: #6a6258; letter-spacing: 1px; line-height: 1.8; }
+
+/* Dönem dışı */
+.inactive-screen {
+  display: none;
+  text-align: center;
+}
+
+.dates {
+  font-size: 0.62rem;
+  color: #4a4640;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-top: 24px;
+  line-height: 2;
+}
+
+.loader {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.72rem;
+  letter-spacing: 3px;
+  color: #4a4640;
+  display: none;
+}
+.loader::after { content: '_'; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+  <!-- GİRİŞ EKRANI -->
+  <div id="loginScreen">
+    <div class="logo">Nora Kitap Evi</div>
+    <div class="title">Yaz Pasosu</div>
+    <div class="subtitle">15 Haz — 1 Eyl 2025</div>
+
+    <div class="field">
+      <label>Telefon Numarası</label>
+      <input type="tel" id="phoneInput" placeholder="05xx xxx xx xx" maxlength="11"
+        oninput="formatPhone(this)" onkeydown="if(event.key==='Enter')document.getElementById('pinInput').focus()">
+    </div>
+    <div class="field">
+      <label>PIN Kodunuz</label>
+      <input type="password" id="pinInput" placeholder="••••" maxlength="4" inputmode="numeric"
+        oninput="this.value=this.value.replace(/\D/,'')"
+        onkeydown="if(event.key==='Enter')checkPass()">
+    </div>
+
+    <button class="btn" id="checkBtn" onclick="checkPass()">Kahvemi Al ☕</button>
+
+    <div class="loader" id="loader">> Doğrulanıyor</div>
+    <div class="msg" id="msgBox"></div>
+
+    <div class="dates">
+      ✦ Filtre kahve · Günde 1 bardak<br>
+      ✦ 15 Haziran – 1 Eylül 2025
+    </div>
+  </div>
+
+  <!-- BAŞARI EKRANI -->
+  <div class="success-screen" id="successScreen">
+    <div class="coffee-icon">☕</div>
+    <div class="season-badge">✦ Yaz Pasosu ✦</div>
+    <div class="success-name" id="successName">Merhaba!</div>
+    <div class="success-msg">Kahveniz hazırlanıyor</div>
+    <div class="success-detail" id="successDetail"></div>
+  </div>
+
+  <!-- KOTA DOLU EKRANI -->
+  <div class="used-screen" id="usedScreen">
+    <div class="used-icon">🌙</div>
+    <div class="used-title">Bugünkü kotanı kullandın</div>
+    <div class="used-msg" id="usedMsg"></div>
+  </div>
+
+  <!-- AKTİF DEĞİL -->
+  <div class="inactive-screen" id="inactiveScreen">
+    <div style="font-size:3rem;margin-bottom:16px;">📅</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:#e8e2d6;margin-bottom:8px;">Paso dönemi dışında</div>
+    <div style="font-size:0.72rem;color:#6a6258;letter-spacing:1px;line-height:1.8;">Yaz Pasosu 15 Haziran –<br>1 Eylül 2025 arasında geçerlidir.</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://higpqbetbrzjiiyukkjn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpZ3BxYmV0YnJ6amlpeXVra2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMjg3NTYsImV4cCI6MjA4ODgwNDc1Nn0.7Hi8GGAVKdketghJi7BAb9A3jtj27-N-B-XuGn9A7ko';
+
+const PASS_START = new Date('2025-06-15T00:00:00');
+const PASS_END   = new Date('2025-09-01T23:59:59');
+
+function api(path, opts = {}) {
+  return fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...opts.headers
+    },
+    ...opts
+  });
+}
+
+function formatPhone(inp) {
+  inp.value = inp.value.replace(/\D/g, '');
+}
+
+function showScreen(id) {
+  ['loginScreen','successScreen','usedScreen','inactiveScreen'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function showMsg(type, text) {
+  const el = document.getElementById('msgBox');
+  el.className = 'msg ' + type;
+  el.innerHTML = text;
+  el.style.display = 'block';
+}
+
+function setLoading(on) {
+  document.getElementById('loader').style.display = on ? 'block' : 'none';
+  document.getElementById('checkBtn').disabled = on;
+  document.getElementById('msgBox').style.display = on ? 'none' : '';
+}
+
+// Dönem kontrolü
+function isInSeason() {
+  const now = new Date();
+  return now >= PASS_START && now <= PASS_END;
+}
+
+// Gün anahtarı — İstanbul saati (UTC+3)
+function getTodayKey() {
+  const now = new Date();
+  const ist = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+  return ist.toISOString().slice(0, 10);
+}
+
+async function checkPass() {
+  const phone = document.getElementById('phoneInput').value.trim().replace(/\D/g, '');
+  const pin = document.getElementById('pinInput').value.trim();
+
+  if (!phone || phone.length < 10) { showMsg('error', '> Telefon numarası eksik'); return; }
+  if (!pin || pin.length !== 4) { showMsg('error', '> PIN 4 haneli olmalı'); return; }
+
+  // Dönem kontrolü
+  if (!isInSeason()) { showScreen('inactiveScreen'); return; }
+
+  setLoading(true);
+
+  try {
+    // Paso sorgula
+    const res = await api('summer_passes?phone=eq.' + encodeURIComponent(phone) + '&select=*');
+    if (!res.ok) throw new Error('API hatası');
+    const passes = await res.json();
+
+    if (!passes.length) {
+      setLoading(false);
+      showMsg('error', '> Bu numara kayıtlı değil.<br><span style="font-size:0.7rem;color:#6a6258;">Paso almak için Nora\'ya uğrayın.</span>');
+      return;
+    }
+
+    const pass = passes[0];
+
+    // PIN kontrolü
+    if (pass.pin !== pin) {
+      setLoading(false);
+      showMsg('error', '> PIN hatalı. Lütfen tekrar deneyin.');
+      return;
+    }
+
+    // Aktif mi?
+    if (!pass.is_active) {
+      setLoading(false);
+      showMsg('error', '> Pasounuz aktif değil. Nora\'ya uğrayın.');
+      return;
+    }
+
+    // Bugün kullandı mı?
+    const todayKey = getTodayKey();
+    const usedRes = await api('pass_uses?pass_id=eq.' + pass.id + '&day_key=eq.' + todayKey + '&select=id,used_at');
+    if (!usedRes.ok) throw new Error('Kullanım kontrolü hatası');
+    const uses = await usedRes.json();
+
+    if (uses.length > 0) {
+      setLoading(false);
+      const usedAt = new Date(uses[0].used_at);
+      const istTime = new Date(usedAt.getTime() + 3 * 60 * 60 * 1000);
+      const timeStr = istTime.toTimeString().slice(0, 5);
+      showScreen('usedScreen');
+      document.getElementById('usedMsg').innerHTML =
+        pass.name + ', bugün saat ' + timeStr + '\'de kahveni aldın.<br><br>' +
+        'Yarın ' + getTodayKey().slice(5).replace('-','.') + ' \'den itibaren<br>tekrar kullanabilirsin. ✦';
+      return;
+    }
+
+    // Kullanım kaydet
+    const insertRes = await api('pass_uses', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({
+        pass_id: pass.id,
+        name: pass.name,
+        day_key: todayKey
+      })
+    });
+    if (!insertRes.ok) throw new Error('Kayıt hatası');
+
+    setLoading(false);
+
+    // Başarı ekranı
+    const now = new Date();
+    const ist = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+    const timeStr = ist.toTimeString().slice(0, 5);
+    const dateStr = ist.toLocaleDateString('tr-TR', { day:'numeric', month:'long' });
+
+    showScreen('successScreen');
+    document.getElementById('successName').textContent = pass.name;
+    document.getElementById('successDetail').innerHTML =
+      dateStr + ' · ' + timeStr + '<br>' +
+      'Filtre Kahve · Ücretsiz<br>' +
+      '<span style="color:#4a4640;">Yaz Pasosu</span>';
+
+    // 10 saniye sonra login ekranına dön
+    setTimeout(() => {
+      showScreen('loginScreen');
+      document.getElementById('phoneInput').value = '';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('msgBox').style.display = 'none';
+    }, 10000);
+
+  } catch(e) {
+    setLoading(false);
+    showMsg('error', '> Bağlantı hatası. Tekrar deneyin.');
+    console.error(e);
+  }
+}
+
+// Sayfa yüklenince dönem kontrolü
+if (!isInSeason()) {
+  showScreen('inactiveScreen');
+}
+</script>
+</body>
+</html>
