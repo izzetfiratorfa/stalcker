@@ -1859,6 +1859,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#9c7a3c;">☕ MENÜ</button>
       <button class="tab-btn" id="tabShelfMap" onclick="switchTab('shelfmap')" style="color:#2a5a8a;">🗺 RAF HARİTASI</button>
       <button class="tab-btn" id="tabPaso" onclick="switchTab('paso')" style="color:#c87020;">☀ YAZ PASOSU</button>
+      <button class="tab-btn" id="tabKolektif" onclick="switchTab('kolektif')" style="color:#6a3a8a;">◈ KOLEKTİF RAF</button>
     </div>
     <div id="panelBooks">
       <div class="admin-search-row">
@@ -2299,7 +2300,95 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div id="shelfMapContent"></div>
     </div>
 
-    <!-- YAZ PASOSU PANELİ -->
+    <!-- KOLEKTİF RAF PANELİ -->
+    <div id="panelKolektif" style="display:none;">
+
+      <!-- Özet -->
+      <div style="display:flex;gap:0;margin-bottom:20px;border:1.5px solid var(--border-dark);overflow:hidden;">
+        <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#6a3a8a;" id="kolTotalCount">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">TOPLAM KİTAP</div>
+        </div>
+        <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#2a7a2a;" id="kolSatistaCnt">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">SATIŞTA</div>
+        </div>
+        <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#9c7a3c;" id="kolSatildiCnt">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">SATILDI</div>
+        </div>
+        <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#2a5a8a;" id="kolNoraGelir">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">NORA GELİR (₺)</div>
+        </div>
+        <div style="flex:1;padding:14px;text-align:center;">
+          <div style="font-family:'Courier Prime',monospace;font-size:1.8rem;font-weight:700;color:#c84040;" id="kolSahibiGelir">—</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-top:2px;">SAHİP GELİR (₺)</div>
+        </div>
+      </div>
+
+      <!-- Yeni kitap ekle -->
+      <div style="border:1px solid var(--border-dark);padding:18px;margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:#6a3a8a;margin-bottom:14px;" id="kolFormTitle">+ YENİ KİTAP EKLE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">KİTAP ADI *</label>
+            <input type="text" id="kolTitle" placeholder="Kitap adı"
+              style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">KİTABI VEREN *</label>
+            <input type="text" id="kolOwner" placeholder="Kişi adı"
+              style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">SATIŞ FİYATI (₺) *</label>
+            <input type="number" id="kolPrice" placeholder="150" min="0"
+              style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+          <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">DURUM</label>
+            <select id="kolStatus"
+              style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;cursor:pointer;">
+              <option value="satista">Satışta</option>
+              <option value="depoda">Depoda</option>
+              <option value="satildi">Satıldı</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">NOT</label>
+            <input type="text" id="kolNotes" placeholder="Kitabın durumu, özel not..."
+              style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+        </div>
+        <input type="hidden" id="kolEditId">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="saveKolektif()" id="kolSaveBtn"
+            style="background:#6a3a8a;color:#fff;border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:9px 20px;cursor:pointer;">KAYDET</button>
+          <button onclick="cancelKolEdit()" id="kolCancelBtn" style="display:none;background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 14px;cursor:pointer;">İPTAL</button>
+          <span id="kolFormMsg" style="font-family:'Courier Prime',monospace;font-size:0.7rem;"></span>
+        </div>
+      </div>
+
+      <!-- Filtre + liste -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="kolSearch" placeholder="Kitap veya kişi ara..." oninput="renderKolektifList()"
+          style="flex:1;min-width:160px;padding:6px 10px;font-family:'Courier Prime',monospace;font-size:0.75rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);outline:none;">
+        <select id="kolFilterStatus" onchange="renderKolektifList()"
+          style="padding:6px 10px;font-family:'Courier Prime',monospace;font-size:0.75rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="">Tümü</option>
+          <option value="satista">Satışta</option>
+          <option value="depoda">Depoda</option>
+          <option value="satildi">Satıldı</option>
+        </select>
+        <select id="kolFilterOwner" onchange="renderKolektifList()"
+          style="padding:6px 10px;font-family:'Courier Prime',monospace;font-size:0.75rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer;">
+          <option value="">Tüm Kişiler</option>
+        </select>
+      </div>
+
+      <div id="kolList"></div>
+    </div>
     <div id="panelPaso" style="display:none;">
       <div style="display:flex;gap:0;margin-bottom:20px;border:1.5px solid var(--border-dark);overflow:hidden;">
         <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--border-dark);">
@@ -6574,7 +6663,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -6586,7 +6675,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -6610,6 +6699,7 @@ function switchTab(tab) {
   if (tab === 'menuadmin') loadMenuAdmin();
   if (tab === 'shelfmap') renderShelfMap();
   if (tab === 'paso') loadPasoPanel();
+  if (tab === 'kolektif') loadKolektif();
 }
 
 function renderMissedSearches() {
@@ -9504,7 +9594,190 @@ async function toggleNora(id) {
 }
 
 // ===== MODAL =====
-// ===== YAZ PASOSU ADMIN =====
+// ===== KOLEKTİF RAF =====
+let _kolItems = [];
+
+const KOL_STATUS_LABEL = { satista: 'Satışta', depoda: 'Depoda', satildi: 'Satıldı' };
+const KOL_STATUS_COLOR = { satista: '#2a7a2a', depoda: '#9c7a3c', satildi: '#c84040' };
+
+async function loadKolektif() {
+  try {
+    const res = await api('kolektif_raf?order=created_at.desc&select=*');
+    if (!res.ok) throw new Error();
+    _kolItems = await res.json();
+    updateKolStats();
+    buildKolOwnerFilter();
+    renderKolektifList();
+  } catch(e) { console.error('loadKolektif:', e); }
+}
+
+function updateKolStats() {
+  const satista  = _kolItems.filter(k => k.status === 'satista');
+  const satildi  = _kolItems.filter(k => k.status === 'satildi');
+  const noraGelir   = satildi.reduce((s,k) => s + Math.floor((k.price||0)/2), 0);
+  const sahibiGelir = satildi.reduce((s,k) => s + Math.ceil((k.price||0)/2), 0);
+
+  const el = id => document.getElementById(id);
+  if (el('kolTotalCount'))  el('kolTotalCount').textContent  = _kolItems.length;
+  if (el('kolSatistaCnt'))  el('kolSatistaCnt').textContent  = satista.length;
+  if (el('kolSatildiCnt'))  el('kolSatildiCnt').textContent  = satildi.length;
+  if (el('kolNoraGelir'))   el('kolNoraGelir').textContent   = noraGelir.toLocaleString('tr-TR');
+  if (el('kolSahibiGelir')) el('kolSahibiGelir').textContent = sahibiGelir.toLocaleString('tr-TR');
+}
+
+function buildKolOwnerFilter() {
+  const sel = document.getElementById('kolFilterOwner');
+  if (!sel) return;
+  const cur = sel.value;
+  const owners = [...new Set(_kolItems.map(k => k.owner).filter(Boolean))].sort((a,b) => a.localeCompare(b,'tr'));
+  sel.innerHTML = '<option value="">Tüm Kişiler</option>' +
+    owners.map(o => `<option value="${o}"${o===cur?' selected':''}>${o}</option>`).join('');
+}
+
+function renderKolektifList() {
+  const el = document.getElementById('kolList');
+  if (!el) return;
+  const q = normalize(document.getElementById('kolSearch')?.value || '');
+  const filterStatus = document.getElementById('kolFilterStatus')?.value || '';
+  const filterOwner  = document.getElementById('kolFilterOwner')?.value  || '';
+
+  const list = _kolItems.filter(k => {
+    if (q && !normalize(k.title||'').includes(q) && !normalize(k.owner||'').includes(q)) return false;
+    if (filterStatus && k.status !== filterStatus) return false;
+    if (filterOwner  && k.owner  !== filterOwner)  return false;
+    return true;
+  });
+
+  if (!list.length) {
+    el.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.78rem;color:var(--ink-faint);padding:24px 0;text-align:center;">Kayıt bulunamadı.</div>';
+    return;
+  }
+
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+    <thead><tr style="border-bottom:2px solid var(--ink);">
+      <th style="padding:7px 8px;text-align:left;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">KİTAP</th>
+      <th style="padding:7px 8px;text-align:left;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">VEREN</th>
+      <th style="padding:7px 8px;text-align:right;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">FİYAT</th>
+      <th style="padding:7px 8px;text-align:right;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">NORA</th>
+      <th style="padding:7px 8px;text-align:right;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">SAHİP</th>
+      <th style="padding:7px 8px;text-align:center;color:var(--ink-faint);font-weight:normal;letter-spacing:1px;">DURUM</th>
+      <th style="padding:7px 4px;"></th>
+    </tr></thead>
+    <tbody>
+      ${list.map(k => {
+        const nora   = Math.floor((k.price||0)/2);
+        const sahip  = Math.ceil((k.price||0)/2);
+        const color  = KOL_STATUS_COLOR[k.status] || 'var(--ink-faint)';
+        const label  = KOL_STATUS_LABEL[k.status] || k.status;
+        return `<tr style="border-bottom:1px dashed var(--border);">
+          <td style="padding:9px 8px;">
+            <div style="color:var(--ink);font-weight:700;">${k.title}</div>
+            ${k.notes ? `<div style="font-size:0.65rem;color:var(--ink-faint);margin-top:2px;">${k.notes}</div>` : ''}
+          </td>
+          <td style="padding:9px 8px;color:var(--ink-light);">${k.owner}</td>
+          <td style="padding:9px 8px;text-align:right;color:var(--ink);">₺${(k.price||0).toLocaleString('tr-TR')}</td>
+          <td style="padding:9px 8px;text-align:right;color:#2a5a8a;">₺${nora.toLocaleString('tr-TR')}</td>
+          <td style="padding:9px 8px;text-align:right;color:#c84040;">₺${sahip.toLocaleString('tr-TR')}</td>
+          <td style="padding:9px 8px;text-align:center;">
+            <select onchange="kolQuickStatus(${k.id}, this.value)"
+              style="background:none;border:1px solid ${color};color:${color};font-family:'Courier Prime',monospace;font-size:0.62rem;padding:2px 6px;cursor:pointer;letter-spacing:1px;">
+              <option value="satista"  ${k.status==='satista' ?'selected':''}>Satışta</option>
+              <option value="depoda"   ${k.status==='depoda'  ?'selected':''}>Depoda</option>
+              <option value="satildi"  ${k.status==='satildi' ?'selected':''}>Satıldı</option>
+            </select>
+          </td>
+          <td style="padding:9px 4px;white-space:nowrap;">
+            <button onclick="editKolektif(${k.id})" title="Düzenle"
+              style="background:none;border:1px solid var(--border);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 7px;cursor:pointer;margin-right:3px;">✎</button>
+            <button onclick="deleteKolektif(${k.id})" title="Sil"
+              style="background:none;border:1px solid #5a2a2a;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 7px;cursor:pointer;">✕</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function saveKolektif() {
+  const editId = document.getElementById('kolEditId')?.value;
+  const title  = document.getElementById('kolTitle')?.value.trim();
+  const owner  = document.getElementById('kolOwner')?.value.trim();
+  const price  = parseInt(document.getElementById('kolPrice')?.value) || 0;
+  const status = document.getElementById('kolStatus')?.value || 'satista';
+  const notes  = document.getElementById('kolNotes')?.value.trim() || null;
+  const msgEl  = document.getElementById('kolFormMsg');
+
+  if (!title || !owner || !price) {
+    if (msgEl) { msgEl.textContent = '✗ Kitap adı, veren kişi ve fiyat zorunlu.'; msgEl.style.color = '#c84040'; }
+    return;
+  }
+  if (msgEl) { msgEl.textContent = '↻ Kaydediliyor...'; msgEl.style.color = '#9c7a3c'; }
+
+  const body = { title, owner, price, status, notes };
+  if (status === 'satildi') body.sold_at = new Date().toISOString();
+
+  try {
+    const res = editId
+      ? await api('kolektif_raf?id=eq.' + editId, { method:'PATCH', body: JSON.stringify(body) })
+      : await api('kolektif_raf', { method:'POST', prefer:'return=minimal', body: JSON.stringify(body) });
+
+    if (!res.ok) throw new Error();
+    if (msgEl) { msgEl.textContent = editId ? '✓ Güncellendi.' : '✓ Eklendi.'; msgEl.style.color = '#2a7a2a'; }
+    clearKolForm();
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 2000);
+    await loadKolektif();
+  } catch(e) {
+    if (msgEl) { msgEl.textContent = '✗ Kayıt hatası.'; msgEl.style.color = '#c84040'; }
+  }
+}
+
+function editKolektif(id) {
+  const k = _kolItems.find(x => x.id === id);
+  if (!k) return;
+  document.getElementById('kolTitle').value  = k.title  || '';
+  document.getElementById('kolOwner').value  = k.owner  || '';
+  document.getElementById('kolPrice').value  = k.price  || '';
+  document.getElementById('kolStatus').value = k.status || 'satista';
+  document.getElementById('kolNotes').value  = k.notes  || '';
+  document.getElementById('kolEditId').value = k.id;
+  document.getElementById('kolFormTitle').textContent = '✎ KİTABI DÜZENLE';
+  document.getElementById('kolCancelBtn').style.display = '';
+  document.getElementById('kolTitle').focus();
+  document.getElementById('kolFormTitle').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function cancelKolEdit() {
+  clearKolForm();
+}
+
+function clearKolForm() {
+  ['kolTitle','kolOwner','kolPrice','kolNotes','kolEditId'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const sel = document.getElementById('kolStatus'); if (sel) sel.value = 'satista';
+  document.getElementById('kolFormTitle').textContent = '+ YENİ KİTAP EKLE';
+  document.getElementById('kolCancelBtn').style.display = 'none';
+  const msg = document.getElementById('kolFormMsg'); if (msg) msg.textContent = '';
+}
+
+async function kolQuickStatus(id, status) {
+  const body = { status };
+  if (status === 'satildi') body.sold_at = new Date().toISOString();
+  else body.sold_at = null;
+  await api('kolektif_raf?id=eq.' + id, { method:'PATCH', body: JSON.stringify(body) });
+  const item = _kolItems.find(k => k.id === id);
+  if (item) { item.status = status; if (body.sold_at !== undefined) item.sold_at = body.sold_at; }
+  updateKolStats();
+  renderKolektifList();
+}
+
+async function deleteKolektif(id) {
+  const k = _kolItems.find(x => x.id === id);
+  const title = k ? k.title : 'bu kitap';
+  if (!confirm('"' + title + '" silinsin mi?')) return;
+  await api('kolektif_raf?id=eq.' + id, { method:'DELETE' });
+  await loadKolektif();
+}
 let _pasoAll = [];
 let _pasoUses = [];
 
