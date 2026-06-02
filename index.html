@@ -2337,6 +2337,11 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
               style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
           </div>
           <div>
+            <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">YAZAR</label>
+            <input type="text" id="kolAuthor" placeholder="Yazar adı"
+              style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
+          </div>
+          <div>
             <label style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:var(--ink-faint);display:block;margin-bottom:4px;">KİTABI VEREN *</label>
             <input type="text" id="kolOwner" placeholder="Kişi adı"
               style="width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);outline:none;">
@@ -9642,7 +9647,7 @@ function renderKolektifList() {
   const filterOwner  = document.getElementById('kolFilterOwner')?.value  || '';
 
   const list = _kolItems.filter(k => {
-    if (q && !normalize(k.title||'').includes(q) && !normalize(k.owner||'').includes(q)) return false;
+    if (q && !normalize(k.title||'').includes(q) && !normalize(k.author||'').includes(q) && !normalize(k.owner||'').includes(q)) return false;
     if (filterStatus && k.status !== filterStatus) return false;
     if (filterOwner  && k.owner  !== filterOwner)  return false;
     return true;
@@ -9672,6 +9677,7 @@ function renderKolektifList() {
         return `<tr style="border-bottom:1px dashed var(--border);">
           <td style="padding:9px 8px;">
             <div style="color:var(--ink);font-weight:700;">${k.title}</div>
+            ${k.author ? `<div style="font-size:0.72rem;color:var(--ink-light);font-style:italic;margin-top:1px;">${k.author}</div>` : ''}
             ${k.notes ? `<div style="font-size:0.65rem;color:var(--ink-faint);margin-top:2px;">${k.notes}</div>` : ''}
           </td>
           <td style="padding:9px 8px;color:var(--ink-light);">${k.owner}</td>
@@ -9701,6 +9707,7 @@ function renderKolektifList() {
 async function saveKolektif() {
   const editId = document.getElementById('kolEditId')?.value;
   const title  = document.getElementById('kolTitle')?.value.trim();
+  const author = document.getElementById('kolAuthor')?.value.trim() || null;
   const owner  = document.getElementById('kolOwner')?.value.trim();
   const price  = parseInt(document.getElementById('kolPrice')?.value) || 0;
   const status = document.getElementById('kolStatus')?.value || 'satista';
@@ -9713,7 +9720,7 @@ async function saveKolektif() {
   }
   if (msgEl) { msgEl.textContent = '↻ Kaydediliyor...'; msgEl.style.color = '#9c7a3c'; }
 
-  const body = { title, owner, price, status, notes };
+  const body = { title, author, owner, price, status, notes };
   if (status === 'satildi') body.sold_at = new Date().toISOString();
 
   try {
@@ -9735,6 +9742,7 @@ function editKolektif(id) {
   const k = _kolItems.find(x => x.id === id);
   if (!k) return;
   document.getElementById('kolTitle').value  = k.title  || '';
+  document.getElementById('kolAuthor').value = k.author || '';
   document.getElementById('kolOwner').value  = k.owner  || '';
   document.getElementById('kolPrice').value  = k.price  || '';
   document.getElementById('kolStatus').value = k.status || 'satista';
@@ -9751,7 +9759,7 @@ function cancelKolEdit() {
 }
 
 function clearKolForm() {
-  ['kolTitle','kolOwner','kolPrice','kolNotes','kolEditId'].forEach(id => {
+  ['kolTitle','kolAuthor','kolOwner','kolPrice','kolNotes','kolEditId'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const sel = document.getElementById('kolStatus'); if (sel) sel.value = 'satista';
