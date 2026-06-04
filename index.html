@@ -10199,10 +10199,15 @@ async function saveBulkBooks() {
         status: 'available'
       };
       const res = await api('books', { method: 'POST', body: JSON.stringify(body) });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('Bulk insert error:', res.status, err);
+        throw new Error(err.message || res.status);
+      }
       if (el) el.style.background = '#f0fff0';
       success++;
     } catch(e) {
+      console.error('Bulk row error:', e.message);
       if (el) el.style.background = '#fff0f0';
       fail++;
     }
@@ -10317,10 +10322,20 @@ async function saveBook() {
     sim3: document.getElementById('fSim3').value.trim()
   };
   try {
-    if (editingId) await api('books?id=eq.' + editingId, { method:'PATCH', body:JSON.stringify(data) });
-    else await api('books', { method:'POST', body:JSON.stringify(data) });
+    let res;
+    if (editingId) {
+      res = await api('books?id=eq.' + editingId, { method:'PATCH', body:JSON.stringify(data) });
+    } else {
+      res = await api('books', { method:'POST', body:JSON.stringify(data) });
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err.message || err.hint || err.details || JSON.stringify(err);
+      alert('Kayıt hatası (' + res.status + '):\n' + msg);
+      return;
+    }
     closeModal(); await fetchBooks(); renderAdminTable(); renderStats(); buildFilters();
-  } catch(e) { alert('Kaydetme hatası: ' + e.message); }
+  } catch(e) { alert('Bağlantı hatası: ' + e.message); }
 }
 
 async function deleteBook(id) {
