@@ -3063,14 +3063,13 @@ function fuzzyMatch(text, query) {
 // ===== API =====
 async function fetchBooks() {
   try {
-    // Supabase varsayılan limiti 1000 — tüm kitapları çekmek için Range header gerekiyor
-    const res = await api('books?order=id.asc', {
-      headers: { 'Range-Unit': 'items', 'Range': '0-9999' }
-    });
-    if (!res.ok) throw new Error('Bağlantı hatası');
+    // Supabase varsayılan limiti 1000 — limit parametresiyle aşıyoruz
+    const res = await api('books?order=id.asc&limit=10000');
+    if (!res.ok) throw new Error('Bağlantı hatası ' + res.status);
     books = await res.json();
+    console.log('Yüklenen kitap sayısı:', books.length);
     fetchBookRatings();
-  } catch(e) { books = []; console.error(e); }
+  } catch(e) { books = []; console.error('fetchBooks hatası:', e); }
 }
 
 async function fetchBookRatings() {
