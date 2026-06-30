@@ -326,8 +326,8 @@ body.dark .detail-description { border-color:#333; }
 .admin-search-row { display:flex;gap:0;margin-bottom:18px;border:1.5px solid var(--border-dark);box-shadow:3px 3px 0 rgba(0,0,0,0.1);background:var(--white); }
 .admin-search-input { flex:1;border:none;padding:10px 14px;font-family:'Courier Prime',monospace;font-size:0.9rem;color:var(--ink);background:transparent;outline:none; }
 .books-table { background:var(--white);border:1.5px solid var(--border-dark);overflow:hidden;box-shadow:4px 4px 0 rgba(0,0,0,0.12); }
-.table-head { display:grid;grid-template-columns:36px 2fr 1.4fr 0.8fr 0.8fr 0.7fr 100px;padding:10px 18px;background:var(--black);color:var(--white);font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;font-family:'Courier Prime',monospace; }
-.table-row { display:grid;grid-template-columns:36px 2fr 1.4fr 0.8fr 0.8fr 0.7fr 100px;padding:12px 18px;border-bottom:1px solid var(--border);align-items:center;font-size:0.85rem;transition:background 0.1s; }
+.table-head { display:grid;grid-template-columns:36px 2fr 1.4fr 0.8fr 0.7fr 0.6fr 0.7fr 100px;padding:10px 18px;background:var(--black);color:var(--white);font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;font-family:'Courier Prime',monospace; }
+.table-row { display:grid;grid-template-columns:36px 2fr 1.4fr 0.8fr 0.7fr 0.6fr 0.7fr 100px;padding:12px 18px;border-bottom:1px solid var(--border);align-items:center;font-size:0.85rem;transition:background 0.1s; }
 .table-row:last-child { border-bottom:none; }
 .table-row:hover { background:var(--paper); }
 .table-row .book-name { font-weight:700;color:var(--ink);font-family:'Playfair Display',serif; }
@@ -1924,6 +1924,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <div>Kitap Adı</div>
           <div>Yazar</div>
           <div>Raf</div>
+          <div>Fiyat</div>
           <div>Durum</div>
           <div>Nora</div>
           <div>İşlem</div>
@@ -9616,9 +9617,10 @@ function renderAdminTable() {
     const priceStr = b.price ? `<span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#9c7a3c;">₺${b.price}</span>` : '';
     return `<div class="table-row ${isSelected ? 'selected' : ''}" data-id="${b.id}">
       <div><input type="checkbox" class="row-checkbox" data-id="${b.id}" ${isSelected ? 'checked' : ''} onchange="toggleRow(${b.id}, this)"></div>
-      <div class="book-name">${b.title}${priceStr ? ' ' + priceStr : ''}</div>
+      <div class="book-name">${b.title}</div>
       <div class="author-name">${authorLinks(b.author)}</div>
       <div><span class="badge-shelf" style="font-size:0.7rem">Raf ${b.shelf}</span></div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#9c7a3c;font-weight:700;">${b.price ? '₺' + b.price.toLocaleString('tr-TR') : '—'}</div>
       <div>${statusSelect}</div>
       <div style="color:var(--gold);font-size:1rem">${b.nora_pick ? '★' : ''}</div>
       <div class="table-actions">
