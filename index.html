@@ -310,7 +310,7 @@ body.dark .detail-description { border-color:#333; }
 .admin-title span { color:var(--ink-faint);font-size:0.85rem;font-family:'Courier Prime',monospace;font-weight:400;margin-left:10px;letter-spacing:1px; }
 .btn-add { background:var(--black);color:var(--white);border:2px solid var(--black);padding:10px 22px;font-family:'Courier Prime',monospace;font-size:0.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;box-shadow:3px 3px 0 #888;transition:all 0.15s; }
 .btn-add:hover { box-shadow:5px 5px 0 #888;transform:translate(-1px,-1px); }
-.tab-btn { background:transparent;border:none;border-bottom:3px solid transparent;color:var(--ink-faint);padding:10px 22px;font-family:'Courier Prime',monospace;font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:-2px;transition:all 0.15s; }
+.tab-btn { background:transparent;border:none;border-bottom:3px solid transparent;color:var(--ink-faint);padding:8px 16px;font-family:'Courier Prime',monospace;font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-bottom:-2px;transition:all 0.15s;white-space:nowrap; }
 .tab-btn:hover { color:var(--ink); }
 .tab-btn.active { color:var(--ink);border-bottom-color:var(--ink); }
 .stats-bar { display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap; }
@@ -1841,7 +1841,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
     </div>
     <div class="stats-bar" id="statsBar"></div>
-    <div style="display:flex;border-bottom:2px solid var(--ink);margin-bottom:18px;">
+    <div style="display:flex;flex-wrap:wrap;border-bottom:2px solid var(--ink);margin-bottom:18px;gap:0;">
       <button class="tab-btn active" id="tabBooks" onclick="switchTab('books')">KİTAPLAR</button>
       <button class="tab-btn" id="tabStats" onclick="switchTab('stats')">İSTATİSTİKLER</button>
       <button class="tab-btn" id="tabQuotes" onclick="switchTab('quotes')">ALINTILAR</button>
@@ -1884,6 +1884,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <option value="">Tüm Durumlar</option>
           <option value="available">Mevcut</option>
           <option value="borrowed">Ödünçte</option>
+          <option value="satista">Satışta</option>
+          <option value="satildi">Satıldı</option>
         </select>
         <select id="adminFilterShelf" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
           <option value="">Tüm Raflar</option>
@@ -1927,7 +1929,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
       <div id="adminPagination" style="display:flex;gap:6px;align-items:center;justify-content:center;padding:16px 0;flex-wrap:wrap;font-family:'Courier Prime',monospace;font-size:0.72rem;"></div>
     </div>
-    <div id="panelStats" style="display:none;"><div id="statsPanel"></div></div>
+    <div id="panelStats" style="display:none;"><div id="statsPanel"></div><div id="salesStatsPanel" style="margin-top:28px;"></div></div>
     <div id="panelQuotes" style="display:none;">
       <div style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-family:'Courier Prime',monospace;font-size:0.75rem;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase">Alıntı Yönetimi</span>
@@ -2545,6 +2547,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
               <th style="padding:6px 8px;text-align:left;width:60px;">Sayfa</th>
               <th style="padding:6px 8px;text-align:left;width:55px;">Raf</th>
               <th style="padding:6px 8px;text-align:left;width:60px;">Sene</th>
+              <th style="padding:6px 8px;text-align:left;width:60px;">Fiyat</th>
               <th style="padding:6px 8px;text-align:left;min-width:120px;">Etiketler</th>
               <th style="padding:6px 4px;width:30px;"></th>
             </tr>
@@ -2597,6 +2600,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div class="field"><label>Yayınevi</label><input type="text" id="fPublisher" placeholder="Yayınevi"></div>
       <div class="field"><label>Raf Numarası *</label><input type="text" id="fShelf" placeholder="örn: A-3, B-12"></div>
       <div class="field"><label>Yayın Yılı</label><input type="number" id="fYear" placeholder="örn: 1984" min="1000" max="2099"></div>
+      <div class="field"><label>Satış Fiyatı (₺)</label><input type="number" id="fPrice" placeholder="örn: 150" min="0"></div>
       <div class="field"><label>ISBN <button type="button" onclick="openBarcodeScannerAdmin()" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:1px 6px;cursor:pointer;letter-spacing:1px;margin-left:6px;">📷 Tara</button></label>
         <div style="display:flex;gap:6px;">
           <input type="text" id="fIsbn" placeholder="978-..." style="flex:1;">
@@ -2616,7 +2620,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
       <div class="field full"><label>Etiketler (virgülle ayır)</label><input type="text" id="fTags" placeholder="klasik, çeviri, aşk..."></div>
       <div class="field full"><label>Durum</label>
-        <select id="fStatus"><option value="available">Mevcut</option><option value="borrowed">Ödünçte</option><option value="askida">Askıda Kitap ❤</option></select>
+        <select id="fStatus"><option value="available">Mevcut</option><option value="borrowed">Ödünçte</option><option value="askida">Askıda Kitap ❤</option><option value="satista">Satışta</option><option value="satildi">Satıldı</option></select>
       </div>
       <div class="field full"><label>Nora\u2019n\u0131n \u00d6nerisi</label>
         <select id="fNora"><option value="0">Hayır</option><option value="1">Evet ★</option></select>
@@ -6709,8 +6713,48 @@ function renderAdminQuotes() {
     </div>`).join('');
 }
 
+// ===== SATIŞ İSTATİSTİKLERİ =====
+function renderSalesStats() {
+  const el = document.getElementById('salesStatsPanel');
+  if (!el) return;
+  const sold = books.filter(b => b.status === 'satildi');
+  const satista = books.filter(b => b.status === 'satista');
+  const totalRevenue = sold.reduce((s, b) => s + (b.price || 0), 0);
+  const avgPrice = sold.length ? Math.round(totalRevenue / sold.length) : 0;
+  const byMonth = {};
+  sold.forEach(b => {
+    const d = b.sold_at ? new Date(b.sold_at) : null;
+    if (!d) return;
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    if (!byMonth[key]) byMonth[key] = { count:0, revenue:0 };
+    byMonth[key].count++; byMonth[key].revenue += (b.price || 0);
+  });
+  const months = Object.keys(byMonth).sort().slice(-6);
+  const byGenre = {};
+  sold.forEach(b => { (b.genre||'Belirtilmemiş').split(',').map(g=>g.trim()).forEach(g => { byGenre[g]=(byGenre[g]||0)+1; }); });
+  const topGenres = Object.entries(byGenre).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const colors = ['#c84040','#2a5a8a','#2a7a2a','#9c7a3c','#6a3a8a'];
+
+  el.innerHTML = `<div style="border-top:2px solid var(--ink);padding-top:24px;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;letter-spacing:3px;text-transform:uppercase;color:var(--ink);margin-bottom:16px;">✦ Satış İstatistiği</div>
+    <div style="display:flex;gap:0;border:1.5px solid var(--border-dark);overflow:hidden;margin-bottom:20px;">
+      ${[['SATILAN',sold.length,'#2a7a2a'],['SATIŞTA',satista.length,'#2a5a8a'],['TOPLAM GELİR','₺'+totalRevenue.toLocaleString('tr-TR'),'#9c7a3c'],['ORT. FİYAT',sold.length?'₺'+avgPrice:'—','#6a3a8a']].map(([l,v,c],i,a)=>
+        `<div style="flex:1;padding:14px 10px;text-align:center;${i<a.length-1?'border-right:1px solid var(--border-dark);':''}"><div style="font-family:'Courier Prime',monospace;font-size:1.5rem;font-weight:700;color:${c};">${v}</div><div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:2px;color:var(--ink-faint);margin-top:3px;">${l}</div></div>`).join('')}
+    </div>
+    ${months.length ? `<div style="margin-bottom:20px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;">SON 6 AY — SATIŞ</div>
+      ${(() => { const mx=Math.max(...months.map(m=>byMonth[m].count),1); return months.map(m=>{const{count,revenue}=byMonth[m];return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);width:50px;">${m.slice(5)}/${m.slice(2,4)}</div><div style="flex:1;background:var(--border);height:18px;"><div style="width:${Math.round(count/mx*100)}%;background:#2a7a2a;height:100%;"></div></div><div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink);width:60px;">${count} kitap</div><div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#9c7a3c;width:70px;">₺${revenue.toLocaleString('tr-TR')}</div></div>`; }).join(''); })()}
+    </div>` : ''}
+    ${topGenres.length ? `<div><div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;">EN ÇOK SATAN TÜRLER</div>
+      ${topGenres.map(([g,n],i)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-light);width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${g}</div><div style="flex:1;background:var(--border);height:14px;"><div style="width:${Math.round(n/topGenres[0][1]*100)}%;background:${colors[i]};height:100%;"></div></div><div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);width:40px;">${n}</div></div>`).join('')}
+    </div>` : ''}
+    ${!sold.length ? '<div style="font-family:\'Courier Prime\',monospace;font-size:0.78rem;color:var(--ink-faint);padding:20px 0;">Henüz satılan kitap yok.</div>' : ''}
+  </div>`;
+}
+
 // ===== ADMIN =====
 function renderStats() {
+  renderSalesStats();
   const total = books.length;
   const avail = books.filter(b => b.status === 'available').length;
   const borrowed = books.filter(b => b.status === 'borrowed').length;
@@ -9501,14 +9545,20 @@ function renderAdminTable() {
   if (info) info.textContent = `${total} kitap · Sayfa ${adminCurrentPage}/${totalPages}`;
 
   // Tablo
+  const statusMap = {
+    available: '<span class="badge-status status-available" style="font-size:0.7rem">Mevcut</span>',
+    borrowed:  '<span class="badge-status status-borrowed"  style="font-size:0.7rem">Ödünçte</span>',
+    askida:    '<span class="badge-status" style="font-size:0.7rem;background:#9c7a3c;color:#fff;padding:2px 8px;">Askıda</span>',
+    satista:   '<span class="badge-status" style="font-size:0.7rem;background:#2a5a8a;color:#fff;padding:2px 8px;">Satışta</span>',
+    satildi:   '<span class="badge-status" style="font-size:0.7rem;background:#2a7a2a;color:#fff;padding:2px 8px;">Satıldı</span>',
+  };
   document.getElementById('adminTableBody').innerHTML = pageItems.length ? pageItems.map(b => {
     const isSelected = selectedIds.has(b.id);
-    const statusBadge = b.status === 'available'
-      ? '<span class="badge-status status-available" style="font-size:0.7rem">Mevcut</span>'
-      : '<span class="badge-status status-borrowed" style="font-size:0.7rem">Ödünçte</span>';
+    const statusBadge = statusMap[b.status] || `<span class="badge-status" style="font-size:0.7rem">${b.status||'?'}</span>`;
+    const priceStr = b.price ? `<span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#9c7a3c;">₺${b.price}</span>` : '';
     return `<div class="table-row ${isSelected ? 'selected' : ''}" data-id="${b.id}">
       <div><input type="checkbox" class="row-checkbox" data-id="${b.id}" ${isSelected ? 'checked' : ''} onchange="toggleRow(${b.id}, this)"></div>
-      <div class="book-name">${b.title}</div>
+      <div class="book-name">${b.title}${priceStr ? ' ' + priceStr : ''}</div>
       <div class="author-name">${authorLinks(b.author)}</div>
       <div><span class="badge-shelf" style="font-size:0.7rem">Raf ${b.shelf}</span></div>
       <div>${statusBadge}</div>
@@ -10356,8 +10406,8 @@ function adminFilterByShelf(shelf) {
   if (sel) { sel.value = shelf; adminTableReset(); }
   document.getElementById('panelBooks')?.scrollIntoView({behavior:'smooth'});
 }
-const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','year','tags'];
-const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','1866','klasik, çeviri'];
+const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','year','price','tags'];
+const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','1866','150','klasik, çeviri'];
 
 function openBulkModal() {
   document.getElementById('bulkModalOverlay').style.display = 'flex';
@@ -10388,7 +10438,7 @@ function addBulkRow(data = {}) {
   tr.style.borderBottom = '1px solid var(--border)';
   tr.innerHTML = BULK_FIELDS.map((f, fi) => `
     <td style="padding:4px;">
-      <input type="${(f === 'pages' || f === 'year') ? 'number' : 'text'}" data-field="${f}"
+      <input type="${(f === 'pages' || f === 'year' || f === 'price') ? 'number' : 'text'}" data-field="${f}"
         placeholder="${BULK_PLACEHOLDERS[fi]}"
         value="${data[f] || ''}"
         style="width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.75rem;padding:5px 7px;outline:none;"
@@ -10498,7 +10548,7 @@ async function saveBulkBooks() {
       toSave.push({ el: document.getElementById('csvRow_' + ri), data: {
         title: cols[0]||'', author: cols[1]||'', genre: cols[2]||'',
         publisher: cols[3]||'', pages: cols[4]||'', shelf: cols[5]||'',
-        year: cols[6]||'', tags: cols[7]||''
+        year: cols[6]||'', price: cols[7]||'', tags: cols[8]||''
       }});
     });
   }
@@ -10518,6 +10568,7 @@ async function saveBulkBooks() {
         shelf: data.shelf || null,
         tags: data.tags || null,
         year: data.year ? parseInt(data.year) : null,
+        price: data.price ? parseInt(data.price) : null,
         status: 'available'
       };
       const res = await api('books', { method: 'POST', body: JSON.stringify(body) });
@@ -10565,6 +10616,7 @@ function openModal(id = null) {
     document.getElementById('fIsbn').value = b.isbn || '';
     document.getElementById('fPages').value = b.pages || '';
     document.getElementById('fYear').value = b.year || '';
+    const fPrice = document.getElementById('fPrice'); if (fPrice) fPrice.value = b.price || '';
     document.getElementById('fGenre').value = b.genre || '';
     document.getElementById('fTags').value = b.tags || '';
     document.getElementById('fDescription').value = b.description || '';
@@ -10633,11 +10685,13 @@ async function saveBook() {
     isbn: document.getElementById('fIsbn').value.trim(),
     pages: parseInt(document.getElementById('fPages').value) || null,
     year: parseInt(document.getElementById('fYear').value) || null,
+    price: parseInt(document.getElementById('fPrice')?.value) || null,
     genre: document.getElementById('fGenre').value.trim(),
     tags: document.getElementById('fTags').value.trim(),
     description: document.getElementById('fDescription').value.trim(),
     cover_url: document.getElementById('fCoverUrl').value.trim(),
     status: document.getElementById('fStatus').value,
+    sold_at: document.getElementById('fStatus').value === 'satildi' ? new Date().toISOString() : null,
     nora_pick: document.getElementById('fNora').value === '1',
     sim1: document.getElementById('fSim1').value.trim(),
     sim2: document.getElementById('fSim2').value.trim(),
