@@ -6817,6 +6817,8 @@ function renderStats() {
   const total = books.length;
   const avail = books.filter(b => b.status === 'available').length;
   const borrowed = books.filter(b => b.status === 'borrowed').length;
+  const satista = books.filter(b => b.status === 'satista').length;
+  const satildi = books.filter(b => b.status === 'satildi').length;
   const genreSet = new Set();
   books.filter(b => b.genre).forEach(b => b.genre.split(',').map(g=>g.trim()).filter(Boolean).forEach(g => genreSet.add(g)));
   const genres = genreSet.size;
@@ -6825,6 +6827,8 @@ function renderStats() {
     <div class="stat-card"><div class="num">${total}</div><div class="lbl">Toplam</div></div>
     <div class="stat-card"><div class="num" style="color:var(--green)">${avail}</div><div class="lbl">Mevcut</div></div>
     <div class="stat-card"><div class="num" style="color:var(--red)">${borrowed}</div><div class="lbl">Ödünçte</div></div>
+    <div class="stat-card"><div class="num" style="color:#2a5a8a">${satista}</div><div class="lbl">Satışta</div></div>
+    <div class="stat-card"><div class="num" style="color:#2a7a2a">${satildi}</div><div class="lbl">Satıldı</div></div>
     <div class="stat-card"><div class="num">${genres}</div><div class="lbl">Kategori</div></div>
     <div class="stat-card"><div class="num" style="color:var(--gold)">${nora}</div><div class="lbl">Nora Seçimi</div></div>`;
   document.getElementById('bookCountLabel').textContent = '(' + total + ' kitap)';
