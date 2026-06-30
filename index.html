@@ -2548,6 +2548,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
               <th style="padding:6px 8px;text-align:left;width:55px;">Raf</th>
               <th style="padding:6px 8px;text-align:left;width:60px;">Sene</th>
               <th style="padding:6px 8px;text-align:left;width:60px;">Fiyat</th>
+              <th style="padding:6px 8px;text-align:left;width:90px;">Durum</th>
               <th style="padding:6px 8px;text-align:left;min-width:120px;">Etiketler</th>
               <th style="padding:6px 4px;width:30px;"></th>
             </tr>
@@ -9545,23 +9546,23 @@ function renderAdminTable() {
   if (info) info.textContent = `${total} kitap · Sayfa ${adminCurrentPage}/${totalPages}`;
 
   // Tablo
-  const statusMap = {
-    available: '<span class="badge-status status-available" style="font-size:0.7rem">Mevcut</span>',
-    borrowed:  '<span class="badge-status status-borrowed"  style="font-size:0.7rem">Ödünçte</span>',
-    askida:    '<span class="badge-status" style="font-size:0.7rem;background:#9c7a3c;color:#fff;padding:2px 8px;">Askıda</span>',
-    satista:   '<span class="badge-status" style="font-size:0.7rem;background:#2a5a8a;color:#fff;padding:2px 8px;">Satışta</span>',
-    satildi:   '<span class="badge-status" style="font-size:0.7rem;background:#2a7a2a;color:#fff;padding:2px 8px;">Satıldı</span>',
-  };
   document.getElementById('adminTableBody').innerHTML = pageItems.length ? pageItems.map(b => {
     const isSelected = selectedIds.has(b.id);
-    const statusBadge = statusMap[b.status] || `<span class="badge-status" style="font-size:0.7rem">${b.status||'?'}</span>`;
+    const statusOpts = [
+      ['available','Mevcut'],['borrowed','Ödünçte'],['askida','Askıda'],
+      ['satista','Satışta'],['satildi','Satıldı']
+    ];
+    const statusSelect = `<select onchange="inlineStatusChange(${b.id},this.value,this)"
+      style="border:1px solid ${b.status==='satildi'?'#2a7a2a':b.status==='satista'?'#2a5a8a':b.status==='askida'?'#9c7a3c':b.status==='borrowed'?'#c84040':'var(--border-dark)'};background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:2px 4px;cursor:pointer;outline:none;">
+      ${statusOpts.map(([v,l])=>`<option value="${v}"${b.status===v?' selected':''}>${l}</option>`).join('')}
+    </select>`;
     const priceStr = b.price ? `<span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#9c7a3c;">₺${b.price}</span>` : '';
     return `<div class="table-row ${isSelected ? 'selected' : ''}" data-id="${b.id}">
       <div><input type="checkbox" class="row-checkbox" data-id="${b.id}" ${isSelected ? 'checked' : ''} onchange="toggleRow(${b.id}, this)"></div>
       <div class="book-name">${b.title}${priceStr ? ' ' + priceStr : ''}</div>
       <div class="author-name">${authorLinks(b.author)}</div>
       <div><span class="badge-shelf" style="font-size:0.7rem">Raf ${b.shelf}</span></div>
-      <div>${statusBadge}</div>
+      <div>${statusSelect}</div>
       <div style="color:var(--gold);font-size:1rem">${b.nora_pick ? '★' : ''}</div>
       <div class="table-actions">
         <button class="btn-edit" onclick="openModal(${b.id})">Düz</button>
@@ -9677,6 +9678,26 @@ function bulkExportCSV() {
   a.download = 'nora-katalog-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   if (ids) clearSelection();
+}
+
+async function inlineStatusChange(id, newStatus, selectEl) {
+  const body = { status: newStatus };
+  if (newStatus === 'satildi') body.sold_at = new Date().toISOString();
+  else body.sold_at = null;
+  try {
+    const res = await api('books?id=eq.' + id, { method: 'PATCH', body: JSON.stringify(body) });
+    if (!res.ok) throw new Error();
+    // Rengi güncelle
+    const colorMap = { satildi:'#2a7a2a', satista:'#2a5a8a', askida:'#9c7a3c', borrowed:'#c84040' };
+    selectEl.style.borderColor = colorMap[newStatus] || 'var(--border-dark)';
+    // books array'ini güncelle
+    const b = books.find(x => x.id === id);
+    if (b) { b.status = newStatus; b.sold_at = body.sold_at; }
+    // Satış istatistiklerini yenile
+    renderSalesStats();
+  } catch(e) {
+    alert('Durum güncellenemedi.'); selectEl.value = books.find(x=>x.id===id)?.status || 'available';
+  }
 }
 
 async function bulkSetStatus(status) {
@@ -10406,8 +10427,8 @@ function adminFilterByShelf(shelf) {
   if (sel) { sel.value = shelf; adminTableReset(); }
   document.getElementById('panelBooks')?.scrollIntoView({behavior:'smooth'});
 }
-const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','year','price','tags'];
-const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','1866','150','klasik, çeviri'];
+const BULK_FIELDS = ['title','author','genre','publisher','pages','shelf','year','price','status','tags'];
+const BULK_PLACEHOLDERS = ['Suç ve Ceza','Dostoyevski','Roman','İş Bankası','545','A3','1866','150','available','klasik, çeviri'];
 
 function openBulkModal() {
   document.getElementById('bulkModalOverlay').style.display = 'flex';
@@ -10436,15 +10457,27 @@ function addBulkRow(data = {}) {
   const tbody = document.getElementById('bulkTableBody');
   const tr = document.createElement('tr');
   tr.style.borderBottom = '1px solid var(--border)';
-  tr.innerHTML = BULK_FIELDS.map((f, fi) => `
-    <td style="padding:4px;">
-      <input type="${(f === 'pages' || f === 'year' || f === 'price') ? 'number' : 'text'}" data-field="${f}"
-        placeholder="${BULK_PLACEHOLDERS[fi]}"
-        value="${data[f] || ''}"
-        style="width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.75rem;padding:5px 7px;outline:none;"
+  tr.innerHTML = BULK_FIELDS.map((f, fi) => {
+    const baseStyle = 'width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--paper);color:var(--ink);font-family:\'Courier Prime\',monospace;font-size:0.75rem;padding:5px 7px;outline:none;';
+    let input;
+    if (f === 'status') {
+      const val = data[f] || 'available';
+      input = `<select data-field="${f}" style="${baseStyle}cursor:pointer;">
+        <option value="available" ${val==='available'?'selected':''}>Mevcut</option>
+        <option value="borrowed"  ${val==='borrowed' ?'selected':''}>Ödünçte</option>
+        <option value="askida"    ${val==='askida'   ?'selected':''}>Askıda</option>
+        <option value="satista"   ${val==='satista'  ?'selected':''}>Satışta</option>
+        <option value="satildi"   ${val==='satildi'  ?'selected':''}>Satıldı</option>
+      </select>`;
+    } else {
+      input = `<input type="${(f==='pages'||f==='year'||f==='price')?'number':'text'}" data-field="${f}"
+        placeholder="${BULK_PLACEHOLDERS[fi]}" value="${data[f]||''}"
+        style="${baseStyle}"
         onfocus="this.style.borderColor='var(--ink)'"
-        onblur="this.style.borderColor='var(--border)'">
-    </td>`).join('') +
+        onblur="this.style.borderColor='var(--border)'">`;
+    }
+    return `<td style="padding:4px;">${input}</td>`;
+  }).join('') +
     `<td style="padding:4px;text-align:center;">
       <button onclick="removeBulkRow(this)" style="background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:1rem;padding:2px 6px;" title="Sil">✕</button>
     </td>`;
@@ -10461,7 +10494,7 @@ function getBulkRows() {
   const rows = [];
   document.querySelectorAll('#bulkTableBody tr').forEach(tr => {
     const row = {};
-    tr.querySelectorAll('input[data-field]').forEach(inp => { row[inp.dataset.field] = inp.value.trim(); });
+    tr.querySelectorAll('[data-field]').forEach(el => { row[el.dataset.field] = el.value.trim(); });
     rows.push({ el: tr, data: row });
   });
   return rows;
@@ -10548,7 +10581,7 @@ async function saveBulkBooks() {
       toSave.push({ el: document.getElementById('csvRow_' + ri), data: {
         title: cols[0]||'', author: cols[1]||'', genre: cols[2]||'',
         publisher: cols[3]||'', pages: cols[4]||'', shelf: cols[5]||'',
-        year: cols[6]||'', price: cols[7]||'', tags: cols[8]||''
+        year: cols[6]||'', price: cols[7]||'', status: cols[8]||'available', tags: cols[9]||''
       }});
     });
   }
@@ -10569,7 +10602,8 @@ async function saveBulkBooks() {
         tags: data.tags || null,
         year: data.year ? parseInt(data.year) : null,
         price: data.price ? parseInt(data.price) : null,
-        status: 'available'
+        status: data.status || 'available',
+        sold_at: data.status === 'satildi' ? new Date().toISOString() : null
       };
       const res = await api('books', { method: 'POST', body: JSON.stringify(body) });
       if (!res.ok) {
