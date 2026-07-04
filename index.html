@@ -24,6 +24,13 @@
   --gold: #9c7a3c;
   --gold-bg: #fdf6e3;
   --font-display: 'Courier Prime', monospace;
+  /* STALKER FİLM PALETİ */
+  --zone-rust: #8a4a2a;      /* pas — metal, terk edilmiş makine */
+  --zone-khaki: #6a6a4a;     /* haki — Stalker'ın ceketi */
+  --zone-sepia: #7a6a52;     /* sepya — Bölge dışı dünya */
+  --zone-phosphor: #3a7a3a;  /* fosfor — Bölge'nin yeşili */
+  --zone-water: #4a5a5a;     /* durgun su — filmin göletleri */
+  --zone-deep: #2a3a2a;      /* koyu yosun */
 }
 /* Special Elite kaldırıldı — Courier Prime ile değiştirildi */
 @font-face {
@@ -32,6 +39,9 @@
   font-weight: normal;
 }
 @keyframes slideUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+/* STALKER: Bölge dışı sepya → Bölge'de renk */
+body.pre-zone { filter: sepia(0.55) contrast(1.02) brightness(0.97); transition: filter 2.2s ease; }
+body.entering-zone { filter: sepia(0) contrast(1) brightness(1); transition: filter 2.2s ease; }
 @keyframes modalIn { from { opacity:0;transform:scale(0.96) translateY(8px); } to { opacity:1;transform:scale(1) translateY(0); } }
 * { margin:0;padding:0;box-sizing:border-box; }
 body { font-family:'Courier Prime',monospace;background:var(--paper);background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(0,0,0,0.04) 27px,rgba(0,0,0,0.04) 28px);color:var(--ink);min-height:100vh;transition:background 0.3s,color 0.3s; }
@@ -492,10 +502,29 @@ body.dark .serendipity-msg { background:#111;border-color:#333;color:#b0aa9f; }
 .cursor-blink { animation: blink 1s step-end infinite; font-weight:700; }
 
 @media(max-width:600px) {
-  /* Admin tablo */
-  .table-head,.table-row { grid-template-columns:36px 2fr 0.8fr 0.7fr 80px; }
-  .table-head > div:nth-child(3),.table-row > div:nth-child(3),
-  .table-head > div:nth-child(5),.table-row > div:nth-child(5) { display:none; }
+  /* Admin tablo → kart görünümü */
+  .table-head { display:none; }
+  .table-row {
+    display:grid;
+    grid-template-columns:28px 1fr auto;
+    grid-template-areas:
+      "check name name"
+      "check author author"
+      "check meta actions";
+    gap:4px 10px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    margin-bottom:8px;
+    background:var(--white);
+  }
+  .table-row > div:nth-child(1) { grid-area:check;align-self:start; }
+  .table-row > div:nth-child(2) { grid-area:name;font-weight:700; }
+  .table-row > div:nth-child(3) { grid-area:author;font-size:0.78rem; }
+  .table-row > div:nth-child(4),
+  .table-row > div:nth-child(5),
+  .table-row > div:nth-child(6) { grid-area:meta;display:inline-flex;margin-right:8px; }
+  .table-row > div:nth-child(7) { grid-area:actions;justify-self:end; }
+  .table-row > div:nth-child(4) { margin-top:2px; }
 
   /* Header / Nav */
   header { padding:0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch; }
@@ -1675,7 +1704,10 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="btn-search" onclick="doSearch()">Ara</button>
       <div class="autocomplete-list" id="autocompleteList"></div>
     </div>
-    <button onclick="doSerendipity()" style="width:100%;margin-top:6px;background:#1a1a1a;border:none;border-left:4px solid #333;color:#aaa;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='#1a1a1a'">✦ SERENDIPITY</button>
+    <div style="display:flex;gap:6px;margin-top:6px;">
+      <button onclick="doSerendipity()" style="flex:1;background:#1a1a1a;border:none;border-left:4px solid #333;color:#aaa;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='#1a1a1a'">✦ SERENDIPITY</button>
+      <button onclick="odaBaslat()" style="flex:1;background:#0a1a0a;border:none;border-left:4px solid var(--zone-phosphor);color:#6a9a6a;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#122412'" onmouseout="this.style.background='#0a1a0a'">◉ ODA'YA YOLCULUK</button>
+    </div>
   </div>
 
   <div class="isbn-row">
@@ -1842,27 +1874,40 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
     </div>
     <div class="stats-bar" id="statsBar"></div>
-    <div style="display:flex;flex-wrap:wrap;border-bottom:2px solid var(--ink);margin-bottom:18px;gap:0;">
-      <button class="tab-btn active" id="tabBooks" onclick="switchTab('books')">KİTAPLAR</button>
-      <button class="tab-btn" id="tabStats" onclick="switchTab('stats')">İSTATİSTİKLER</button>
-      <button class="tab-btn" id="tabQuotes" onclick="switchTab('quotes')">ALINTILAR</button>
-      <button class="tab-btn" id="tabAskida" onclick="switchTab('askida')" style="color:#c8a86b;">ASKIDA KİTAP</button>
-      <button class="tab-btn" id="tabMissed" onclick="switchTab('missed')" style="color:#c84040;">BULUNAMADI</button>
-      <button class="tab-btn" id="tabGizli" onclick="switchTab('gizli')" style="color:#8a4040;">GİZLİ RAF</button>
-      <button class="tab-btn" id="tabYazarlar" onclick="switchTab('yazarlar')" style="color:#4a7a9c;">YAZARLAR</button>
-      <button class="tab-btn" id="tabGunun" onclick="switchTab('gunun')" style="color:#9c7a3c;">GÜNÜN KİTABI</button>
-      <button class="tab-btn" id="tabSpotify" onclick="switchTab('spotify')" style="color:#1DB954;">SPOTİFY</button>
-      <button class="tab-btn" id="tabIkram" onclick="switchTab('ikram')" style="color:#c8a86b;">İKRAM</button>
-      <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:#9c7a3c;">GÜNLÜK</button>
-      <button class="tab-btn" id="tabSahaf" onclick="switchTab('sahaf')" style="color:#c8a86b;">SAHAF</button>
-      <button class="tab-btn" id="tabReport" onclick="switchTab('report')" style="color:#1a6a6a;">📊 RAPOR</button>
-      <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:#8B4513;">PANO</button>
-      <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:#9c7a3c;">☕ MENÜ</button>
-      <button class="tab-btn" id="tabShelfMap" onclick="switchTab('shelfmap')" style="color:#2a5a8a;">🗺 RAF HARİTASI</button>
-      <button class="tab-btn" id="tabPaso" onclick="switchTab('paso')" style="color:#c87020;">☀ YAZ PASOSU</button>
-      <button class="tab-btn" id="tabKolektif" onclick="switchTab('kolektif')" style="color:#6a3a8a;">◈ KOLEKTİF RAF</button>
-      <button class="tab-btn" id="tabFotoScan" onclick="switchTab('fotoscan')" style="color:#1a7a6a;">📷 FOTOĞRAFTAN EKLE</button>
-      <button class="tab-btn" id="tabTemin" onclick="switchTab('temin')" style="color:#c87020;">📋 TEMİN LİSTESİ</button>
+    <div style="margin-bottom:18px;">
+      <!-- GRUP: KATALOG -->
+      <div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:2px;">▸ KATALOG</div>
+      <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:10px;gap:0;">
+        <button class="tab-btn active" id="tabBooks" onclick="switchTab('books')">KİTAPLAR</button>
+        <button class="tab-btn" id="tabFotoScan" onclick="switchTab('fotoscan')" style="color:var(--zone-khaki);">📷 FOTOĞRAFTAN</button>
+        <button class="tab-btn" id="tabGizli" onclick="switchTab('gizli')" style="color:var(--zone-rust);">GİZLİ RAF</button>
+        <button class="tab-btn" id="tabYazarlar" onclick="switchTab('yazarlar')" style="color:var(--zone-water);">YAZARLAR</button>
+        <button class="tab-btn" id="tabQuotes" onclick="switchTab('quotes')" style="color:var(--zone-sepia);">ALINTILAR</button>
+        <button class="tab-btn" id="tabStats" onclick="switchTab('stats')" style="color:var(--zone-phosphor);">İSTATİSTİK</button>
+      </div>
+      <!-- GRUP: İŞLETME -->
+      <div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:2px;">▸ İŞLETME</div>
+      <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:10px;gap:0;">
+        <button class="tab-btn" id="tabSatis" onclick="switchTab('satis')" style="color:var(--zone-phosphor);font-weight:700;">⚡ HIZLI SATIŞ</button>
+        <button class="tab-btn" id="tabTemin" onclick="switchTab('temin')" style="color:var(--zone-rust);">📋 TEMİN</button>
+        <button class="tab-btn" id="tabKolektif" onclick="switchTab('kolektif')" style="color:var(--zone-khaki);">◈ KOLEKTİF RAF</button>
+        <button class="tab-btn" id="tabPaso" onclick="switchTab('paso')" style="color:var(--zone-rust);">☀ YAZ PASOSU</button>
+        <button class="tab-btn" id="tabSahaf" onclick="switchTab('sahaf')" style="color:var(--zone-sepia);">SAHAF</button>
+        <button class="tab-btn" id="tabAskida" onclick="switchTab('askida')" style="color:var(--gold);">ASKIDA</button>
+        <button class="tab-btn" id="tabMissed" onclick="switchTab('missed')" style="color:var(--zone-rust);">BULUNAMADI</button>
+        <button class="tab-btn" id="tabReport" onclick="switchTab('report')" style="color:var(--zone-water);">📊 RAPOR</button>
+      </div>
+      <!-- GRUP: MEKÂN -->
+      <div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:2px;">▸ MEKÂN</div>
+      <div style="display:flex;flex-wrap:wrap;border-bottom:2px solid var(--ink);gap:0;">
+        <button class="tab-btn" id="tabShelfMap" onclick="switchTab('shelfmap')" style="color:var(--zone-water);">🗺 RAF HARİTASI</button>
+        <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:var(--gold);">☕ MENÜ</button>
+        <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:var(--zone-rust);">PANO</button>
+        <button class="tab-btn" id="tabGunun" onclick="switchTab('gunun')" style="color:var(--gold);">GÜNÜN KİTABI</button>
+        <button class="tab-btn" id="tabSpotify" onclick="switchTab('spotify')" style="color:var(--zone-phosphor);">SPOTİFY</button>
+        <button class="tab-btn" id="tabIkram" onclick="switchTab('ikram')" style="color:var(--gold);">İKRAM</button>
+        <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:var(--zone-sepia);">GÜNLÜK</button>
+      </div>
     </div>
     <div id="panelBooks">
       <div class="admin-search-row">
@@ -2524,6 +2569,18 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
     </div>
 
+    <!-- HIZLI SATIŞ PANELİ -->
+    <div id="panelSatis" style="display:none;">
+      <div style="max-width:640px;margin:0 auto;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:3px;color:var(--zone-phosphor);margin-bottom:8px;text-align:center;">⚡ HIZLI SATIŞ MODU — kitabı bul, dokun, onayla</div>
+        <input type="text" id="satisSearchInput" placeholder="Kitap adı veya yazar yaz..."
+          oninput="satisSearch()"
+          style="width:100%;padding:16px 18px;font-family:'Courier Prime',monospace;font-size:1.1rem;border:2px solid var(--zone-phosphor);background:var(--paper);color:var(--ink);outline:none;letter-spacing:1px;box-sizing:border-box;">
+        <div id="satisResults" style="margin-top:14px;"></div>
+        <div id="satisRecent" style="margin-top:24px;"></div>
+      </div>
+    </div>
+
     <!-- TEMİN LİSTESİ PANELİ -->
     <div id="panelTemin" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -2645,6 +2702,14 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
       <div class="field full"><label>Nora\u2019n\u0131n \u00d6nerisi</label>
         <select id="fNora"><option value="0">Hayır</option><option value="1">Evet ★</option></select>
+      </div>
+      <div class="field full" style="border-left:3px solid var(--zone-phosphor);padding-left:10px;">
+        <label style="color:var(--zone-phosphor);">◉ ARTEFAKT — Bölge'den çıkarılmış nadir nesne</label>
+        <select id="fArtefakt" onchange="document.getElementById('fArtefaktNote').style.display=this.value==='1'?'block':'none'">
+          <option value="0">Hayır</option>
+          <option value="1">Evet ◉</option>
+        </select>
+        <input type="text" id="fArtefaktNote" placeholder="Artefakt hikâyesi (örn: Bu baskı 1974'te toplatıldı)" style="display:none;margin-top:6px;width:100%;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--zone-phosphor);background:var(--paper);color:var(--ink);outline:none;">
       </div>
       <div class="field full" style="border-top:1px dashed var(--border);padding-top:12px;margin-top:4px;">
         <label style="color:var(--ink-faint)">🌌 Kitap Evreni Bağlantıları</label>
@@ -3243,7 +3308,8 @@ function showLoading(id) {
 function showEmptyState(id, icon, title, msg) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.innerHTML = `<div class="empty-state"><span class="big-icon">${icon}</span><div class="empty-title">${title}</div><p>${msg}</p></div>`;
+  el.innerHTML = `<div class="empty-state"><span class="big-icon">${icon}</span><div class="empty-title">${title}</div><p>${msg}</p>
+    <div style="font-family:'Playfair Display',serif;font-size:0.82rem;font-style:italic;color:var(--zone-sepia);margin-top:14px;line-height:1.7;">"${typeof zoneQuote==='function'?zoneQuote():''}"</div></div>`;
 }
 
 // Scroll to top
@@ -5773,6 +5839,171 @@ function goToWheelBook() {
   setTimeout(() => openDetail(wheelPickedBook.id), 400);
 }
 
+// ===== ODA'YA YOLCULUK (Stalker) =====
+const ODA_SORULAR = [
+  {
+    q: 'Bölge\'ye neden geldin?',
+    opts: [
+      { label: 'Kaçmak istiyorum', val: 'kacis' },
+      { label: 'Anlamak istiyorum', val: 'anlam' },
+      { label: 'Hissetmek istiyorum', val: 'his' },
+      { label: 'Bilmiyorum', val: 'bilinmez' }
+    ]
+  },
+  {
+    q: 'Yolculuk ne kadar sürsün?',
+    opts: [
+      { label: 'Bir kahve molası', val: 'kisa' },
+      { label: 'Birkaç gece', val: 'orta' },
+      { label: 'Zamanın önemi yok', val: 'uzun' }
+    ]
+  },
+  {
+    q: 'Rehberine ne kadar güveniyorsun?',
+    opts: [
+      { label: 'Tamamen — beni bilinmeyene götür', val: 'tam' },
+      { label: 'Kısmen — tanıdık sulardan uzaklaşma', val: 'kismi' }
+    ]
+  }
+];
+let _odaCevaplar = [];
+let _odaStep = 0;
+
+function odaBaslat() {
+  _odaCevaplar = [];
+  _odaStep = 0;
+  let overlay = document.getElementById('odaOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'odaOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#060806;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  odaRenderStep();
+}
+
+function odaRenderStep() {
+  const overlay = document.getElementById('odaOverlay');
+  const soru = ODA_SORULAR[_odaStep];
+  overlay.innerHTML = `
+    <div style="max-width:480px;width:100%;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:4px;color:#3a5a3a;margin-bottom:24px;">
+        BÖLGE // ADIM ${_odaStep+1}/${ODA_SORULAR.length}
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#c8c2b6;margin-bottom:32px;line-height:1.4;">${soru.q}</div>
+      ${soru.opts.map((o,i) => `
+        <button onclick="odaCevapla('${o.val}')"
+          style="display:block;width:100%;text-align:left;background:none;border:1px solid #2a3a2a;color:#8a9a8a;font-family:'Courier Prime',monospace;font-size:0.85rem;padding:14px 18px;margin-bottom:10px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;"
+          onmouseover="this.style.borderColor='#4a7a4a';this.style.color='#c8d8c8';this.style.paddingLeft='26px'"
+          onmouseout="this.style.borderColor='#2a3a2a';this.style.color='#8a9a8a';this.style.paddingLeft='18px'">
+          ${o.label}
+        </button>`).join('')}
+      <button onclick="odaKapat()" style="background:none;border:none;color:#3a4a3a;font-family:'Courier Prime',monospace;font-size:0.65rem;margin-top:16px;cursor:pointer;letter-spacing:2px;">← BÖLGE'DEN ÇIK</button>
+    </div>`;
+}
+
+function odaCevapla(val) {
+  _odaCevaplar.push(val);
+  _odaStep++;
+  if (_odaStep < ODA_SORULAR.length) { odaRenderStep(); return; }
+  odaYolculuk();
+}
+
+function odaYolculuk() {
+  const overlay = document.getElementById('odaOverlay');
+  const kitap = odaKitapSec();
+  const satirlar = [
+    '> Bölge\'ye giriliyor...',
+    '> Somunlar atılıyor... yol güvenli.',
+    '> Kıvrımlardan geçiliyor...',
+    '> Et kıyma makinesi atlatıldı.',
+    '> İz sürülüyor...',
+    '> Oda bulundu.'
+  ];
+  overlay.innerHTML = `<div style="max-width:480px;width:100%;font-family:'Courier Prime',monospace;font-size:0.85rem;color:#5a8a5a;line-height:2.4;" id="odaTerminal"></div>`;
+  const term = document.getElementById('odaTerminal');
+  satirlar.forEach((s, i) => {
+    setTimeout(() => {
+      term.innerHTML += `<div style="animation:slideUp 0.3s ease;">${s}</div>`;
+      if (i === satirlar.length - 1) setTimeout(() => odaSonuc(kitap), 900);
+    }, i * 700);
+  });
+}
+
+function odaKitapSec() {
+  const [neden, sure, guven] = _odaCevaplar;
+  let pool = books.filter(b => (b.status === 'yerlesik' || b.status === 'satista') && b.genre !== 'gizli-raf');
+
+  // Neden → tür eşleşmesi
+  const genreMap = {
+    kacis: ['roman','macera','fantastik','bilim kurgu','polisiye','gerilim'],
+    anlam: ['felsefe','deneme','tarih','psikoloji','din','sosyoloji','siyaset'],
+    his: ['şiir','öykü','aşk','anı','biyografi','mektup'],
+    bilinmez: null // filtre yok — kader
+  };
+  const genres = genreMap[neden];
+  if (genres) {
+    const filtered = pool.filter(b => {
+      const g = normalize(b.genre||'');
+      return genres.some(x => g.includes(normalize(x)));
+    });
+    if (filtered.length > 3) pool = filtered;
+  }
+
+  // Süre → sayfa
+  if (sure === 'kisa') {
+    const short = pool.filter(b => b.pages && b.pages < 180);
+    if (short.length) pool = short;
+  } else if (sure === 'uzun') {
+    const long = pool.filter(b => b.pages && b.pages > 350);
+    if (long.length > 2) pool = long;
+  }
+
+  // Güven → tam ise en az bilinen (nora_pick olmayan, kapaksız), kısmi ise nora_pick öncelik
+  if (guven === 'tam') {
+    const obscure = pool.filter(b => !b.nora_pick);
+    if (obscure.length) pool = obscure;
+  } else {
+    const kismi = pool.filter(b => b.nora_pick);
+    if (kismi.length >= 2) pool = kismi;
+  }
+
+  if (!pool.length) pool = books.filter(b => b.status === 'yerlesik' || b.status === 'satista');
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function odaSonuc(kitap) {
+  const overlay = document.getElementById('odaOverlay');
+  if (!kitap) { odaKapat(); return; }
+  const alinti = [
+    'Oda, insanın en derin arzusunu gerçekleştirir. Dile getirdiğini değil — derindekini.',
+    'Bölge, umudunu kaybetmiş insanları geçirir yalnızca.',
+    'Buraya kadar geldiyse, hazırdır.',
+    'İnsan yazmak için değil, bulunmak için okur.'
+  ][Math.floor(Math.random()*4)];
+  overlay.innerHTML = `
+    <div style="max-width:480px;width:100%;text-align:center;animation:slideUp 0.6s ease;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:4px;color:var(--zone-phosphor);margin-bottom:12px;">◉ ODA</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.8rem;color:#e8e2d6;margin-bottom:8px;line-height:1.3;">${kitap.title}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.85rem;color:#8a9a8a;font-style:italic;margin-bottom:20px;">${kitap.author||''}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#5a6a5a;letter-spacing:1px;margin-bottom:28px;">
+        RAF ${kitap.shelf||'?'} ${kitap.status==='satista' && kitap.price ? '· ₺'+kitap.price : ''} ${kitap.status==='yerlesik' ? '· YERLEŞİK KOLEKSİYON' : ''}
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:0.85rem;font-style:italic;color:#6a7a6a;line-height:1.8;margin-bottom:32px;padding:0 20px;">"${alinti}"</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="odaKapat();openDetail(${kitap.id})" style="background:var(--zone-phosphor);color:#0a0a0a;border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:12px 24px;cursor:pointer;letter-spacing:2px;">KİTABA GİT</button>
+        <button onclick="odaBaslat()" style="background:none;border:1px solid #2a3a2a;color:#8a9a8a;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:12px 24px;cursor:pointer;letter-spacing:2px;">TEKRAR GİR</button>
+        <button onclick="odaKapat()" style="background:none;border:none;color:#3a4a3a;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:12px;cursor:pointer;letter-spacing:2px;">ÇIK</button>
+      </div>
+    </div>`;
+}
+
+function odaKapat() {
+  const overlay = document.getElementById('odaOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
 // ===== SERENDIPITY =====
 function doSerendipity() {
   if (!books.length) return;
@@ -6159,9 +6390,14 @@ function authorLinksDetail(author) {
 function renderBookCard(b) {
   if (!b) return '';
   const tags = (b.tags || '').split(',').map(t => t.trim()).filter(Boolean);
-  const statusBadge = b.status === 'yerlesik'
-    ? '<span class="badge-status status-yerlesik">✓ Yerleşik</span>'
-    : '<span class="badge-status status-borrowed">⏳ Ödünçte</span>';
+  const statusMap = {
+    yerlesik: '<span class="badge-status status-yerlesik">✓ Yerleşik</span>',
+    borrowed: '<span class="badge-status status-borrowed">⏳ Ödünçte</span>',
+    askida:   '<span class="badge-status" style="background:var(--gold);color:#fff;">❤ Askıda</span>',
+    satista:  '<span class="badge-status" style="background:var(--zone-water);color:#fff;">₺ Satışta' + (b.price ? ' · '+b.price+'₺' : '') + '</span>',
+  };
+  const statusBadge = statusMap[b.status] || '';
+  const artefaktBadge = b.is_artefakt ? '<div class="nora-badge" style="background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:#8aba8a;" title="' + (b.artefakt_note||'').replace(/"/g,'&quot;') + '">◉ ARTEFAKT</div>' : '';
   const noraBadge = b.nora_pick ? '<div class="nora-badge">★ Nora\u2019n\u0131n \u00d6nerisi</div>' : '';
   const newBadge = isNewBook(b) ? '<span class="badge-new">⚡ Yeni</span>' : '';
   const tagBadges = tags.map(t => `<span class="badge-tag">#${t}</span>`).join('');
@@ -6178,7 +6414,7 @@ function renderBookCard(b) {
   return `<div class="book-card ${b.nora_pick ? 'nora-pick' : ''}" style="${borderStyle}" onclick="openDetail(${b.id})">
     <div class="book-spine">${b.cover_url ? `<img data-src="${b.cover_url}" src="" alt="" class="lazy-img" onerror="this.parentElement.innerHTML='${icon}'" style="opacity:0;transition:opacity 0.3s;">` : icon}</div>
     <div class="book-info">
-      ${noraBadge}
+      ${artefaktBadge}${noraBadge}
       <div class="book-title">${b.title || ''}${newBadge}</div>
       <div class="book-author">${authorLinks(b.author)}${ratingHtml}</div>
       ${b.publisher ? `<div class="book-publisher">${b.publisher}</div>` : ''}
@@ -6258,6 +6494,10 @@ async function openDetail(id) {
     : '<p style="color:var(--ink-faint);font-size:0.82rem;font-style:italic">Henüz mesaj yok. Bir sonraki okuyucuya not bırak!</p>';
 
   document.getElementById('detailContent').innerHTML = `
+    ${b.is_artefakt ? `<div style="background:var(--zone-deep);border:1px solid var(--zone-phosphor);padding:12px 16px;margin-bottom:14px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:3px;color:#8aba8a;margin-bottom:4px;">◉ ARTEFAKT — BÖLGE'DEN ÇIKARILDI</div>
+      ${b.artefakt_note ? `<div style="font-family:'Playfair Display',serif;font-size:0.88rem;font-style:italic;color:#c8d2c8;line-height:1.6;">${b.artefakt_note}</div>` : ''}
+    </div>` : ''}
     ${noraBadge}
     ${b.cover_url ? `
     <div class="detail-cover-wrap">
@@ -6838,7 +7078,6 @@ function renderStats() {
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-card"><div class="num">${total}</div><div class="lbl">Toplam</div></div>
     <div class="stat-card"><div class="num" style="color:var(--green)">${avail}</div><div class="lbl">Yerleşik</div></div>
-    <div class="stat-card"><div class="num" style="color:var(--red)">${borrowed}</div><div class="lbl">Ödünçte</div></div>
     <div class="stat-card"><div class="num" style="color:#2a5a8a">${satista}</div><div class="lbl">Satışta</div></div>
     <div class="stat-card"><div class="num" style="color:#2a7a2a">${satildi}</div><div class="lbl">Satıldı</div></div>
     <div class="stat-card"><div class="num">${genres}</div><div class="lbl">Kategori</div></div>
@@ -6853,7 +7092,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -6865,7 +7104,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -6891,6 +7130,7 @@ function switchTab(tab) {
   if (tab === 'paso') loadPasoPanel();
   if (tab === 'kolektif') loadKolektif();
   if (tab === 'temin') loadTeminListesi();
+  if (tab === 'satis') initSatisMode();
 }
 
 function renderMissedSearches() {
@@ -9869,6 +10109,11 @@ async function inlineStatusChange(id, newStatus, selectEl) {
       await addToTeminListesi(book, id);
     }
 
+    // Durum değişikliği geri alınabilir
+    if (newStatus === 'satildi' && book) {
+      showUndoToast('✓ "' + book.title + '" satıldı', id, oldStatus);
+    }
+
     // Son kopya uyarısı — satıldı olarak işaretlenince
     if (newStatus === 'satildi' && book) {
       const remaining = books.filter(b =>
@@ -10851,6 +11096,12 @@ function openModal(id = null) {
     if (b.cover_url) { prev.src = b.cover_url; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
     document.getElementById('fStatus').value = b.status;
     document.getElementById('fNora').value = b.nora_pick ? '1' : '0';
+    const fArt = document.getElementById('fArtefakt');
+    if (fArt) {
+      fArt.value = b.is_artefakt ? '1' : '0';
+      const noteEl = document.getElementById('fArtefaktNote');
+      if (noteEl) { noteEl.value = b.artefakt_note || ''; noteEl.style.display = b.is_artefakt ? 'block' : 'none'; }
+    }
     document.getElementById('fSim1').value = b.sim1 || '';
     document.getElementById('fSim2').value = b.sim2 || '';
     document.getElementById('fSim3').value = b.sim3 || '';
@@ -10862,6 +11113,8 @@ function openModal(id = null) {
     document.getElementById('fCoverPreview').style.display = 'none';
     document.getElementById('fStatus').value = 'yerlesik';
     document.getElementById('fNora').value = '0';
+    const fArtN = document.getElementById('fArtefakt');
+    if (fArtN) { fArtN.value = '0'; const ne = document.getElementById('fArtefaktNote'); if (ne) { ne.value=''; ne.style.display='none'; } }
   }
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -10972,6 +11225,8 @@ async function saveBook() {
     status: document.getElementById('fStatus').value,
     sold_at: document.getElementById('fStatus').value === 'satildi' ? new Date().toISOString() : null,
     nora_pick: document.getElementById('fNora').value === '1',
+    is_artefakt: document.getElementById('fArtefakt')?.value === '1',
+    artefakt_note: document.getElementById('fArtefakt')?.value === '1' ? (document.getElementById('fArtefaktNote')?.value.trim() || null) : null,
     sim1: document.getElementById('fSim1').value.trim(),
     sim2: document.getElementById('fSim2').value.trim(),
     sim3: document.getElementById('fSim3').value.trim()
@@ -11503,6 +11758,264 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
+// ===== KOMUT PALETİ (Ctrl+K) =====
+const PALETTE_COMMANDS = [
+  { key: 'satis',    label: '⚡ Hızlı Satış',        hint: 'kitap sat',            run: () => { switchTab('satis'); } },
+  { key: 'yeni',     label: '+ Yeni Kitap Ekle',     hint: 'kitap ekle form',      run: () => { switchTab('books'); openModal(); } },
+  { key: 'toplu',    label: '⊞ Toplu Kitap Ekle',    hint: 'csv bulk import',      run: () => { switchTab('books'); openBulkModal(); } },
+  { key: 'foto',     label: '📷 Fotoğraftan Ekle',   hint: 'fotoğraf tara',        run: () => switchTab('fotoscan') },
+  { key: 'kitaplar', label: '📚 Kitap Yönetimi',     hint: 'katalog liste',        run: () => switchTab('books') },
+  { key: 'temin',    label: '📋 Temin Listesi',      hint: 'alınacaklar',          run: () => switchTab('temin') },
+  { key: 'kolektif', label: '◈ Kolektif Raf',        hint: 'emanet kitaplar',      run: () => switchTab('kolektif') },
+  { key: 'paso',     label: '☀ Yaz Pasosu',          hint: 'kahve pass müşteri',   run: () => switchTab('paso') },
+  { key: 'istatistik', label: '📊 İstatistikler',    hint: 'satış rapor grafik',   run: () => switchTab('stats') },
+  { key: 'rafharita', label: '🗺 Raf Haritası',      hint: 'raf doluluk',          run: () => switchTab('shelfmap') },
+  { key: 'menu',     label: '☕ Menü Yönetimi',      hint: 'kahve yemek fiyat',    run: () => switchTab('menuadmin') },
+  { key: 'alinti',   label: '✦ Alıntılar',           hint: 'quote ekle',           run: () => switchTab('quotes') },
+  { key: 'yedek',    label: '⬇ Yedek Al (JSON)',     hint: 'backup indir',         run: () => backupCatalog() },
+  { key: 'csv',      label: '↓ CSV İndir',           hint: 'export katalog',       run: () => bulkExportCSV() },
+  { key: 'kapak',    label: '🖼 Eksik Kapakları Çek', hint: 'cover isbn openlibrary', run: () => bulkFetchCovers() },
+  { key: 'gizli',    label: '🔒 Gizli Raf',          hint: 'saklı kitaplar',       run: () => switchTab('gizli') },
+  { key: 'rapor',    label: '📊 Günlük Rapor',       hint: 'bugün özet',           run: () => switchTab('report') },
+  { key: 'cikis',    label: '⏻ Admin Çıkış',         hint: 'logout kilitle',       run: () => lockAdmin() },
+];
+
+let _paletteIdx = 0;
+
+function openPalette() {
+  let p = document.getElementById('cmdPalette');
+  if (!p) {
+    p = document.createElement('div');
+    p.id = 'cmdPalette';
+    p.style.cssText = 'position:fixed;inset:0;background:rgba(6,8,6,0.85);z-index:10002;display:flex;align-items:flex-start;justify-content:center;padding-top:12vh;';
+    p.innerHTML = `
+      <div style="width:100%;max-width:520px;background:#0d0f0d;border:1px solid var(--zone-phosphor);box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+        <input type="text" id="paletteInput" placeholder="> komut yaz..."
+          style="width:100%;box-sizing:border-box;background:transparent;border:none;border-bottom:1px solid #2a3a2a;color:#c8d8c8;font-family:'Courier Prime',monospace;font-size:1rem;padding:16px 18px;outline:none;letter-spacing:1px;"
+          oninput="renderPalette()" onkeydown="paletteKey(event)">
+        <div id="paletteList" style="max-height:50vh;overflow-y:auto;"></div>
+      </div>`;
+    p.onclick = (e) => { if (e.target === p) closePalette(); };
+    document.body.appendChild(p);
+  }
+  p.style.display = 'flex';
+  _paletteIdx = 0;
+  const inp = document.getElementById('paletteInput');
+  inp.value = '';
+  renderPalette();
+  setTimeout(() => inp.focus(), 50);
+}
+
+function closePalette() {
+  const p = document.getElementById('cmdPalette');
+  if (p) p.style.display = 'none';
+}
+
+function renderPalette() {
+  const q = normalize(document.getElementById('paletteInput')?.value || '');
+  const list = document.getElementById('paletteList');
+  const matches = PALETTE_COMMANDS.filter(c =>
+    !q || normalize(c.label).includes(q) || normalize(c.hint).includes(q) || c.key.includes(q)
+  );
+  if (_paletteIdx >= matches.length) _paletteIdx = 0;
+  list.innerHTML = matches.length ? matches.map((c, i) => `
+    <div onclick="runPaletteCmd('${c.key}')" onmouseover="_paletteIdx=${i};renderPalette()"
+      style="padding:11px 18px;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.82rem;display:flex;justify-content:space-between;align-items:center;${i===_paletteIdx?'background:#1a2a1a;border-left:3px solid var(--zone-phosphor);':'border-left:3px solid transparent;'}">
+      <span style="color:${i===_paletteIdx?'#c8d8c8':'#7a8a7a'};">${c.label}</span>
+      <span style="color:#3a4a3a;font-size:0.62rem;letter-spacing:1px;">${c.hint}</span>
+    </div>`).join('') :
+    `<div style="padding:20px;text-align:center;font-family:'Courier Prime',monospace;font-size:0.75rem;color:#3a4a3a;">komut yok — "${zoneQuote()}"</div>`;
+  list.dataset.matches = JSON.stringify(matches.map(c => c.key));
+}
+
+function paletteKey(e) {
+  const matches = JSON.parse(document.getElementById('paletteList')?.dataset.matches || '[]');
+  if (e.key === 'Escape') { closePalette(); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); _paletteIdx = Math.min(_paletteIdx+1, matches.length-1); renderPalette(); return; }
+  if (e.key === 'ArrowUp') { e.preventDefault(); _paletteIdx = Math.max(_paletteIdx-1, 0); renderPalette(); return; }
+  if (e.key === 'Enter' && matches.length) { runPaletteCmd(matches[_paletteIdx]); }
+}
+
+function runPaletteCmd(key) {
+  const cmd = PALETTE_COMMANDS.find(c => c.key === key);
+  closePalette();
+  if (cmd) cmd.run();
+}
+
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    // Sadece admin kilidi açıksa
+    if (typeof _adminUnlocked !== 'undefined' && !_adminUnlocked) return;
+    e.preventDefault();
+    openPalette();
+  }
+});
+
+// ===== DİKOBRAZ EASTER EGG =====
+// Bölge'de acele eden kaybeder. Çok hızlı gezinen kullanıcıya bir kez görünür.
+let _dikobrazClicks = [];
+let _dikobrazShown = sessionStorage.getItem('nora_dikobraz') === '1';
+
+document.addEventListener('click', function(e) {
+  if (_dikobrazShown) return;
+  // Sadece kitap kartı / detay tıklamalarını say
+  if (!e.target.closest('.book-card') && !e.target.closest('.filter-chip')) return;
+  const now = Date.now();
+  _dikobrazClicks.push(now);
+  _dikobrazClicks = _dikobrazClicks.filter(t => now - t < 12000);
+  if (_dikobrazClicks.length >= 7) {
+    _dikobrazShown = true;
+    sessionStorage.setItem('nora_dikobraz', '1');
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;background:rgba(6,8,6,0.94);z-index:10001;display:flex;align-items:center;justify-content:center;padding:24px;animation:slideUp 0.8s ease;';
+    d.innerHTML = `<div style="max-width:420px;text-align:center;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:4px;color:#3a5a3a;margin-bottom:20px;">— DİKOBRAZ'IN HİKÂYESİ —</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-style:italic;color:#c8c2b6;line-height:1.9;margin-bottom:12px;">"Yavaşla.<br>Bölge acele edeni sevmez."</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#5a6a5a;line-height:1.8;margin-bottom:28px;">Dikobraz, Oda'ya koşarak girdi.<br>İstediğini değil, hak ettiğini aldı.</div>
+      <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:1px solid #2a3a2a;color:#8a9a8a;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:10px 24px;cursor:pointer;letter-spacing:2px;">ANLADIM</button>
+    </div>`;
+    d.onclick = (ev) => { if (ev.target === d) d.remove(); };
+    document.body.appendChild(d);
+  }
+}, true);
+
+// ===== BÖLGE ALINTILARI (Stalker / Uzayda Piknik) =====
+const ZONE_QUOTES = [
+  'Bölge\'de düz yol yoktur.',
+  'Bölge, umudunu kaybetmiş insanları geçirir yalnızca.',
+  'Buraya silahla girilmez. Silahla ancak korunursun; burada korunacak bir şey yok, kaybedecek her şey var.',
+  'İnsan, mutsuz olduğunu bildiği sürece umut vardır.',
+  'Zayıflık büyüktür, güç ise hiçtir.',
+  'Bölge her an değişir. Az önce güvenli olan yol, şimdi ölümdür.',
+  'Müzik... gerçeklikle en az ilişkisi olan sanattır. Belki de bu yüzden en çok dokunur.',
+  'Dilekler yüksek sesle söylenmez.',
+  'Et kıyma makinesinden geçmeden Oda\'ya varılmaz.',
+  'Mutluluk, herkese — ve kimse eksik kalmasın.',
+];
+function zoneQuote() { return ZONE_QUOTES[Math.floor(Math.random() * ZONE_QUOTES.length)]; }
+
+function zoneEmptyState(msg) {
+  return `<div style="text-align:center;padding:48px 20px;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:16px;">— BÖLGE BOŞ —</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-style:italic;color:var(--ink-faint);line-height:1.8;max-width:400px;margin:0 auto;">"${zoneQuote()}"</div>
+    ${msg ? `<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-top:16px;">${msg}</div>` : ''}
+  </div>`;
+}
+
+// ===== HIZLI SATIŞ MODU =====
+let _satisRecentSales = [];
+
+function initSatisMode() {
+  const inp = document.getElementById('satisSearchInput');
+  if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 100); }
+  document.getElementById('satisResults').innerHTML = '';
+  renderSatisRecent();
+}
+
+function satisSearch() {
+  const q = normalize(document.getElementById('satisSearchInput')?.value || '');
+  const el = document.getElementById('satisResults');
+  if (!el) return;
+  if (q.length < 2) { el.innerHTML = ''; return; }
+
+  const matches = books.filter(b =>
+    b.status !== 'satildi' && b.genre !== 'gizli-raf' &&
+    (normalize(b.title||'').includes(q) || normalize(b.author||'').includes(q))
+  ).slice(0, 8);
+
+  if (!matches.length) {
+    el.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.8rem;color:var(--ink-faint);padding:16px;text-align:center;">Eşleşme yok.</div>';
+    return;
+  }
+
+  el.innerHTML = matches.map(b => {
+    const statusColor = b.status === 'satista' ? 'var(--zone-water)' : b.status === 'yerlesik' ? 'var(--zone-phosphor)' : 'var(--gold)';
+    const statusLabel = { yerlesik:'Yerleşik', satista:'Satışta', askida:'Askıda', borrowed:'Ödünçte' }[b.status] || b.status;
+    return `<div onclick="satisSell(${b.id})"
+      style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-dark);margin-bottom:8px;cursor:pointer;background:var(--white);transition:all 0.12s;"
+      onmouseover="this.style.borderColor='var(--zone-phosphor)';this.style.transform='translateX(4px)'"
+      onmouseout="this.style.borderColor='var(--border-dark)';this.style.transform=''">
+      <div style="flex:1;">
+        <div style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);font-weight:700;">${b.title}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-top:2px;">
+          ${b.author||'—'} · Raf ${b.shelf||'?'} · <span style="color:${statusColor};">${statusLabel}</span>
+        </div>
+      </div>
+      <div style="font-family:'Courier Prime',monospace;font-size:1.1rem;font-weight:700;color:var(--gold);">${b.price ? '₺'+b.price : '—'}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;background:var(--zone-phosphor);color:#fff;padding:8px 14px;letter-spacing:2px;">SAT</div>
+    </div>`;
+  }).join('');
+}
+
+async function satisSell(id) {
+  const b = books.find(x => x.id === id);
+  if (!b) return;
+  const oldStatus = b.status;
+
+  const body = { status: 'satildi', sold_at: new Date().toISOString() };
+  const res = await api('books?id=eq.' + id, { method:'PATCH', body: JSON.stringify(body) });
+  if (!res.ok) { showToast('✗ Satış kaydedilemedi', '#c84040'); return; }
+
+  b.status = 'satildi'; b.sold_at = body.sold_at;
+
+  // Geri al destekli toast
+  _satisRecentSales.unshift({ id, title: b.title, price: b.price, oldStatus, time: new Date() });
+  if (_satisRecentSales.length > 10) _satisRecentSales.pop();
+
+  showUndoToast('✓ "' + b.title + '" satıldı' + (b.price ? ' — ₺'+b.price : ''), id, oldStatus);
+
+  // Yerleşikten satıldıysa temin listesine
+  if (oldStatus === 'yerlesik') await addToTeminListesi(b, id);
+
+  // Son kopya kontrolü
+  const remaining = books.filter(x =>
+    x.id !== id && x.status !== 'satildi' &&
+    normalize(x.title||'') === normalize(b.title||'')
+  );
+  if (remaining.length === 0) {
+    setTimeout(() => showToast('📚 Son kopyaydı!', 'var(--zone-rust)'), 1500);
+  }
+
+  document.getElementById('satisSearchInput').value = '';
+  document.getElementById('satisResults').innerHTML = '';
+  document.getElementById('satisSearchInput').focus();
+  renderSatisRecent();
+  renderSalesStats();
+}
+
+function renderSatisRecent() {
+  const el = document.getElementById('satisRecent');
+  if (!el) return;
+  if (!_satisRecentSales.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">BU OTURUMDA SATILAN</div>
+    ${_satisRecentSales.map(s => `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);font-family:'Courier Prime',monospace;font-size:0.75rem;">
+        <span style="color:var(--ink-light);">${s.title}</span>
+        <span style="color:var(--gold);">${s.price ? '₺'+s.price : '—'} · ${s.time.toTimeString().slice(0,5)}</span>
+      </div>`).join('')}`;
+}
+
+// ===== GERİ AL TOAST =====
+function showUndoToast(msg, bookId, oldStatus) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--zone-deep);color:#e8e2d6;font-family:'Courier Prime',monospace;font-size:0.75rem;padding:10px 16px;z-index:9999;letter-spacing:1px;box-shadow:0 4px 12px rgba(0,0,0,0.4);display:flex;align-items:center;gap:14px;white-space:nowrap;`;
+  t.innerHTML = `<span>${msg}</span><button style="background:none;border:1px solid var(--zone-phosphor);color:#6abf6a;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:4px 12px;cursor:pointer;letter-spacing:1px;">GERİ AL</button>`;
+  t.querySelector('button').onclick = async () => {
+    const body = { status: oldStatus, sold_at: null };
+    await api('books?id=eq.' + bookId, { method:'PATCH', body: JSON.stringify(body) });
+    const b = books.find(x => x.id === bookId);
+    if (b) { b.status = oldStatus; b.sold_at = null; }
+    _satisRecentSales = _satisRecentSales.filter(s => s.id !== bookId);
+    renderSatisRecent(); renderSalesStats();
+    if (typeof renderAdminTable === 'function') renderAdminTable();
+    t.remove();
+    showToast('↩ Geri alındı');
+  };
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.5s'; setTimeout(()=>t.remove(),500); }, 6000);
+}
+
 // ===== TOAST BİLDİRİM =====
 function showToast(msg, color = '#9c7a3c') {
   const t = document.createElement('div');
@@ -11603,6 +12116,25 @@ function observeLazyImages() {
 }
 
 // ===== INIT =====
+// STALKER: Bölge'ye giriş — sayfa sepya başlar, ilk etkileşimle renklenir
+(function zoneEntry() {
+  // Admin görünümündeyse veya hash varsa sepya atlansın
+  if (location.hash && location.hash !== '#' && location.hash !== '#customer') return;
+  document.body.classList.add('pre-zone');
+  let entered = false;
+  const enterZone = () => {
+    if (entered) return;
+    entered = true;
+    document.body.classList.remove('pre-zone');
+    document.body.classList.add('entering-zone');
+    setTimeout(() => document.body.classList.remove('entering-zone'), 2500);
+    ['click','input','scroll','touchstart'].forEach(ev => document.removeEventListener(ev, enterZone));
+  };
+  ['click','input','scroll','touchstart'].forEach(ev => document.addEventListener(ev, enterZone, { once:false, passive:true }));
+  // 6 saniye sonra kendiliğinden de girer
+  setTimeout(enterZone, 6000);
+})();
+
 (async () => {
   const savedSound = localStorage.getItem('noraSound');
   if (savedSound === '0') {
