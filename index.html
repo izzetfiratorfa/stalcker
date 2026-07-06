@@ -1714,6 +1714,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <div style="display:flex;gap:6px;margin-top:6px;">
       <button onclick="doSerendipity()" style="flex:1;background:#1a1a1a;border:none;border-left:4px solid #333;color:#aaa;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='#1a1a1a'">✦ SERENDIPITY</button>
       <button onclick="odaBaslat()" style="flex:1;background:#0a1a0a;border:none;border-left:4px solid var(--zone-phosphor);color:#6a9a6a;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#122412'" onmouseout="this.style.background='#0a1a0a'">◉ ODA'YA YOLCULUK</button>
+      <button onclick="show3DLibrary()" style="background:#1a120a;border:none;border-left:4px solid var(--zone-rust);color:#9a7a5a;padding:10px 14px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:2px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#241a10'" onmouseout="this.style.background='#1a120a'">📚 3D</button>
     </div>
   </div>
 
@@ -1989,6 +1990,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="bulk-btn" onclick="bulkPricePrompt()">₺ Fiyat</button>
         <button class="bulk-btn" onclick="bulkToggleNora()">★ Nora Seç</button>
         <button class="bulk-btn" onclick="bulkFetchCovers()">🖼 Kapak Çek</button>
+        <button class="bulk-btn" onclick="bulkEnrichOpenLibrary()">📡 Zenginleştir</button>
         <button class="bulk-btn" onclick="bulkEditField()">✎ Alan Düzenle</button>
         <button class="bulk-btn" onclick="bulkAddToCollection()">📂 Koleksiyona Ekle</button>
         <button class="bulk-btn" onclick="printLabels()">🏷 Etiket Bas</button>
@@ -2737,6 +2739,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <div style="display:flex;gap:6px;">
           <input type="text" id="fIsbn" placeholder="978-..." style="flex:1;">
           <button type="button" onclick="fetchByIsbnManual()" style="background:var(--black);color:var(--white);border:none;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:0 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap;">Bilgileri Çek</button>
+          <button type="button" onclick="googleBooksLookup()" title="Google Books'tan ara" style="background:var(--zone-deep);color:var(--zone-phosphor);border:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:0 10px;cursor:pointer;letter-spacing:1px;white-space:nowrap;">G Books</button>
         </div>
       </div>
       <div class="field"><label>Sayfa Sayısı <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(okuma süresi için)</span></label><input type="number" id="fPages" placeholder="örn: 320" min="1"></div>
@@ -11921,6 +11924,8 @@ const PALETTE_COMMANDS = [
   { key: 'kapak',    label: '🖼 Eksik Kapakları Çek', hint: 'cover isbn openlibrary', run: () => bulkFetchCovers() },
   { key: 'yazdir',   label: '🖨 Kataloğu Yazdır',    hint: 'print baskı',           run: () => printCatalog() },
   { key: 'etiket',   label: '🏷 Etiket Bas',          hint: 'label print fiyat',     run: () => printLabels() },
+  { key: '3d',       label: '📚 3D Kitaplık',         hint: 'sanal raf görünüm',    run: () => show3DLibrary() },
+  { key: 'zengin',   label: '📡 Toplu Zenginleştir',  hint: 'open library bulk',    run: () => bulkEnrichOpenLibrary() },
   { key: 'gizli',    label: '🔒 Gizli Raf',          hint: 'saklı kitaplar',       run: () => switchTab('gizli') },
   { key: 'koleksiy', label: '📂 Koleksiyonlar',      hint: 'koleksiyon grup',      run: () => switchTab('koleksiyon') },
   { key: 'rapor',    label: '📊 Günlük Rapor',       hint: 'bugün özet',           run: () => switchTab('report') },
@@ -11997,6 +12002,120 @@ document.addEventListener('keydown', function(e) {
     openPalette();
   }
 });
+
+// ===== FAZ 5: DIŞ API, PAYLAŞIM, 3D KİTAPLIK =====
+
+async function bulkEnrichOpenLibrary() {
+  const targets = selectedIds.size>0 ? books.filter(b=>selectedIds.has(b.id)&&b.isbn&&(!b.pages||!b.cover_url||!b.year)) : books.filter(b=>b.isbn&&(!b.pages||!b.cover_url||!b.year));
+  if (!targets.length) { showToast('Zenginleştirilecek kitap yok','#c84040'); return; }
+  if (!confirm(targets.length+' kitap Open Library\'den zenginleştirilsin mi?')) return;
+  let done=0, fail=0;
+  for (const b of targets) {
+    const isbn=b.isbn.replace(/[-\s]/g,'');
+    try {
+      const res=await fetch('https://openlibrary.org/api/books?bibkeys=ISBN:'+isbn+'&format=json&jscmd=data');
+      const data=await res.json(); const info=data['ISBN:'+isbn];
+      if (!info) { fail++; continue; }
+      const patch={};
+      if (!b.pages&&info.number_of_pages) patch.pages=info.number_of_pages;
+      if (!b.cover_url&&info.cover?.medium) patch.cover_url=info.cover.medium;
+      if (!b.year&&info.publish_date) { const y=parseInt(info.publish_date.match(/\d{4}/)?.[0]); if(y) patch.year=y; }
+      if (!b.publisher&&info.publishers?.length) patch.publisher=info.publishers[0].name;
+      if (Object.keys(patch).length) { await api('books?id=eq.'+b.id,{method:'PATCH',body:JSON.stringify(patch)}); Object.assign(b,patch); done++; }
+      else fail++;
+    } catch(e) { fail++; }
+    await new Promise(r=>setTimeout(r,200));
+  }
+  showToast('✓ '+done+' kitap zenginleştirildi'+(fail?' · '+fail+' atlandı':''),'#2a7a2a');
+  await fetchBooks(); renderAdminTable();
+}
+
+async function searchGoogleBooks(title, author) {
+  const q=encodeURIComponent((title||'')+' '+(author||''));
+  try {
+    const res=await fetch('https://www.googleapis.com/books/v1/volumes?q='+q+'&maxResults=3&langRestrict=tr');
+    const data=await res.json();
+    if (!data.items?.length) return null;
+    return data.items.map(item => { const v=item.volumeInfo; return { title:v.title, author:v.authors?.join(', '), publisher:v.publisher, year:v.publishedDate?parseInt(v.publishedDate.slice(0,4)):null, pages:v.pageCount, description:v.description?.slice(0,300), cover_url:v.imageLinks?.thumbnail?.replace('http:','https:'), isbn:v.industryIdentifiers?.find(x=>x.type==='ISBN_13')?.identifier||v.industryIdentifiers?.find(x=>x.type==='ISBN_10')?.identifier }; });
+  } catch(e) { return null; }
+}
+
+async function googleBooksLookup() {
+  const title=document.getElementById('fTitle')?.value.trim();
+  const authorEls=document.querySelectorAll('#authorFields .author-field');
+  const author=authorEls.length?authorEls[0].value.trim():'';
+  if (!title) { showToast('Önce kitap adı gir','#c84040'); return; }
+  showToast('📡 Google Books aranıyor...','var(--zone-water)');
+  const results=await searchGoogleBooks(title,author);
+  if (!results?.length) { showToast('✗ Bulunamadı','#c84040'); return; }
+  const best=results[0];
+  const fPub=document.getElementById('fPublisher'),fPages=document.getElementById('fPages'),fYear=document.getElementById('fYear'),fDesc=document.getElementById('fDescription'),fCover=document.getElementById('fCoverUrl'),fIsbn=document.getElementById('fIsbn');
+  if(best.publisher&&fPub&&!fPub.value) fPub.value=best.publisher;
+  if(best.pages&&fPages&&!fPages.value) fPages.value=best.pages;
+  if(best.year&&fYear&&!fYear.value) fYear.value=best.year;
+  if(best.description&&fDesc&&!fDesc.value) fDesc.value=best.description;
+  if(best.cover_url&&fCover&&!fCover.value) fCover.value=best.cover_url;
+  if(best.isbn&&fIsbn&&!fIsbn.value) fIsbn.value=best.isbn;
+  showToast('✓ Google Books\'tan dolduruldu','#2a7a2a');
+}
+
+async function fetchAuthorBio(authorName) {
+  if (!authorName) return null;
+  try {
+    const sr=await fetch('https://openlibrary.org/search/authors.json?q='+encodeURIComponent(authorName)+'&limit=1');
+    const sd=await sr.json(); if(!sd.docs?.length) return null;
+    const ar=await fetch('https://openlibrary.org/authors/'+sd.docs[0].key+'.json');
+    const ad=await ar.json();
+    return { name:ad.name||authorName, bio:typeof ad.bio==='string'?ad.bio:ad.bio?.value||'', birth:ad.birth_date||'', death:ad.death_date||'', photo:ad.photos?.length?'https://covers.openlibrary.org/a/id/'+ad.photos[0]+'-M.jpg':null, works:sd.docs[0].work_count||0 };
+  } catch(e) { return null; }
+}
+
+async function shareCollection(colId) {
+  const col=_collections.find(c=>c.id===colId); if(!col) return;
+  const res=await api('book_collections?collection_id=eq.'+colId+'&select=book_id'); if(!res.ok) return;
+  const rows=await res.json();
+  const colBooks=books.filter(b=>rows.some(r=>r.book_id===b.id));
+  const shareData={name:col.name, description:col.description, books:colBooks.map(b=>({title:b.title,author:b.author,genre:b.genre,shelf:b.shelf})), shared_at:new Date().toISOString(), source:'STAL(C)KER — Nora Kitap Evi'};
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(shareData,null,2)],{type:'application/json'}));
+  a.download='nora-koleksiyon-'+col.name.replace(/\s+/g,'-').toLowerCase()+'.json'; a.click();
+  showToast('✓ Koleksiyon dosyası indirildi');
+}
+
+function showSyncStatus() {
+  let dot=document.getElementById('syncDot');
+  if (!dot) { dot=document.createElement('div'); dot.id='syncDot'; dot.style.cssText='position:fixed;bottom:12px;right:12px;width:8px;height:8px;border-radius:50%;z-index:400;cursor:help;'; document.body.appendChild(dot); }
+  dot.style.background=navigator.onLine?'var(--zone-phosphor)':'#c84040';
+  dot.title=navigator.onLine?'Çevrimiçi — Supabase senkron':'Çevrimdışı';
+}
+window.addEventListener('online',showSyncStatus); window.addEventListener('offline',showSyncStatus);
+setTimeout(showSyncStatus,1000);
+
+function show3DLibrary() {
+  let ov=document.getElementById('library3dOverlay');
+  if(!ov){ov=document.createElement('div');ov.id='library3dOverlay';ov.style.cssText='position:fixed;inset:0;background:rgba(6,8,6,0.96);z-index:10000;display:flex;flex-direction:column;align-items:center;padding:30px 20px;overflow-y:auto;';document.body.appendChild(ov);}
+  ov.style.display='flex';
+  const sg={};
+  books.filter(b=>b.shelf&&b.genre!=='gizli-raf'&&b.status!=='satildi').forEach(b=>{const s=(b.shelf||'').trim().toUpperCase();if(!sg[s])sg[s]=[];sg[s].push(b);});
+  const sk=Object.keys(sg).sort((a,b)=>a.localeCompare(b,'tr')).slice(0,14);
+  const gc={'roman':'#8a4a2a','öykü':'#9c7a3c','şiir':'#6a6a4a','tarih':'#4a5a5a','felsefe':'#3a7a3a','bilim kurgu':'#2a5a8a','polisiye':'#5a3a3a','siyaset':'#5a5a3a','kişisel gelişim':'#7a5a2a'};
+  function bc(b){if(!b.genre)return '#7a6a52';const g=b.genre.toLowerCase();for(const[k,c]of Object.entries(gc)){if(g.includes(k))return c;}return '#7a6a52';}
+
+  ov.innerHTML=`<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:4px;color:var(--zone-phosphor);margin-bottom:20px;">◉ BÖLGE KİTAPLIĞI</div>
+    <div style="perspective:800px;max-width:900px;width:100%;">
+    ${sk.map(shelf=>{const bks=sg[shelf].slice(0,25);return `<div style="margin-bottom:4px;transform:rotateX(2deg);transform-origin:bottom;">
+      <div style="display:flex;align-items:flex-end;gap:1px;padding:6px 10px;min-height:55px;background:linear-gradient(180deg,#1a1208,#2a1e10);border-bottom:4px solid #3a2a14;border-left:2px solid #2a1e10;border-right:2px solid #2a1e10;box-shadow:0 4px 8px rgba(0,0,0,0.4);">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.45rem;color:#5a4a3a;writing-mode:vertical-lr;transform:rotate(180deg);margin-right:3px;">${shelf}</div>
+        ${bks.map(b=>{const h=Math.min(48,Math.max(26,(b.pages||200)/8));const w=Math.max(5,Math.min(14,(b.pages||200)/40));return `<div onclick="document.getElementById('library3dOverlay').style.display='none';openDetail(${b.id})" title="${b.title} — ${b.author||'?'}" style="width:${w}px;height:${h}px;background:${bc(b)};border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:transform 0.15s;flex-shrink:0;" onmouseover="this.style.transform='translateY(-5px) scale(1.1)'" onmouseout="this.style.transform=''">
+          ${b.nora_pick?'<div style="position:absolute;top:-1px;right:-1px;width:3px;height:3px;background:var(--gold);border-radius:50%;"></div>':''}
+        </div>`;}).join('')}
+      </div>
+    </div>`;}).join('')}
+    </div>
+    <div style="margin-top:14px;font-family:'Courier Prime',monospace;font-size:0.5rem;color:#5a6a5a;">
+      ${Object.entries(gc).map(([k,c])=>`<span style="display:inline-block;width:7px;height:7px;background:${c};margin:0 2px;"></span>${k}`).join(' · ')}
+    </div>
+    <button onclick="document.getElementById('library3dOverlay').style.display='none'" style="margin-top:16px;background:none;border:1px solid #2a3a2a;color:#8a9a8a;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:10px 24px;cursor:pointer;letter-spacing:2px;">KAPAT</button>`;
+}
 
 // ===== FAZ 4: OTOMASYON, SINIFLANDIRMA, GÖRSEL KİTAPLIK =====
 
@@ -12122,6 +12241,7 @@ function renderCollections() {
           ${c.description?`<div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-top:2px;">${c.description}</div>`:''}
         </div>
         <div style="display:flex;gap:6px;">
+          <button onclick="shareCollection(${c.id})" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Paylaş</button>
           <button onclick="editCollection(${c.id})" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Düzenle</button>
           <button onclick="deleteCollection(${c.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Sil</button>
         </div>
