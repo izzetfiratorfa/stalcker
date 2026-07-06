@@ -2776,6 +2776,9 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
             <optgroup label="KÖKEN">
               <option>Yerli</option><option>Yabancı</option>
             </optgroup>
+            <optgroup label="——">
+              <option value="_custom">+ Özel Tür Ekle...</option>
+            </optgroup>
           </select>
           <input type="text" id="fGenre" placeholder="Roman, Tarih, Yerli…" style="flex:2;">
         </div>
@@ -6520,6 +6523,7 @@ function renderBookCard(b) {
         ${b.pages ? `<span style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">${b.pages} sf.</span>` : ''}
         ${b.condition ? `<span style="font-family:'Courier Prime',monospace;font-size:0.65rem;padding:2px 6px;border:1px solid var(--zone-sepia);color:var(--zone-sepia);">${{cok_iyi:'Çok İyi',iyi:'İyi',orta:'Orta',kotu:'Kötü'}[b.condition]||b.condition}</span>` : ''}
         ${b.edition_info ? `<span style="font-family:'Courier Prime',monospace;font-size:0.65rem;padding:2px 6px;border:1px solid var(--zone-rust);color:var(--zone-rust);">${b.edition_info}</span>` : ''}
+        ${(() => { const dw=guessDewey(b.genre); return dw ? `<span title="Dewey: ${dw} — ${DEWEY_MAP[dw]||''}" style="font-family:'Courier Prime',monospace;font-size:0.58rem;padding:2px 5px;border:1px solid var(--zone-water);color:var(--zone-water);cursor:help;">D${dw}</span>` : ''; })()}
         ${b.price && (b.status==='satista') ? `<span style="font-family:'Courier Prime',monospace;font-size:0.72rem;font-weight:700;color:var(--gold);">₺${b.price}</span>` : ''}
         ${b.genre ? `<span class="badge-tag" style="${genreColor?`color:${genreColor};border-color:${genreColor};background:${genreColor}18;`:''}">${b.genre}</span>` : ''}
         ${tagBadges}
@@ -7475,9 +7479,7 @@ async function handleScannedISBN(isbn) {
 }
 
 async function fetchByIsbnManual() {
-  const isbn = document.getElementById('fIsbn').value.trim().replace(/[-\s]/g, '');
-  if (!isbn) { alert('Önce ISBN girin.'); return; }
-  await fillBookFromISBN(isbn);
+  await autoFillFromISBN();
 }
 
 // Türkçe başlık büyük harf — her kelimenin ilk harfi büyük, Türkçe karakterler korunur
@@ -11996,6 +11998,108 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ===== FAZ 4: OTOMASYON, SINIFLANDIRMA, GÖRSEL KİTAPLIK =====
+
+const DEWEY_MAP = {'000':'Genel','100':'Felsefe','150':'Psikoloji','158':'Kişisel Gelişim','160':'Mantık','200':'Din','297':'İslam','300':'Sosyal Bilimler','320':'Siyaset','330':'Ekonomi','340':'Hukuk','370':'Eğitim','410':'Dilbilim','500':'Bilim','510':'Matematik','600':'Teknoloji','610':'Tıp','700':'Sanat','720':'Mimari','770':'Fotoğraf','780':'Müzik','790':'Sahne Sanatları','800':'Edebiyat','808':'Tür Edebiyatı','894':'Türk Edebiyatı','900':'Tarih','910':'Coğrafya','920':'Biyografi','956':'Ortadoğu Tarihi'};
+
+function guessDewey(genre) {
+  if (!genre) return '';
+  const g = genre.toLowerCase();
+  const map = [[['roman','öykü','şiir','edebiyat','deneme','anı','günlük','mektup'],'894'],
+    [['bilim kurgu','fantastik','polisiye','gerilim','macera','korku'],'808'],
+    [['tarih','osmanlı'],'956'],[['felsefe'],'100'],[['psikoloji'],'150'],
+    [['din','islam'],'297'],[['siyaset'],'320'],[['ekonomi'],'330'],
+    [['hukuk'],'340'],[['eğitim','çocuk'],'370'],[['bilim'],'500'],
+    [['sanat'],'700'],[['müzik'],'780'],[['sinema','tiyatro'],'790'],
+    [['mimari'],'720'],[['fotoğraf'],'770'],[['coğrafya','gezi'],'910'],
+    [['biyografi'],'920'],[['sosyoloji'],'300'],[['kişisel gelişim'],'158']];
+  for (const [keys, code] of map) { if (keys.some(k => g.includes(k))) return code; }
+  return '';
+}
+
+const BISAC_MAP = {'Roman':'FIC000000','Öykü':'FIC029000','Şiir':'POE000000','Deneme':'LIT004000','Tarih':'HIS000000','Felsefe':'PHI000000','Psikoloji':'PSY000000','Bilim Kurgu':'FIC028000','Polisiye':'FIC022000','Biyografi':'BIO000000','Din':'REL000000','Siyaset':'POL000000','Sanat':'ART000000','Eğitim':'EDU000000','Çocuk':'JUV000000','Kişisel Gelişim':'SEL000000'};
+function guessBISAC(genre) { if(!genre) return ''; for(const g of genre.split(',').map(x=>x.trim())) { if(BISAC_MAP[g]) return BISAC_MAP[g]; } return ''; }
+
+function getCustomGenres() { try { return JSON.parse(localStorage.getItem('nora_custom_genres')||'[]'); } catch(e) { return []; } }
+function addCustomGenre() {
+  const name = prompt('Yeni tür adı:');
+  if (!name) return;
+  const list = getCustomGenres();
+  if (!list.includes(name)) { list.push(name); localStorage.setItem('nora_custom_genres',JSON.stringify(list)); }
+  updateGenrePicker();
+  showToast('✓ "'+name+'" türü eklendi');
+}
+function updateGenrePicker() {
+  const picker = document.getElementById('fGenrePicker');
+  if (!picker) return;
+  const old = picker.querySelector('optgroup[label="ÖZEL"]');
+  if (old) old.remove();
+  const custom = getCustomGenres();
+  if (custom.length) {
+    const group = document.createElement('optgroup'); group.label = 'ÖZEL';
+    custom.forEach(g => { const o=document.createElement('option'); o.textContent=g; group.appendChild(o); });
+    picker.appendChild(group);
+  }
+}
+setTimeout(updateGenrePicker, 1000);
+
+async function autoFillFromISBN() {
+  const isbn = document.getElementById('fIsbn')?.value.trim().replace(/[-\s]/g,'');
+  if (!isbn || isbn.length < 10) { showToast('Geçerli bir ISBN gir','#c84040'); return; }
+  showToast('📡 Open Library sorgulanıyor...','var(--zone-water)');
+  try {
+    const res = await fetch('https://openlibrary.org/api/books?bibkeys=ISBN:'+isbn+'&format=json&jscmd=data');
+    const data = await res.json();
+    const key = 'ISBN:'+isbn;
+    if (!data[key]) { showToast('✗ ISBN bulunamadı','#c84040'); return; }
+    const b = data[key];
+    const fTitle=document.getElementById('fTitle'), fPub=document.getElementById('fPublisher'), fPages=document.getElementById('fPages'), fYear=document.getElementById('fYear'), fCover=document.getElementById('fCoverUrl');
+    if (b.title && fTitle && !fTitle.value) fTitle.value = b.title;
+    if (b.publishers?.length && fPub && !fPub.value) fPub.value = b.publishers[0].name;
+    if (b.number_of_pages && fPages && !fPages.value) fPages.value = b.number_of_pages;
+    if (b.publish_date && fYear && !fYear.value) { const y=parseInt(b.publish_date.match(/\d{4}/)?.[0]); if(y) fYear.value=y; }
+    if (b.cover?.medium && fCover && !fCover.value) fCover.value = b.cover.medium;
+    if (b.authors?.length) { const af=document.querySelectorAll('#authorFields .author-field'); if(af.length&&!af[0].value) af[0].value=b.authors.map(a=>a.name).join(', '); }
+    showToast('✓ Bilgiler dolduruldu','#2a7a2a');
+    showSimilarBooks();
+  } catch(e) { showToast('✗ Bağlantı hatası','#c84040'); }
+}
+
+function getShelfPhotos() { try { return JSON.parse(localStorage.getItem('nora_shelf_photos')||'[]'); } catch(e) { return []; } }
+function addShelfPhoto() {
+  const url = prompt('Raf fotoğrafı URL\'si:'); if (!url) return;
+  const shelf = prompt('Hangi raf?',''); const note = prompt('Not:','');
+  const photos = getShelfPhotos();
+  photos.push({url,shelf,note,date:new Date().toISOString()});
+  localStorage.setItem('nora_shelf_photos',JSON.stringify(photos));
+  showToast('✓ Raf fotoğrafı eklendi');
+}
+
+function scheduleAutoBackup() {
+  const last = localStorage.getItem('nora_last_backup');
+  const daysSince = last ? (Date.now()-new Date(last).getTime())/(1000*60*60*24) : 999;
+  if (daysSince >= 3 && books.length > 0) {
+    setTimeout(() => {
+      const t = document.createElement('div');
+      t.style.cssText = 'position:fixed;bottom:70px;right:16px;background:var(--zone-deep);color:#c8d8c8;font-family:"Courier Prime",monospace;font-size:0.68rem;padding:10px 14px;cursor:pointer;z-index:500;border:1px solid var(--zone-phosphor);';
+      t.innerHTML = '⬇ '+Math.floor(daysSince)+' gündür yedek alınmadı <u>İndir</u>';
+      t.onclick = () => { backupCatalog(); t.remove(); };
+      document.body.appendChild(t);
+      setTimeout(() => { if(t.parentElement) t.remove(); }, 15000);
+    }, 3000);
+  }
+}
+
+function checkPWA() {
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const m = {name:'STAL(C)KER — Nora Kitap Evi',short_name:'STAL(C)KER',start_url:'./',display:'standalone',background_color:'#f2efe8',theme_color:'#0a0a0a',icons:[{src:'./icon-192.png',sizes:'192x192',type:'image/png'}]};
+    const link = document.createElement('link'); link.rel='manifest'; link.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('meta[name="theme-color"]')) { const tc=document.createElement('meta'); tc.name='theme-color'; tc.content='#0a0a0a'; document.head.appendChild(tc); }
+}
+setTimeout(checkPWA, 500);
+
 // ===== FAZ 3: KOLEKSİYON, ERİŞİLEBİLİRLİK, ARŞİVLEME =====
 let _collections = [];
 
@@ -12268,6 +12372,7 @@ function addGenreFromPicker() {
   const picker = document.getElementById('fGenrePicker');
   const input = document.getElementById('fGenre');
   if (!picker.value || !input) return;
+  if (picker.value === '_custom') { picker.value = ''; addCustomGenre(); return; }
   const current = input.value.split(',').map(s=>s.trim()).filter(Boolean);
   if (!current.includes(picker.value)) {
     current.push(picker.value);
