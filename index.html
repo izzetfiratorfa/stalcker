@@ -615,6 +615,13 @@ body.dark .serendipity-msg { background:#111;border-color:#333;color:#b0aa9f; }
   .btn-mode { padding:0 9px;font-size:0.6rem; }
   .detail-shelf-big { font-size:1.6rem;letter-spacing:2px; }
   .ikram-code-box { font-size:1.5rem;letter-spacing:4px; }
+  /* FAZ 3 mobil iyileştirmeler */
+  .stat-card { min-width:70px; }
+  .stat-card .num { font-size:1.1rem; }
+  .stat-card .lbl { font-size:0.45rem; }
+  .admin-search-input { font-size:0.82rem;padding:10px 12px; }
+  .field label { font-size:0.72rem; }
+  #cmdPalette input { font-size:0.88rem;padding:12px 14px; }
 }
 
 /* ===== YENİ EKLENENLER ROZET ===== */
@@ -1888,6 +1895,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="tab-btn" id="tabYazarlar" onclick="switchTab('yazarlar')" style="color:var(--zone-water);">YAZARLAR</button>
         <button class="tab-btn" id="tabQuotes" onclick="switchTab('quotes')" style="color:var(--zone-sepia);">ALINTILAR</button>
         <button class="tab-btn" id="tabStats" onclick="switchTab('stats')" style="color:var(--zone-phosphor);">İSTATİSTİK</button>
+        <button class="tab-btn" id="tabKoleksiyon" onclick="switchTab('koleksiyon')" style="color:var(--zone-rust);">📂 KOLEKSİYONLAR</button>
       </div>
       <!-- GRUP: İŞLETME -->
       <div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:2px;">▸ İŞLETME</div>
@@ -1982,6 +1990,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="bulk-btn" onclick="bulkToggleNora()">★ Nora Seç</button>
         <button class="bulk-btn" onclick="bulkFetchCovers()">🖼 Kapak Çek</button>
         <button class="bulk-btn" onclick="bulkEditField()">✎ Alan Düzenle</button>
+        <button class="bulk-btn" onclick="bulkAddToCollection()">📂 Koleksiyona Ekle</button>
         <button class="bulk-btn" onclick="printLabels()">🏷 Etiket Bas</button>
         <button class="bulk-btn" onclick="bulkExportCSV()">↓ CSV</button>
         <button class="bulk-btn bulk-btn-danger" onclick="bulkDelete()">✕ Sil</button>
@@ -2592,6 +2601,15 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
     </div>
 
+    <!-- KOLEKSİYON PANELİ -->
+    <div id="panelKoleksiyon" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);">Kitapları tematik koleksiyonlara grupla</div>
+        <button onclick="createCollection()" style="background:var(--zone-deep);color:var(--zone-phosphor);border:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.68rem;padding:7px 14px;cursor:pointer;letter-spacing:1px;">+ Yeni Koleksiyon</button>
+      </div>
+      <div id="collectionsPanel"></div>
+    </div>
+
     <!-- HIZLI SATIŞ PANELİ -->
     <div id="panelSatis" style="display:none;">
       <div style="max-width:640px;margin:0 auto;">
@@ -2723,6 +2741,20 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
       <div class="field"><label>Sayfa Sayısı <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(okuma süresi için)</span></label><input type="number" id="fPages" placeholder="örn: 320" min="1"></div>
       <div class="field"><label>Tür / Kategori</label>
+        <div style="display:flex;gap:4px;margin-bottom:4px;">
+          <select onchange="if(this.value)applyTemplate(this.value);this.value=''" style="padding:5px;font-family:'Courier Prime',monospace;font-size:0.68rem;border:1px solid var(--zone-sepia);background:var(--paper);color:var(--zone-sepia);cursor:pointer;">
+            <option value="">⚡ Hızlı Şablon</option>
+            <option value="roman_yerli">Roman (Yerli)</option>
+            <option value="roman_yabanci">Roman (Yabancı)</option>
+            <option value="siir_yerli">Şiir (Yerli)</option>
+            <option value="tarih">Tarih</option>
+            <option value="felsefe">Felsefe</option>
+            <option value="cocuk">Çocuk</option>
+            <option value="bilim_kurgu">Bilim Kurgu</option>
+            <option value="kisisel_gelisim">Kişisel Gelişim</option>
+            <option value="siyaset">Siyaset</option>
+          </select>
+        </div>
         <div style="display:flex;gap:4px;">
           <select id="fGenrePicker" onchange="addGenreFromPicker()" style="flex:1;padding:7px;font-family:'Courier Prime',monospace;font-size:0.78rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
             <option value="">+ Tür Ekle</option>
@@ -7160,7 +7192,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis','koleksiyon':'panelKoleksiyon'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -7172,7 +7204,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis','koleksiyon':'tabKoleksiyon'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -7199,6 +7231,7 @@ function switchTab(tab) {
   if (tab === 'kolektif') loadKolektif();
   if (tab === 'temin') loadTeminListesi();
   if (tab === 'satis') initSatisMode();
+  if (tab === 'koleksiyon') loadCollections();
 }
 
 function renderMissedSearches() {
@@ -11356,8 +11389,11 @@ async function saveBook() {
 
 async function deleteBook(id) {
   const b = books.find(x => x.id === id);
-  if (!confirm('"' + b.title + '" silinsin mi?')) return;
+  if (!confirm('"' + b.title + '" silinsin mi?\n(Arşivde saklanacak, geri getirilebilir)')) return;
+  // 100. Arşive kaydet
+  await api('books_archive', { method:'POST', prefer:'return=minimal', body: JSON.stringify({ original_id: id, data: b, reason: 'manual_delete' }) });
   await api('books?id=eq.' + id, { method:'DELETE', prefer:'return=minimal' });
+  showToast('📦 "' + b.title + '" arşive taşındı');
   await fetchBooks(); renderAdminTable(); renderStats(); buildFilters();
 }
 
@@ -11884,6 +11920,7 @@ const PALETTE_COMMANDS = [
   { key: 'yazdir',   label: '🖨 Kataloğu Yazdır',    hint: 'print baskı',           run: () => printCatalog() },
   { key: 'etiket',   label: '🏷 Etiket Bas',          hint: 'label print fiyat',     run: () => printLabels() },
   { key: 'gizli',    label: '🔒 Gizli Raf',          hint: 'saklı kitaplar',       run: () => switchTab('gizli') },
+  { key: 'koleksiy', label: '📂 Koleksiyonlar',      hint: 'koleksiyon grup',      run: () => switchTab('koleksiyon') },
   { key: 'rapor',    label: '📊 Günlük Rapor',       hint: 'bugün özet',           run: () => switchTab('report') },
   { key: 'cikis',    label: '⏻ Admin Çıkış',         hint: 'logout kilitle',       run: () => lockAdmin() },
 ];
@@ -11958,6 +11995,152 @@ document.addEventListener('keydown', function(e) {
     openPalette();
   }
 });
+
+// ===== FAZ 3: KOLEKSİYON, ERİŞİLEBİLİRLİK, ARŞİVLEME =====
+let _collections = [];
+
+async function loadCollections() {
+  const res = await api('collections?order=created_at.desc');
+  if (!res.ok) return;
+  _collections = await res.json();
+  renderCollections();
+}
+
+function renderCollections() {
+  const el = document.getElementById('collectionsPanel');
+  if (!el) return;
+  if (!_collections.length) { el.innerHTML = zoneEmptyState('Henüz koleksiyon oluşturulmadı.'); return; }
+  el.innerHTML = _collections.map(c => `
+    <div style="border:1.5px solid ${c.color||'var(--border-dark)'};margin-bottom:14px;background:var(--white);">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:${c.color||'var(--gold)'}12;">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);font-weight:700;">${c.name}</div>
+          ${c.description?`<div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-top:2px;">${c.description}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="editCollection(${c.id})" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Düzenle</button>
+          <button onclick="deleteCollection(${c.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Sil</button>
+        </div>
+      </div>
+      <div id="colBooks_${c.id}" style="padding:12px 16px;"><div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">Yükleniyor...</div></div>
+    </div>`).join('');
+  _collections.forEach(c => loadCollectionBooks(c.id));
+}
+
+async function loadCollectionBooks(colId) {
+  const el = document.getElementById('colBooks_' + colId);
+  if (!el) return;
+  const res = await api('book_collections?collection_id=eq.' + colId + '&select=book_id');
+  if (!res.ok) return;
+  const rows = await res.json();
+  const colBooks = books.filter(b => rows.some(r=>r.book_id===b.id));
+  if (!colBooks.length) { el.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.7rem;color:var(--ink-faint);">Koleksiyon boş — kitapları seçip toolbar\'dan ekle</div>'; return; }
+  el.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);margin-bottom:8px;">${colBooks.length} kitap</div>` +
+    colBooks.map(b => `<div style="display:inline-block;padding:4px 10px;margin:2px;border:1px solid var(--border);font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-light);cursor:pointer;" onclick="openDetail(${b.id})" title="Raf ${b.shelf||'?'}">${b.title} <span style="color:var(--ink-faint);">— ${b.author||'?'}</span><span onclick="event.stopPropagation();removeFromCollection(${b.id},${colId})" style="color:#c84040;cursor:pointer;margin-left:4px;">✕</span></div>`).join('');
+}
+
+async function createCollection() {
+  const name = prompt('Koleksiyon adı:');
+  if (!name) return;
+  const desc = prompt('Açıklama (isteğe bağlı):') || '';
+  const colors = ['#8a4a2a','#6a6a4a','#3a7a3a','#4a5a5a','#9c7a3c','#2a5a8a','#7a3a5a','#c87020'];
+  await api('collections', { method:'POST', prefer:'return=minimal', body:JSON.stringify({ name, description:desc, color:colors[Math.floor(Math.random()*colors.length)] }) });
+  await loadCollections();
+}
+
+async function editCollection(id) {
+  const c = _collections.find(x=>x.id===id);
+  const name = prompt('Koleksiyon adı:', c?.name);
+  if (!name) return;
+  const desc = prompt('Açıklama:', c?.description||'');
+  await api('collections?id=eq.'+id, { method:'PATCH', body:JSON.stringify({ name, description:desc||null }) });
+  await loadCollections();
+}
+
+async function deleteCollection(id) {
+  if (!confirm('Koleksiyon silinsin mi? (Kitaplar silinmez)')) return;
+  await api('collections?id=eq.'+id, { method:'DELETE' });
+  await loadCollections();
+}
+
+async function addBookToCollection(bookId, colId) {
+  await api('book_collections', { method:'POST', prefer:'return=minimal', body:JSON.stringify({ book_id:bookId, collection_id:colId }) });
+}
+
+async function removeFromCollection(bookId, colId) {
+  await api('book_collections?book_id=eq.'+bookId+'&collection_id=eq.'+colId, { method:'DELETE' });
+  loadCollectionBooks(colId);
+}
+
+async function bulkAddToCollection() {
+  if (!selectedIds.size) { showToast('Önce kitap seç','#c84040'); return; }
+  const res = await api('collections?order=name.asc');
+  if (!res.ok) return;
+  const cols = await res.json();
+  if (!cols.length) { showToast('Önce koleksiyon oluştur','#c84040'); return; }
+  const choice = prompt('Koleksiyon seç (numara):\\n\\n' + cols.map((c,i)=>(i+1)+'. '+c.name).join('\\n'));
+  if (!choice) return;
+  const idx = parseInt(choice)-1;
+  if (idx<0 || idx>=cols.length) return;
+  const colId = cols[idx].id;
+  let added=0;
+  for (const bid of Array.from(selectedIds)) { try { await addBookToCollection(bid,colId); added++; } catch(e){} }
+  showToast('✓ '+added+' kitap "'+cols[idx].name+'" koleksiyonuna eklendi','#2a7a2a');
+  clearSelection();
+}
+
+// 75. Üst veri şablonları
+const META_TEMPLATES = {
+  'roman_yerli': { genre:'Roman, Yerli', tags:'roman', condition:'iyi' },
+  'roman_yabanci': { genre:'Roman, Yabancı', tags:'roman, çeviri', condition:'iyi' },
+  'siir_yerli': { genre:'Şiir, Yerli', tags:'şiir' },
+  'tarih': { genre:'Tarih, Yerli', tags:'tarih, araştırma' },
+  'felsefe': { genre:'Felsefe, Yabancı', tags:'felsefe, düşünce, çeviri' },
+  'cocuk': { genre:'Çocuk, Yerli', tags:'çocuk, eğitim' },
+  'bilim_kurgu': { genre:'Bilim Kurgu, Yabancı', tags:'bilim kurgu, çeviri' },
+  'kisisel_gelisim': { genre:'Kişisel Gelişim, Yabancı', tags:'kişisel gelişim, çeviri' },
+  'siyaset': { genre:'Siyaset, Yerli', tags:'siyaset, toplum' },
+};
+
+function applyTemplate(key) {
+  const t = META_TEMPLATES[key];
+  if (!t) return;
+  if (t.genre) document.getElementById('fGenre').value = t.genre;
+  if (t.tags) document.getElementById('fTags').value = t.tags;
+  if (t.condition) { const el=document.getElementById('fCondition'); if(el) el.value=t.condition; }
+  showToast('Şablon uygulandı: '+key);
+}
+
+// 100. Arşivden geri yükleme
+async function restoreFromArchive(archiveId) {
+  const res = await api('books_archive?id=eq.'+archiveId);
+  if (!res.ok) return;
+  const rows = await res.json();
+  if (!rows.length) return;
+  const book = rows[0].data;
+  delete book.id;
+  const saveRes = await api('books', { method:'POST', prefer:'return=minimal', body:JSON.stringify(book) });
+  if (saveRes.ok) {
+    await api('books_archive?id=eq.'+archiveId, { method:'DELETE' });
+    showToast('✓ "'+book.title+'" geri yüklendi','#2a7a2a');
+    await fetchBooks(); renderAdminTable(); renderStats();
+  }
+}
+
+// 103. Erişilebilirlik
+function enhanceAccessibility() {
+  if (!document.getElementById('skipLink')) {
+    const skip = document.createElement('a');
+    skip.id = 'skipLink'; skip.href = '#mainContent'; skip.textContent = 'İçeriğe geç';
+    skip.style.cssText = 'position:absolute;top:-40px;left:0;background:var(--ink);color:var(--white);padding:8px 16px;z-index:10000;font-family:"Courier Prime",monospace;font-size:0.8rem;transition:top 0.2s;';
+    skip.onfocus = () => skip.style.top='0'; skip.onblur = () => skip.style.top='-40px';
+    document.body.prepend(skip);
+  }
+  document.querySelectorAll('.tab-btn').forEach(btn => { if(!btn.getAttribute('role')) btn.setAttribute('role','tab'); });
+  document.querySelectorAll('.book-card').forEach(card => { if(!card.getAttribute('role')){ card.setAttribute('role','article'); card.setAttribute('tabindex','0'); } });
+  document.querySelectorAll('input,select,textarea').forEach(el => { if(!el.getAttribute('aria-label')&&el.placeholder) el.setAttribute('aria-label',el.placeholder); });
+}
+setTimeout(enhanceAccessibility, 2000);
 
 // ===== FAZ 2: GELİŞMİŞ ARAMA, GÖRSELLEŞTİRME, RAPORLAMA =====
 
