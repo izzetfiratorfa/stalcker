@@ -7179,11 +7179,11 @@ function renderStats() {
   renderSalesStats();
   renderAuthorStats();
   renderAdvancedStats();
-  const allActive = books.filter(b => b.status !== 'satildi');
-  const total = allActive.length;
   const avail = books.filter(b => b.status === 'yerlesik').length;
   const satista = books.filter(b => b.status === 'satista').length;
   const satildi = books.filter(b => b.status === 'satildi').length;
+  const total = avail + satista; // Toplam = Yerleşik + Satışta
+  const allActive = books.filter(b => b.status !== 'satildi');
   const genreSet = new Set();
   allActive.filter(b => b.genre).forEach(b => b.genre.split(',').map(g=>g.trim()).filter(Boolean).forEach(g => genreSet.add(g)));
   const genres = genreSet.size;
