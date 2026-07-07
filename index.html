@@ -6415,7 +6415,7 @@ function doSearch() {
 
   if (!q && activeFilter === 'Tümü' && activeGenres.size === 0 && !pMin && !pMax && minRating === 0 && !activeTag && !document.getElementById('filterPublisher')?.value) {
     if (!books.length) { container.innerHTML = ''; titleEl.textContent = ''; return; }
-    const shuffled = [...books].filter(b=>b.genre!=='gizli-raf').sort(() => Math.random() - 0.5).slice(0, 3);
+    const shuffled = [...books].filter(b=>b.genre!=='gizli-raf'&&b.status!=='satildi').sort(() => Math.random() - 0.5).slice(0, 3);
     titleEl.textContent = 'bugün için üç öneri';
     try {
       container.innerHTML = shuffled.map(renderBookCard).join('');
@@ -6430,6 +6430,7 @@ function doSearch() {
     const activePublisher = document.getElementById('filterPublisher')?.value || '';
     let filtered = books.filter(b => {
       if (b.genre === 'gizli-raf') return false;
+      if (b.status === 'satildi') return false;
       const match = !q || fuzzyMatch(b.title + ' ' + b.author + ' ' + (b.publisher||'') + ' ' + (b.tags||'') + ' ' + (b.isbn||''), q);
       const genreOk = activeFilter === 'Tümü' || (b.genre||'').split(',').map(g=>g.trim()).includes(activeFilter);
       const multiGenreOk = activeGenres.size === 0 || [...activeGenres].every(g => (b.genre||'').split(',').map(x=>x.trim()).includes(g));
@@ -6543,9 +6544,14 @@ async function openDetail(id) {
   if (!b) return;
   const tags = (b.tags || '').split(',').map(t => t.trim()).filter(Boolean);
   const noraBadge = b.nora_pick ? '<div class="nora-badge" style="display:inline-flex;margin-bottom:12px">★ Nora\u2019n\u0131n \u00d6nerisi</div>' : '';
-  const statusBadge = b.status === 'yerlesik'
-    ? '<span class="badge-status status-yerlesik">✓ Yerleşik</span>'
-    : '<span class="badge-status status-borrowed">⏳ Ödünçte</span>';
+  const detailStatusMap = {
+    yerlesik: '<span class="badge-status status-yerlesik">✓ Yerleşik</span>',
+    borrowed: '<span class="badge-status status-borrowed">⏳ Ödünçte</span>',
+    askida:   '<span class="badge-status" style="background:var(--gold-bg);color:var(--gold);border-color:var(--gold);">❤ Askıda</span>',
+    satista:  '<span class="badge-status" style="background:#e8f0f8;color:#2a5a8a;border-color:#2a5a8a;">₺ Satışta' + (b.price ? ' · '+b.price+'₺' : '') + '</span>',
+    satildi:  '<span class="badge-status" style="background:#e8f0e8;color:#2a7a2a;border-color:#2a7a2a;">✓ Satıldı</span>',
+  };
+  const statusBadge = detailStatusMap[b.status] || '';
 
   // Yorumları Supabase'den çek
   let reviews = [];
@@ -7173,15 +7179,15 @@ function renderStats() {
   renderSalesStats();
   renderAuthorStats();
   renderAdvancedStats();
-  const total = books.length;
+  const allActive = books.filter(b => b.status !== 'satildi');
+  const total = allActive.length;
   const avail = books.filter(b => b.status === 'yerlesik').length;
-  const borrowed = books.filter(b => b.status === 'borrowed').length;
   const satista = books.filter(b => b.status === 'satista').length;
   const satildi = books.filter(b => b.status === 'satildi').length;
   const genreSet = new Set();
-  books.filter(b => b.genre).forEach(b => b.genre.split(',').map(g=>g.trim()).filter(Boolean).forEach(g => genreSet.add(g)));
+  allActive.filter(b => b.genre).forEach(b => b.genre.split(',').map(g=>g.trim()).filter(Boolean).forEach(g => genreSet.add(g)));
   const genres = genreSet.size;
-  const nora = books.filter(b => b.nora_pick).length;
+  const nora = allActive.filter(b => b.nora_pick).length;
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-card"><div class="num">${total}</div><div class="lbl">Toplam</div></div>
     <div class="stat-card"><div class="num" style="color:var(--green)">${avail}</div><div class="lbl">Yerleşik</div></div>
@@ -7189,7 +7195,7 @@ function renderStats() {
     <div class="stat-card"><div class="num" style="color:#2a7a2a">${satildi}</div><div class="lbl">Satıldı</div></div>
     <div class="stat-card"><div class="num">${genres}</div><div class="lbl">Kategori</div></div>
     <div class="stat-card"><div class="num" style="color:var(--gold)">${nora}</div><div class="lbl">Nora Seçimi</div></div>`;
-  document.getElementById('bookCountLabel').textContent = '(' + total + ' kitap)';
+  document.getElementById('bookCountLabel').textContent = '(' + total + ' kitap' + (satildi ? ' · ' + satildi + ' satıldı' : '') + ')';
 }
 
 function switchTab(tab) {
@@ -10895,17 +10901,17 @@ function renderShelfMap() {
   let html = '';
 
   // Özet istatistik
-  const totalBooks = books.filter(b => b.genre !== 'gizli-raf').length;
+  const totalBooks = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'satildi').length;
   const availableCount = books.filter(b => b.status === 'yerlesik' && b.genre !== 'gizli-raf').length;
-  const borrowedCount = books.filter(b => b.status === 'borrowed').length;
+  const satistaCount = books.filter(b => b.status === 'satista' && b.genre !== 'gizli-raf').length;
   const shelfCount = Object.values(shelfGroups).reduce((s,g) => s + Object.keys(g).length, 0);
 
   html += `<div style="display:flex;gap:0;margin-bottom:24px;border:1.5px solid var(--border-dark);overflow:hidden;">
     ${[
       ['TOPLAM KİTAP', totalBooks, 'var(--ink)'],
       ['YERLEŞİK', availableCount, '#2a7a2a'],
-      ['ÖDÜNÇTE', borrowedCount, '#c84040'],
-      ['RAF SAYISI', shelfCount, '#2a5a8a'],
+      ['SATIŞTA', satistaCount, '#2a5a8a'],
+      ['RAF SAYISI', shelfCount, 'var(--zone-sepia)'],
       ['RAFSIZ', noShelf.length, '#9c7a3c'],
     ].map(([label,val,color],i,arr) => `
       <div style="flex:1;padding:14px 12px;text-align:center;${i<arr.length-1?'border-right:1px solid var(--border-dark);':''}">
