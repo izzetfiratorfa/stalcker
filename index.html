@@ -1991,6 +1991,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="bulk-btn" onclick="bulkToggleNora()">★ Nora Seç</button>
         <button class="bulk-btn" onclick="bulkFetchCovers()">🖼 Kapak Çek</button>
         <button class="bulk-btn" onclick="bulkEnrichOpenLibrary()">📡 Zenginleştir</button>
+        <button class="bulk-btn" onclick="bulkDuplicate()">⧉ Çoğalt</button>
         <button class="bulk-btn" onclick="bulkEditField()">✎ Alan Düzenle</button>
         <button class="bulk-btn" onclick="bulkAddToCollection()">📂 Koleksiyona Ekle</button>
         <button class="bulk-btn" onclick="printLabels()">🏷 Etiket Bas</button>
@@ -10011,6 +10012,7 @@ function renderAdminTable() {
       <div style="color:var(--gold);font-size:1rem">${b.nora_pick ? '★' : ''}</div>
       <div class="table-actions">
         <button class="btn-edit" onclick="openModal(${b.id})">Düz</button>
+        <button class="btn-edit" onclick="duplicateBook(${b.id})" title="Kitabı çoğalt">⧉</button>
         <button class="btn-star ${b.nora_pick ? 'active' : ''}" onclick="toggleNora(${b.id})">★</button>
         <button class="btn-delete" onclick="deleteBook(${b.id})">Sil</button>
       </div>
@@ -11396,6 +11398,43 @@ async function saveBook() {
     if (!editingId) await checkTeminOnBookAdd(title);
     closeModal(); await fetchBooks(); renderAdminTable(); renderStats(); buildFilters();
   } catch(e) { alert('Bağlantı hatası: ' + e.message); }
+}
+
+async function bulkDuplicate() {
+  if (!selectedIds.size) { showToast('Önce kitap seç', '#c84040'); return; }
+  if (!confirm(selectedIds.size + ' kitap çoğaltılsın mı?')) return;
+  let done = 0;
+  for (const id of Array.from(selectedIds)) {
+    const b = books.find(x => x.id === id);
+    if (!b) continue;
+    const copy = { ...b };
+    delete copy.id; delete copy.created_at;
+    copy.sold_at = null;
+    if (copy.status === 'satildi') copy.status = 'yerlesik';
+    const res = await api('books', { method:'POST', prefer:'return=minimal', body: JSON.stringify(copy) });
+    if (res.ok) done++;
+  }
+  showToast('⧉ ' + done + ' kitap çoğaltıldı', '#2a7a2a');
+  clearSelection(); await fetchBooks(); renderAdminTable(); renderStats();
+}
+
+async function duplicateBook(id) {
+  const b = books.find(x => x.id === id);
+  if (!b) return;
+  if (!confirm('"' + b.title + '" çoğaltılsın mı?\nTüm bilgiler aynen kopyalanacak.')) return;
+  const copy = { ...b };
+  delete copy.id;
+  delete copy.created_at;
+  copy.sold_at = null; // Kopya satılmamış olarak başlar
+  if (copy.status === 'satildi') copy.status = 'yerlesik';
+  const res = await api('books', { method:'POST', prefer:'return=minimal', body: JSON.stringify(copy) });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert('Çoğaltma hatası: ' + (err.message || res.status));
+    return;
+  }
+  showToast('⧉ "' + b.title + '" çoğaltıldı', '#2a7a2a');
+  await fetchBooks(); renderAdminTable(); renderStats();
 }
 
 async function deleteBook(id) {
