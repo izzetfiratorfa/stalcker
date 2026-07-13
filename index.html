@@ -7727,6 +7727,72 @@ async function fillBookFromISBN(isbn) {
   }
 }
 
+// ===== OTOMATİK BENZERLİK MOTORU =====
+// Elle girilmiş sim1/2/3 öncelikli; boşsa skor bazlı otomatik hesaplama
+function computeSimilarity(a, b) {
+  if (a.id === b.id) return 0;
+  let score = 0;
+
+  // Yazar eşleşmesi — en güçlü sinyal
+  if (a.author && b.author) {
+    const aAuthors = a.author.split(',').map(x => normalize(x.trim()));
+    const bAuthors = b.author.split(',').map(x => normalize(x.trim()));
+    if (aAuthors.some(x => bAuthors.includes(x))) score += 50;
+  }
+
+  // Tür örtüşmesi — her ortak tür +12 (Yerli/Yabancı hariç, onlar zayıf sinyal +3)
+  if (a.genre && b.genre) {
+    const aG = a.genre.split(',').map(x => normalize(x.trim())).filter(Boolean);
+    const bG = b.genre.split(',').map(x => normalize(x.trim())).filter(Boolean);
+    const weak = ['yerli', 'yabanci'];
+    aG.forEach(g => {
+      if (bG.includes(g)) score += weak.includes(g) ? 3 : 12;
+    });
+  }
+
+  // Etiket örtüşmesi — her ortak etiket +8
+  if (a.tags && b.tags) {
+    const aT = a.tags.split(',').map(x => normalize(x.trim())).filter(Boolean);
+    const bT = b.tags.split(',').map(x => normalize(x.trim())).filter(Boolean);
+    aT.forEach(t => { if (bT.includes(t)) score += 8; });
+  }
+
+  // Aynı yayınevi +6
+  if (a.publisher && b.publisher && normalize(a.publisher) === normalize(b.publisher)) score += 6;
+
+  // Yakın yayın yılı (±10 yıl) +4
+  if (a.year && b.year && Math.abs(a.year - b.year) <= 10) score += 4;
+
+  // Benzer sayfa sayısı (±%25) +2
+  if (a.pages && b.pages) {
+    const ratio = Math.min(a.pages, b.pages) / Math.max(a.pages, b.pages);
+    if (ratio > 0.75) score += 2;
+  }
+
+  return score;
+}
+
+function autoSimilarBooks(book, count = 6) {
+  const pool = books.filter(b =>
+    b.id !== book.id &&
+    b.genre !== 'gizli-raf' &&
+    b.status !== 'satildi'
+  );
+  const scored = pool
+    .map(b => ({ book: b, score: computeSimilarity(book, b) }))
+    .filter(x => x.score >= 10)
+    .sort((x, y) => y.score - x.score)
+    .slice(0, count);
+  return scored;
+}
+
+// Skora göre seviye etiketi
+function simLevel(score) {
+  if (score >= 50) return { label: 'Çok Benzer', color: '#2a7a2a' };
+  if (score >= 24) return { label: 'Benzer', color: '#4a7a9c' };
+  return { label: 'Az Benzer', color: '#888' };
+}
+
 // ===== KİTAP ÖNERİ ZİNCİRİ =====
 function buildSuggestionChain(b) {
   const levels = [
@@ -7735,6 +7801,8 @@ function buildSuggestionChain(b) {
     { key: 'sim3', label: 'Az Benzer', color: '#888' }
   ];
   const cards = [];
+
+  // 1. Elle girilmiş sim alanları — öncelikli
   levels.forEach(lvl => {
     if (!b[lvl.key]) return;
     const titles = b[lvl.key].split(',').map(t => t.trim()).filter(Boolean);
@@ -7743,10 +7811,23 @@ function buildSuggestionChain(b) {
       cards.push({ title, book: found, label: lvl.label, color: lvl.color });
     });
   });
+
+  // 2. Elle veri yoksa (veya azsa) otomatik motor devreye girer
+  if (cards.length < 3) {
+    const auto = autoSimilarBooks(b, 5 - cards.length);
+    auto.forEach(({ book: ab, score }) => {
+      // Elle eklenmişlerle çakışmasın
+      if (cards.some(c => c.book && c.book.id === ab.id)) return;
+      const lvl = simLevel(score);
+      cards.push({ title: ab.title, book: ab, label: lvl.label + ' ◈', color: lvl.color });
+    });
+  }
+
   if (!cards.length) return '';
   const chainHtml = cards.map((c, i) => {
     const onclick = c.book ? `closeDetail();setTimeout(()=>openDetail(${c.book.id}),250)` : '';
-    const status = c.book ? (c.book.status === 'yerlesik' ? '<span style="color:#2a7a2a;font-size:0.6rem;">✓ mevcut</span>' : '<span style="color:#888;font-size:0.6rem;">⏳ ödünçte</span>') : '<span style="color:#aaa;font-size:0.6rem;">rafta yok</span>';
+    const statusMap = { yerlesik:'<span style="color:#2a7a2a;font-size:0.6rem;">✓ yerleşik</span>', satista:'<span style="color:#2a5a8a;font-size:0.6rem;">₺ satışta</span>', borrowed:'<span style="color:#888;font-size:0.6rem;">⏳ ödünçte</span>', askida:'<span style="color:#9c7a3c;font-size:0.6rem;">❤ askıda</span>' };
+    const status = c.book ? (statusMap[c.book.status] || '') : '<span style="color:#aaa;font-size:0.6rem;">rafta yok</span>';
     return `
       ${i > 0 ? '<div class="suggestion-arrow">→</div>' : ''}
       <div class="suggestion-card" onclick="${onclick}" style="${!c.book ? 'opacity:0.5;cursor:default;' : ''}border-top:3px solid ${c.color}">
@@ -11598,6 +11679,26 @@ function renderUniverse() {
       });
     });
   });
+
+  // Otomatik benzerlik kenarları — elle girilen sim bağlantıları azsa
+  if (edges.length < nodes.length * 0.3 && typeof computeSimilarity === 'function') {
+    const edgeSet = new Set(edges.map(e => e.source.b.id + '-' + e.target.b.id));
+    nodes.forEach((n, ni) => {
+      // Her düğüm için en iyi 2 otomatik bağlantı
+      const cands = [];
+      nodes.forEach((m, mi) => {
+        if (mi <= ni) return;
+        const s = computeSimilarity(n.b, m.b);
+        if (s >= 20) cands.push({ m, s });
+      });
+      cands.sort((a,b) => b.s - a.s).slice(0, 2).forEach(({ m, s }) => {
+        const key = n.b.id + '-' + m.b.id;
+        if (edgeSet.has(key)) return;
+        edgeSet.add(key);
+        edges.push({ source: n, target: m, strength: s >= 50 ? 0.8 : s >= 30 ? 0.45 : 0.2 });
+      });
+    });
+  }
 
   // Kamera
   let cam = { x:0, y:0, zoom:1 };
