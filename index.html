@@ -1711,6 +1711,10 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <button class="btn-search" onclick="doSearch()">Ara</button>
       <div class="autocomplete-list" id="autocompleteList"></div>
     </div>
+    <!-- Son aramalar -->
+    <div id="recentSearchesRow" style="display:none;margin-top:6px;min-height:22px;"></div>
+    <!-- Popüler etiketler -->
+    <div id="popularTagsRow" style="margin-top:6px;min-height:22px;"></div>
     <div style="display:flex;gap:6px;margin-top:6px;">
       <button onclick="doSerendipity()" style="flex:1;background:#1a1a1a;border:none;border-left:4px solid #333;color:#aaa;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='#1a1a1a'">✦ SERENDIPITY</button>
       <button onclick="odaBaslat()" style="flex:1;background:#0a1a0a;border:none;border-left:4px solid var(--zone-phosphor);color:#6a9a6a;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#122412'" onmouseout="this.style.background='#0a1a0a'">◉ ODA'YA YOLCULUK</button>
@@ -1932,6 +1936,10 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <option value="author">Yazara göre</option>
           <option value="shelf">Rafa göre</option>
           <option value="genre">Türe göre</option>
+          <option value="year">Yıla göre</option>
+          <option value="price">Fiyata göre</option>
+          <option value="publisher">Yayınevine göre</option>
+          <option value="created_at">Eklenme tarihine göre</option>
         </select>
         <select id="adminSortDir" onchange="adminTableReset()" style="padding:5px 8px;font-family:'Courier Prime',monospace;font-size:0.72rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;">
           <option value="asc">A → Z</option>
@@ -3480,7 +3488,7 @@ async function showView(v) {
   ['btnAskidaKitaplar','btnAskidaBagis'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
   if (v === 'askida') { const el=document.getElementById('btnAskidaKitaplar'); if(el) el.classList.add('active'); }
   if (v === 'bagiscilar') { const el=document.getElementById('btnAskidaBagis'); if(el) el.classList.add('active'); }
-  if (v === 'customer') { showLoading('bookResults'); await fetchBooks(); buildFilters(); doSearch(); checkBirthdays(); loadDailyBook(); loadNowPlaying(); loadIkramList(); }
+  if (v === 'customer') { showLoading('bookResults'); await fetchBooks(); buildFilters(); doSearch(); checkBirthdays(); loadDailyBook(); loadNowPlaying(); loadIkramList(); renderPopularTags(); }
   if (v === 'admin') { showLoading('adminTableBody'); await fetchBooks(); renderAdminTable(); renderStats(); }
   if (v === 'quotes') { await fetchQuotes(); }
   if (v === 'profile') { renderProfile(); }
@@ -6462,10 +6470,15 @@ function doSearch() {
     } else if (didYouMeanEl) { didYouMeanEl.style.display = 'none'; }
 
     showTerminal(terminalMsg('found') + ' ' + filtered.length + ' records.', '#39ff14');
+    // 20. Sonuç sayısı
+    titleEl.textContent = filtered.length + ' kitap bulundu' + (q ? ' — "' + q + '"' : '');
     try { container.innerHTML = filtered.map(renderBookCard).join(''); }
     catch(err) { container.innerHTML = filtered.map(b => `<div class="book-card" onclick="openDetail(${b.id})"><div class="book-info"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div></div></div>`).join(''); }
     observeLazyImages();
-    if (q) searchLog[q] = (searchLog[q] || 0) + 1;
+    if (q) {
+      searchLog[q] = (searchLog[q] || 0) + 1;
+      saveRecentSearch(q);
+    }
     updateAdvFilterSummary();
   }, 280);
 }
@@ -6504,7 +6517,7 @@ function renderBookCard(b) {
   const artefaktBadge = b.is_artefakt ? '<div class="nora-badge" style="background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:#8aba8a;" title="' + (b.artefakt_note||'').replace(/"/g,'&quot;') + '">◉ ARTEFAKT</div>' : '';
   const noraBadge = b.nora_pick ? '<div class="nora-badge">★ Nora\u2019n\u0131n \u00d6nerisi</div>' : '';
   const newBadge = isNewBook(b) ? '<span class="badge-new">⚡ Yeni</span>' : '';
-  const tagBadges = tags.map(t => `<span class="badge-tag">#${t}</span>`).join('');
+  const tagBadges = tags.map(t => `<span class="badge-tag" onclick="searchByTag('${t.replace(/'/g,"\\'")}')" style="cursor:pointer;" title="${t} etiketiyle ara">#${t}</span>`).join('');
   const icons = ['📖','📚','✍️','🌿','🔮','🌸','⚔️','🦅','🌊','🏛️'];
   const titleStr = b.title || '';
   const icon = titleStr.length > 0 ? icons[titleStr.charCodeAt(0) % icons.length] : '📖';
@@ -11125,9 +11138,6 @@ function addBulkRow(data = {}) {
         onfocus="this.style.borderColor='var(--ink)'"
         onblur="this.style.borderColor='var(--border)'">`;
     }
-    if (f === 'tags') {
-      return `<td style="padding:4px;"><div style="display:flex;gap:2px;align-items:center;">${input}<button onclick="suggestBulkTags(this)" title="AI ile etiket öner" style="flex-shrink:0;background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 6px;cursor:pointer;white-space:nowrap;">✨</button></div></td>`;
-    }
     return `<td style="padding:4px;">${input}</td>`;
   }).join('') +
     `<td style="padding:4px;text-align:center;">
@@ -11136,76 +11146,6 @@ function addBulkRow(data = {}) {
   tbody.appendChild(tr);
 }
 
-// ===== TOPLU EKLE — AI ETİKET ÖNERİSİ =====
-async function suggestBulkTags(btn) {
-  const tr = btn.closest('tr');
-  if (!tr) return;
-
-  // Satırdaki alanları oku
-  const get = (field) => tr.querySelector(`[data-field="${field}"]`)?.value?.trim() || '';
-  const title = get('title');
-  const author = get('author');
-  const genre = get('genre');
-  const publisher = get('publisher');
-  const year = get('year');
-
-  if (!title) { showToast('Önce kitap adı gir', '#c84040'); return; }
-
-  // Butonu yükleniyor moduna al
-  const origText = btn.textContent;
-  btn.textContent = '...';
-  btn.disabled = true;
-  btn.style.opacity = '0.5';
-
-  try {
-    const prompt = `Sen bir sahaf kütüphanesi için etiket üretiyorsun. Aşağıdaki kitap için 6-10 adet Türkçe etiket üret.
-
-Kitap Adı: ${title}
-Yazar: ${author || '—'}
-Tür: ${genre || '—'}
-Yayınevi: ${publisher || '—'}
-Yıl: ${year || '—'}
-
-Etiketler şunları içermeli:
-- Kitabın içerik/tema etiketleri (edebiyat akımı, dönem, konu)
-- Yazar ve eserin önemi
-- Okuyucu için bağlam (hangi ruh halinde okunur, kimler sever)
-- Yerli/yabancı zaten türde var, tekrar etme
-
-SADECE virgülle ayrılmış etiket listesi döndür. Başka hiçbir şey yazma. Küçük harf, Türkçe.
-Örnek çıktı: klasik, varoluşçuluk, prag, kafka evreni, absürd, yabancılaşma, modernizm`;
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 200,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await res.json();
-    const text = data.content?.[0]?.text?.trim();
-    if (!text) throw new Error('Boş yanıt');
-
-    // Etiket alanına yaz
-    const tagsInput = tr.querySelector('[data-field="tags"]');
-    if (tagsInput) {
-      tagsInput.value = text;
-      tagsInput.style.borderColor = 'var(--zone-phosphor)';
-      setTimeout(() => tagsInput.style.borderColor = 'var(--border)', 2000);
-    }
-    showToast('✨ Etiketler önerildi', '#2a7a2a');
-
-  } catch(e) {
-    showToast('✗ API hatası: ' + e.message, '#c84040');
-  } finally {
-    btn.textContent = origText;
-    btn.disabled = false;
-    btn.style.opacity = '1';
-  }
-}
 
 function removeBulkRow(btn) {
   const tbody = document.getElementById('bulkTableBody');
@@ -12222,6 +12162,85 @@ document.addEventListener('keydown', function(e) {
     openPalette();
   }
 });
+
+// ===== BÖLÜM 1: ARAMA & KEŞİF =====
+
+// 2. Son aramalar
+function saveRecentSearch(q) {
+  if (!q || q.length < 2) return;
+  let recent = JSON.parse(localStorage.getItem('nora_recent_searches') || '[]');
+  recent = [q, ...recent.filter(x => x !== q)].slice(0, 5);
+  localStorage.setItem('nora_recent_searches', JSON.stringify(recent));
+  renderRecentSearches();
+}
+function renderRecentSearches() {
+  const el = document.getElementById('recentSearchesRow');
+  if (!el) return;
+  const recent = JSON.parse(localStorage.getItem('nora_recent_searches') || '[]');
+  if (!recent.length) { el.style.display = 'none'; return; }
+  el.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:0;';
+  el.innerHTML = `<span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);letter-spacing:1px;">son:</span>` +
+    recent.map(q => `<button onclick="applyRecentSearch('${q.replace(/'/g,"\\'")}')"
+      style="background:none;border:1px solid var(--border);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:2px 10px;cursor:pointer;"
+      onmouseover="this.style.borderColor='var(--ink)';this.style.color='var(--ink)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink-faint)'">${q}</button>`).join('') +
+    `<button onclick="clearRecentSearches()" style="background:none;border:none;color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.58rem;cursor:pointer;">✕</button>`;
+}
+function applyRecentSearch(q) {
+  const inp = document.getElementById('searchInput');
+  if (inp) { inp.value = q; doSearch(); }
+}
+function clearRecentSearches() {
+  localStorage.removeItem('nora_recent_searches');
+  const el = document.getElementById('recentSearchesRow');
+  if (el) el.style.display = 'none';
+}
+
+// 52. Popüler etiketler
+function renderPopularTags() {
+  const el = document.getElementById('popularTagsRow');
+  if (!el || !books.length) return;
+  const tagCounts = {};
+  books.filter(b => b.tags && b.status !== 'satildi' && b.genre !== 'gizli-raf').forEach(b => {
+    b.tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => { tagCounts[t] = (tagCounts[t]||0)+1; });
+  });
+  const top = Object.entries(tagCounts).sort((a,b) => b[1]-a[1]).slice(0, 14);
+  if (!top.length) return;
+  el.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:0;';
+  el.innerHTML = top.map(([tag]) => `<button onclick="applyTagFilter('${tag.replace(/'/g,"\\'")}')"
+    style="background:none;border:1px dashed var(--border);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:2px 9px;cursor:pointer;"
+    onmouseover="this.style.background='var(--paper-dark)';this.style.color='var(--ink)'"
+    onmouseout="this.style.background='none';this.style.color='var(--ink-faint)'">#${tag}</button>`).join('');
+}
+function applyTagFilter(tag) {
+  activeTag = tag;
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.value = '';
+  doSearch();
+}
+
+// 51. Etiket tıklama — kitap detayında etiket tıklanınca arama yap
+function searchByTag(tag) {
+  closeDetail();
+  activeTag = tag;
+  setTimeout(() => {
+    const inp = document.getElementById('searchInput');
+    if (inp) inp.value = '';
+    doSearch();
+    document.getElementById('bookResults')?.scrollIntoView({ behavior:'smooth' });
+  }, 250);
+}
+
+// 53. Çelişen etiket uyarısı
+function checkTagConflicts(tags) {
+  if (!tags) return null;
+  const list = tags.split(',').map(t => normalize(t.trim()));
+  const conflicts = [['yerli','ceviri'],['yerli','yabanci'],['yerli','fransiz'],['yerli','ingiliz'],['yerli','alman'],['yerli','rus']];
+  for (const [a,b] of conflicts) { if (list.includes(a) && list.includes(b)) return `"${a}" ve "${b}" çelişkili`; }
+  return null;
+}
+
+setTimeout(() => { renderRecentSearches(); renderPopularTags(); }, 1500);
 
 // ===== FAZ 5: DIŞ API, PAYLAŞIM, 3D KİTAPLIK =====
 
