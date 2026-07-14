@@ -13056,8 +13056,41 @@ async function loadTeminListesi() {
 }
 
 async function teminFulfill(id) {
-  await api('temin_listesi?id=eq.' + id, { method:'PATCH', body:JSON.stringify({ is_fulfilled:true, fulfilled_at:new Date().toISOString() }) });
-  showToast('✓ Temin edildi olarak işaretlendi');
+  // Temin listesi kaydını al
+  const res = await api('temin_listesi?id=eq.' + id + '&select=*');
+  if (!res.ok) { showToast('✗ Kayıt alınamadı', '#c84040'); return; }
+  const rows = await res.json();
+  if (!rows.length) return;
+  const temin = rows[0];
+
+  // Orijinal kitap bilgilerini al (source_book_id varsa)
+  let newBook = { title: temin.title, author: temin.author || null, status: 'yerlesik' };
+  if (temin.source_book_id) {
+    const bRes = await api('books?id=eq.' + temin.source_book_id + '&select=*');
+    if (bRes.ok) {
+      const bRows = await bRes.json();
+      if (bRows.length) {
+        const orig = bRows[0];
+        // Tüm alanları kopyala, ama satış bilgilerini sıfırla
+        newBook = { ...orig };
+        delete newBook.id;
+        delete newBook.created_at;
+        newBook.status = 'yerlesik';
+        newBook.sold_at = null;
+        newBook.price = null; // Yeni kopyanın fiyatı belirtilmemiş
+      }
+    }
+  }
+
+  // Yeni yerleşik kayıt oluştur
+  const createRes = await api('books', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(newBook) });
+  if (!createRes.ok) { showToast('✗ Yeni kayıt oluşturulamadı', '#c84040'); return; }
+
+  // Temin listesini kapat
+  await api('temin_listesi?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ is_fulfilled: true, fulfilled_at: new Date().toISOString() }) });
+
+  showToast('✓ "' + temin.title + '" yerleşiğe eklendi', '#2a7a2a');
+  await fetchBooks(); renderAdminTable(); renderStats();
   loadTeminListesi();
 }
 
