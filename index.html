@@ -11125,12 +11125,86 @@ function addBulkRow(data = {}) {
         onfocus="this.style.borderColor='var(--ink)'"
         onblur="this.style.borderColor='var(--border)'">`;
     }
+    if (f === 'tags') {
+      return `<td style="padding:4px;"><div style="display:flex;gap:2px;align-items:center;">${input}<button onclick="suggestBulkTags(this)" title="AI ile etiket öner" style="flex-shrink:0;background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 6px;cursor:pointer;white-space:nowrap;">✨</button></div></td>`;
+    }
     return `<td style="padding:4px;">${input}</td>`;
   }).join('') +
     `<td style="padding:4px;text-align:center;">
       <button onclick="removeBulkRow(this)" style="background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:1rem;padding:2px 6px;" title="Sil">✕</button>
     </td>`;
   tbody.appendChild(tr);
+}
+
+// ===== TOPLU EKLE — AI ETİKET ÖNERİSİ =====
+async function suggestBulkTags(btn) {
+  const tr = btn.closest('tr');
+  if (!tr) return;
+
+  // Satırdaki alanları oku
+  const get = (field) => tr.querySelector(`[data-field="${field}"]`)?.value?.trim() || '';
+  const title = get('title');
+  const author = get('author');
+  const genre = get('genre');
+  const publisher = get('publisher');
+  const year = get('year');
+
+  if (!title) { showToast('Önce kitap adı gir', '#c84040'); return; }
+
+  // Butonu yükleniyor moduna al
+  const origText = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+
+  try {
+    const prompt = `Sen bir sahaf kütüphanesi için etiket üretiyorsun. Aşağıdaki kitap için 6-10 adet Türkçe etiket üret.
+
+Kitap Adı: ${title}
+Yazar: ${author || '—'}
+Tür: ${genre || '—'}
+Yayınevi: ${publisher || '—'}
+Yıl: ${year || '—'}
+
+Etiketler şunları içermeli:
+- Kitabın içerik/tema etiketleri (edebiyat akımı, dönem, konu)
+- Yazar ve eserin önemi
+- Okuyucu için bağlam (hangi ruh halinde okunur, kimler sever)
+- Yerli/yabancı zaten türde var, tekrar etme
+
+SADECE virgülle ayrılmış etiket listesi döndür. Başka hiçbir şey yazma. Küçük harf, Türkçe.
+Örnek çıktı: klasik, varoluşçuluk, prag, kafka evreni, absürd, yabancılaşma, modernizm`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text?.trim();
+    if (!text) throw new Error('Boş yanıt');
+
+    // Etiket alanına yaz
+    const tagsInput = tr.querySelector('[data-field="tags"]');
+    if (tagsInput) {
+      tagsInput.value = text;
+      tagsInput.style.borderColor = 'var(--zone-phosphor)';
+      setTimeout(() => tagsInput.style.borderColor = 'var(--border)', 2000);
+    }
+    showToast('✨ Etiketler önerildi', '#2a7a2a');
+
+  } catch(e) {
+    showToast('✗ API hatası: ' + e.message, '#c84040');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
 }
 
 function removeBulkRow(btn) {
