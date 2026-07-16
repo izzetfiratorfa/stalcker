@@ -1659,6 +1659,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
   <div class="logo">NORA KİTAPLIĞI</div>
   <div class="header-btns">
     <button class="btn-mode active" id="btnCustomer" onclick="showView('customer')">Kitap Ara</button>
+    <button class="btn-mode" id="btnShelfView" onclick="showView('shelfview')">📚 Raf</button>
     <button class="btn-mode" id="btnQuotes" onclick="showView('quotes')">Nora Quotes</button>
     <button class="btn-mode" id="btnUniverse" onclick="showView('universe')">Kitap Evreni</button>
     <button class="btn-mode" id="btnStats" onclick="showView('stats')">İstatistik</button>
@@ -1681,7 +1682,9 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <button class="dark-toggle" onclick="changeFontSize(-1)" title="Yazıyı küçült" style="font-size:0.7rem;letter-spacing:0;">A-</button>
     <button class="dark-toggle" onclick="changeFontSize(1)" title="Yazıyı büyüt" style="font-size:0.9rem;letter-spacing:0;">A+</button>
     <button class="dark-toggle" id="contrastToggle" onclick="toggleHighContrast()" title="Yüksek kontrast">◑</button>
+    <button class="dark-toggle" onclick="toggleColorBlindMode()" title="Renk körü modu">👁</button>
     <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Karanlık mod">◐</button>
+    <button class="dark-toggle" onclick="openProfileModal()" title="Profil & tercihler" style="font-size:0.8rem;">👤</button>
     <div class="user-badge" id="userBadge" style="display:none;">
       <span id="userLabel"></span>
       <button onclick="signOut()">çıkış</button>
@@ -1739,8 +1742,6 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     </div>
     <!-- Son aramalar -->
     <div id="recentSearchesRow" style="display:none;margin-top:6px;min-height:22px;"></div>
-    <!-- Popüler etiketler -->
-    <div id="popularTagsRow" style="margin-top:6px;min-height:22px;"></div>
     <div style="display:flex;gap:6px;margin-top:6px;">
       <button onclick="doSerendipity()" style="flex:1;background:#1a1a1a;border:none;border-left:4px solid #333;color:#aaa;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='#1a1a1a'">✦ SERENDIPITY</button>
       <button onclick="odaBaslat()" style="flex:1;background:#0a1a0a;border:none;border-left:4px solid var(--zone-phosphor);color:#6a9a6a;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#122412'" onmouseout="this.style.background='#0a1a0a'">◉ ODA'YA YOLCULUK</button>
@@ -1753,7 +1754,39 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <button class="btn-isbn" onclick="openBarcodeScanner()">📷 Barkod Tara</button>
   </div>
 
+  <!-- Sonuçlar — arama kutusunun hemen altında -->
+  <div class="did-you-mean" id="didYouMean" style="display:none;"></div>
+  <div class="results-section">
+    <div class="results-title" id="resultsTitle"></div>
+    <!-- 39. Dönemsel kürasyon banner -->
+    <div id="curatedBanner" style="display:none;margin-bottom:12px;padding:10px 14px;border-left:4px solid var(--gold);background:var(--gold-bg);font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--gold);letter-spacing:1px;cursor:pointer;" onclick="document.getElementById('curatedBanner').style.display='none'">
+      <span id="curatedBannerText"></span> <span style="float:right;opacity:0.5;">✕</span>
+    </div>
+    <div id="bookResults"></div>
+  </div>
+
+  <!-- Filtreler & etiketler — sonuçların altında -->
   <div class="serendipity-msg" id="serendipityMsg"></div>
+
+  <!-- 21-22. Kaç saatin var + 49. Sayfa sıralaması -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 20px 0;">
+    <span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);letter-spacing:1px;align-self:center;">SÜRE:</span>
+    <button onclick="setTimeFilter(null)" id="tf_all" class="filter-chip active" style="font-size:0.6rem;">Tümü</button>
+    <button onclick="setTimeFilter(2)" id="tf_2" class="filter-chip" style="font-size:0.6rem;">⏱ 2 Saat</button>
+    <button onclick="setTimeFilter(6)" id="tf_6" class="filter-chip" style="font-size:0.6rem;">☕ Bir Akşam</button>
+    <button onclick="setTimeFilter(15)" id="tf_15" class="filter-chip" style="font-size:0.6rem;">📅 Hafta Sonu</button>
+    <button onclick="setTimeFilter(40)" id="tf_40" class="filter-chip" style="font-size:0.6rem;">🌞 Bir Yaz</button>
+    <select id="customerSort" onchange="doSearch()" style="margin-left:auto;font-family:'Courier Prime',monospace;font-size:0.62rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:3px 6px;cursor:pointer;">
+      <option value="">Varsayılan</option>
+      <option value="title">Ada göre</option>
+      <option value="author">Yazara göre</option>
+      <option value="year_desc">Yeni → Eski</option>
+      <option value="year_asc">Eski → Yeni</option>
+      <option value="pages_asc">Az sayfalı önce</option>
+      <option value="pages_desc">Çok sayfalı önce</option>
+      <option value="shelf">Rafa göre</option>
+    </select>
+  </div>
 
   <div class="filter-row" id="filterRow">
     <button class="filter-chip active" onclick="setFilter('Tümü', this)">Tümü</button>
@@ -1821,14 +1854,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     </div>
   </div>
 
-  <!-- Etiket Bulutu -->
-  <!-- "Bunu mu demek istedin?" -->
-  <div class="did-you-mean" id="didYouMean" style="display:none;"></div>
-
-  <div class="results-section">
-    <div class="results-title" id="resultsTitle"></div>
-    <div id="bookResults"></div>
-  </div>
+  <!-- Popüler etiketler — en alta -->
+  <div id="popularTagsRow" style="margin-top:12px;padding:0 20px 8px;min-height:22px;"></div>
 
   <!-- Etiket Bulutu — sayfa altı -->
   <div class="tag-cloud-wrap" id="tagCloudWrap" style="display:none;border-top:1px dashed var(--border);margin-top:8px;padding-top:16px;">
@@ -1838,6 +1865,11 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 </div>
 
 <!-- QUOTES VIEW -->
+<div class="view" id="viewShelfview" style="padding:20px;">
+  <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:3px;color:var(--ink-faint);margin-bottom:16px;">📚 RAF GÖRÜNÜMÜ — raflara göre gruplu</div>
+  <div id="shelfViewContent"></div>
+</div>
+
 <div class="view" id="viewQuotes">
   <div class="quotes-wrap">
     <div class="quotes-header">
@@ -1938,6 +1970,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button onclick="document.getElementById('importJSONFile').click()" title="JSON dosyasından içe aktar" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">⬆ İçe Aktar</button>
         <input type="file" id="importJSONFile" accept=".json" style="display:none;" onchange="if(this.files[0])importCatalogJSON(this.files[0])">
         <button onclick="bulkExportCSV()" title="CSV olarak indir" style="background:none;border:1px solid #2a7a2a;color:#2a7a2a;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">↓ CSV</button>
+        <button onclick="toggleAdminDark()" title="Karanlık mod" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 10px;cursor:pointer;">◐</button>
         <button onclick="lockAdmin()" title="Çıkış" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">⏻ Çıkış</button>
       </div>
     </div>
@@ -1952,6 +1985,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="tab-btn" id="tabYazarlar" onclick="switchTab('yazarlar')" style="color:var(--zone-water);">YAZARLAR</button>
         <button class="tab-btn" id="tabQuotes" onclick="switchTab('quotes')" style="color:var(--zone-sepia);">ALINTILAR</button>
         <button class="tab-btn" id="tabStats" onclick="switchTab('stats')" style="color:var(--zone-phosphor);">İSTATİSTİK</button>
+        <button class="tab-btn" id="tabAdminNotes" onclick="switchTab('adminnotes')" style="color:var(--zone-sepia);">📝 NOT DEFTERİ</button>
         <button class="tab-btn" id="tabKoleksiyon" onclick="switchTab('koleksiyon')" style="color:var(--zone-rust);">📂 KOLEKSİYONLAR</button>
       </div>
       <!-- GRUP: İŞLETME -->
@@ -1973,6 +2007,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:var(--gold);">☕ MENÜ</button>
         <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:var(--zone-rust);">PANO</button>
         <button class="tab-btn" id="tabGunun" onclick="switchTab('gunun')" style="color:var(--gold);">GÜNÜN KİTABI</button>
+        <button class="tab-btn" id="tabEtkinlik" onclick="switchTab('etkinlik')" style="color:var(--zone-rust);">📅 ETKİNLİKLER</button>
         <button class="tab-btn" id="tabSpotify" onclick="switchTab('spotify')" style="color:var(--zone-phosphor);">SPOTİFY</button>
         <button class="tab-btn" id="tabIkram" onclick="switchTab('ikram')" style="color:var(--gold);">İKRAM</button>
         <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:var(--zone-sepia);">GÜNLÜK</button>
@@ -2081,6 +2116,19 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div id="adminPagination" style="display:flex;gap:6px;align-items:center;justify-content:center;padding:16px 0;flex-wrap:wrap;font-family:'Courier Prime',monospace;font-size:0.72rem;"></div>
     </div>
     <div id="panelStats" style="display:none;"><div id="statsPanel"></div><div id="salesStatsPanel" style="margin-top:28px;"></div><div id="authorStatsPanel" style="margin-top:28px;"></div><div id="advancedStatsPanel" style="margin-top:28px;"></div></div>
+
+    <!-- 154. Admin Not Defteri -->
+    <div id="panelAdminnotes" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);">NOT DEFTERİ — müşteriye görünmez</div>
+        <button onclick="saveAdminNote()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:7px 14px;cursor:pointer;letter-spacing:1px;">Kaydet</button>
+      </div>
+      <textarea id="adminNotepad" placeholder="Kendine notlar, hatırlatıcılar, tedarik planları..." style="width:100%;min-height:300px;padding:14px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);resize:vertical;box-sizing:border-box;line-height:1.8;"></textarea>
+      <div style="margin-top:16px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">GEÇMİŞ NOTLAR</div>
+        <div id="adminNoteHistory" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+    </div>
     <div id="panelQuotes" style="display:none;">
       <div style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-family:'Courier Prime',monospace;font-size:0.75rem;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase">Alıntı Yönetimi</span>
@@ -2323,7 +2371,13 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
     <!-- PANO MODERASYONu PANELİ -->
     <div id="panelPanoadmin" style="display:none;">
-      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#8B4513;letter-spacing:2px;margin-bottom:20px;">> PANO MODERASYONu — bekleyen ilanları onayla veya reddet.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#8B4513;letter-spacing:2px;">> PANO MODERASYONU — bekleyen ilanları onayla veya reddet.</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="showPanoStats()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">📊 İstatistik</button>
+          <button onclick="showPanoArchive()" style="background:none;border:1px solid var(--zone-water);color:var(--zone-water);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">📋 Arşiv</button>
+        </div>
+      </div>
       <div id="panoAdminList" style="display:flex;flex-direction:column;gap:10px;">
         <div style="font-family:'Courier Prime',monospace;color:#888;font-size:0.8rem;">Yükleniyor...</div>
       </div>
@@ -2697,11 +2751,23 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
     </div>
 
+    <!-- ETKİNLİK PANELİ -->
+    <div id="panelEtkinlik" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);">İmza günleri, okuma seansları, özel etkinlikler</div>
+        <button onclick="addEvent()" style="background:var(--zone-deep);color:var(--zone-phosphor);border:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.68rem;padding:7px 14px;cursor:pointer;letter-spacing:1px;">+ Etkinlik Ekle</button>
+      </div>
+      <div id="eventsPanel"></div>
+    </div>
+
     <!-- KOLEKSİYON PANELİ -->
     <div id="panelKoleksiyon" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);">Kitapları tematik koleksiyonlara grupla</div>
-        <button onclick="createCollection()" style="background:var(--zone-deep);color:var(--zone-phosphor);border:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.68rem;padding:7px 14px;cursor:pointer;letter-spacing:1px;">+ Yeni Koleksiyon</button>
+        <div style="display:flex;gap:6px;">
+          <button onclick="printAllCollections()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.68rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">🖨 Yazdır</button>
+          <button onclick="createCollection()" style="background:var(--zone-deep);color:var(--zone-phosphor);border:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.68rem;padding:7px 14px;cursor:pointer;letter-spacing:1px;">+ Yeni Koleksiyon</button>
+        </div>
       </div>
       <div id="collectionsPanel"></div>
     </div>
@@ -2731,6 +2797,42 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 
   </div>
 </div>
+<!-- PROFİL MODALİ -->
+<div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--paper);border:2px solid var(--ink);max-width:420px;width:100%;padding:24px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">👤 PROFİL & TERCİHLER</div>
+      <button onclick="closeProfileModal()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--ink-faint);">✕</button>
+    </div>
+    <!-- 11. İsim & takma ad -->
+    <div style="margin-bottom:14px;">
+      <label style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;color:var(--ink-faint);">TAKIM AD / İSİM</label>
+      <input type="text" id="profileName" placeholder="Anonim okuyucu" style="width:100%;box-sizing:border-box;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);margin-top:4px;">
+    </div>
+    <!-- 11. Sevilen türler -->
+    <div style="margin-bottom:14px;">
+      <label style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;color:var(--ink-faint);">SEVILEN TÜRLER (virgülle)</label>
+      <input type="text" id="profileGenres" placeholder="Roman, Felsefe, Şiir" style="width:100%;box-sizing:border-box;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);margin-top:4px;">
+    </div>
+    <!-- 11. Sevilen yazarlar -->
+    <div style="margin-bottom:14px;">
+      <label style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;color:var(--ink-faint);">SEVİLEN YAZARLAR (virgülle)</label>
+      <input type="text" id="profileAuthors" placeholder="Kafka, Dostoyevski, Atılgan" style="width:100%;box-sizing:border-box;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);margin-top:4px;">
+    </div>
+    <!-- 20. Doğum günü (admin için) -->
+    <div style="margin-bottom:20px;">
+      <label style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;color:var(--ink-faint);">DOĞUM GÜNÜ (opsiyonel)</label>
+      <input type="date" id="profileBirthday" style="width:100%;box-sizing:border-box;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);margin-top:4px;">
+    </div>
+    <!-- 12. Benim rafım — okuma listesi özeti -->
+    <div style="margin-bottom:16px;padding:12px;border:1px dashed var(--border);background:var(--paper-dark);">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">BENIM RAFIM</div>
+      <div id="profileShelfSummary" style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-light);"></div>
+    </div>
+    <button onclick="saveProfile()" style="width:100%;background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.78rem;padding:10px;cursor:pointer;letter-spacing:2px;">KAYDET</button>
+  </div>
+</div>
+
 <!-- TOPLU KİTAP EKLEME MODAL -->
 <div class="modal-overlay" id="bulkModalOverlay" onclick="if(event.target===this)closeBulkModal()" style="display:none;">
   <div class="modal" style="position:relative;max-width:960px;width:96vw;max-height:90vh;overflow-y:auto;">
@@ -2828,6 +2930,18 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
       <div class="field"><label>Baskı / Özellik</label>
         <input type="text" id="fEditionInfo" placeholder="İlk baskı, İmzalı, Nadir, Toplatılmış..." style="width:100%;">
+      </div>
+      <!-- 91. Hasar notu + 92. Restorasyon durumu -->
+      <div class="field"><label>Hasar / Durum Notu <span style="font-weight:normal;font-size:0.65rem;color:var(--ink-faint);">(sararmış, ıslak iz, kopik vb.)</span></label>
+        <input type="text" id="fDamageNote" placeholder="Kapak yıpranmış, sayfa kıvrık..." style="width:100%;">
+      </div>
+      <div class="field"><label>Restorasyon Durumu</label>
+        <select id="fRestoration" style="width:100%;padding:7px;font-family:'Courier Prime',monospace;font-size:0.78rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
+          <option value="">Normal</option>
+          <option value="temizleniyor">🔧 Temizleniyor</option>
+          <option value="beklemede">⏳ Restorasyona Alındı</option>
+          <option value="tamamlandi">✓ Restorasyon Tamamlandı</option>
+        </select>
       </div>
       <div class="field"><label>ISBN <button type="button" onclick="openBarcodeScannerAdmin()" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:1px 6px;cursor:pointer;letter-spacing:1px;margin-left:6px;">📷 Tara</button></label>
         <div style="display:flex;gap:6px;">
@@ -3582,7 +3696,7 @@ function loadD3ThenRender() {
 async function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.add('active');
-  ['btnCustomer','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano','btnMenu'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+  ['btnCustomer','btnShelfView','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano','btnMenu'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
   const btnMap = {customer:'btnCustomer', quotes:'btnQuotes', universe:'btnUniverse', stats:'btnStats', admin:'btnAdmin', profile:'btnProfile', askida:'btnAskida', bagiscilar:'btnAskida', radio:'btnRadio', mood:'btnMood', blind:'btnBlind', diary:'btnDiary', sahaf:'btnSahaf', pano:'btnPano', menu:'btnMenu'};
   if (btnMap[v]) document.getElementById(btnMap[v]).classList.add('active');
   updateMobileNav(v);
@@ -3592,6 +3706,7 @@ async function showView(v) {
   if (v === 'askida') { const el=document.getElementById('btnAskidaKitaplar'); if(el) el.classList.add('active'); }
   if (v === 'bagiscilar') { const el=document.getElementById('btnAskidaBagis'); if(el) el.classList.add('active'); }
   if (v === 'customer') { showLoading('bookResults'); await fetchBooks(); buildFilters(); doSearch(); checkBirthdays(); loadDailyBook(); loadNowPlaying(); loadIkramList(); renderPopularTags(); }
+  if (v === 'shelfview') { if (!books.length) await fetchBooks(); renderShelfView(); }
   if (v === 'admin') { showLoading('adminTableBody'); await fetchBooks(); renderAdminTable(); renderStats(); setTimeout(()=>{ checkUntaggedWarning(); checkUnpricedWarning(); }, 2000); }
   if (v === 'quotes') { await fetchQuotes(); }
   if (v === 'profile') { renderProfile(); }
@@ -6562,7 +6677,15 @@ function doSearch() {
       const artefaktOk = !_filterArtefakt || b.is_artefakt;
       const satistaOk = !_filterSatista || b.status === 'satista';
       const originOk = !_originFilter || (b.genre||'').split(',').map(g=>g.trim()).includes(_originFilter);
-      return match && genreOk && multiGenreOk && newOk && pageOk && ratingOk && tagOk && publisherOk && priceOk && noraOk && artefaktOk && satistaOk && originOk;
+      // 21-22. Zaman filtresi — sayfa sayısına göre saat hesabı
+      const timeOk = !_timeFilter || (() => {
+        if (!b.pages) return true;
+        const hours = b.pages / 250;
+        return hours <= _timeFilter;
+      })();
+      // 38. Özel yıl filtresi
+      const yearOk = !_customYearFilter || (b.year && (!_customYearFilter.max || b.year <= _customYearFilter.max));
+      return match && genreOk && multiGenreOk && newOk && pageOk && ratingOk && tagOk && publisherOk && priceOk && noraOk && artefaktOk && satistaOk && originOk && timeOk && yearOk;
     });
 
     const didYouMeanEl = document.getElementById('didYouMean');
@@ -6584,7 +6707,8 @@ function doSearch() {
     showTerminal(terminalMsg('found') + ' ' + filtered.length + ' records.', '#39ff14');
     // 20. Sonuç sayısı
     titleEl.textContent = filtered.length + ' kitap bulundu' + (q ? ' — "' + q + '"' : '');
-    renderWithInfiniteScroll(filtered, container);
+    const sortedFiltered = applyCustomerSort(filtered);
+    renderWithInfiniteScroll(sortedFiltered, container);
     if (q) {
       searchLog[q] = (searchLog[q] || 0) + 1;
       saveRecentSearch(q);
@@ -6663,17 +6787,23 @@ function renderBookCard(b) {
   // 13. Okuma süresi
   const readTime = b.pages ? Math.round(b.pages / 250) : null;
 
-  // 45. Kapak yoksa tür renginde gradient arka plan
+  // 54. Harf placeholder — kapak yoksa başlığın baş harfi büyük, renkli arka plan
+  const letterPlaceholder = !b.cover_url ? (() => {
+    const letter = (b.title || '?').charAt(0).toUpperCase();
+    const bg = genreColor || 'var(--zone-sepia)';
+    return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${bg};color:rgba(255,255,255,0.9);font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;">${letter}</div>`;
+  })() : null;
+
   const spineStyle = b.cover_url ? '' : genreColor
     ? `background:linear-gradient(135deg,${genreColor}cc,${genreColor}44);`
     : 'background:linear-gradient(135deg,#2a2a2a,#1a1a1a);';
 
   return `<div class="book-card ${b.nora_pick ? 'nora-pick' : ''} ${b.is_artefakt ? 'artefakt-card' : ''}" style="${borderStyle}position:relative;" onclick="openDetail(${b.id})" ${tooltipAttr}>
     ${priceTag}
-    <div class="book-spine" style="${spineStyle}">${b.cover_url ? `<img data-src="${b.cover_url}" src="" alt="" class="lazy-img" onerror="this.parentElement.innerHTML='${icon}';this.parentElement.style.cssText='${spineStyle}'" style="opacity:0;transition:opacity 0.3s;">` : icon}</div>
+    <div class="book-spine" style="${spineStyle}">${b.cover_url ? `<img data-src="${b.cover_url}" src="" alt="" class="lazy-img" onerror="this.parentElement.innerHTML='${icon}';this.parentElement.style.cssText='${spineStyle}'" style="opacity:0;transition:opacity 0.3s;">` : (letterPlaceholder || icon)}</div>
     <div class="book-info">
       ${artefaktBadge}${noraBadge}
-      <div class="book-title">${b.title || ''}${newBadge}</div>
+      <div class="book-title">${b.title || ''}${newBadge}${shelfAgeBadge(b)}</div>
       <div class="book-author">${authorLinks(b.author)}${ratingHtml}</div>
       ${b.publisher ? `<div class="book-publisher">${b.publisher}</div>` : ''}
       <div class="book-meta">
@@ -6857,6 +6987,17 @@ async function openDetail(id) {
         <textarea id="reviewText" placeholder="Bu kitap hakkında ne düşünüyorsun?"></textarea>
         <button class="btn-review" onclick="submitReview(${id})">Yorumu Gönder</button>
       </div>
+    </div>
+    <!-- 95. Takas teklifi -->
+    ${b.status === 'satista' ? `
+    <div style="margin-top:14px;padding:12px 14px;border:1px dashed var(--border);background:var(--paper-dark);">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">⇄ TAKAS</div>
+      <button onclick="openFindMeModal('${b.title.replace(/'/g,"\\'")}','takas')" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 12px;cursor:pointer;">Takas Teklif Et</button>
+    </div>` : ''}
+    <!-- 99. Bul bana + 114 Yayınevi -->
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      ${b.status !== 'satista' ? `<button onclick="openFindMeModal('${b.title.replace(/'/g,"\\'")}','bul')" style="background:none;border:1px solid var(--zone-rust);color:var(--zone-rust);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 12px;cursor:pointer;">🔍 Bul Bana</button>` : ''}
+      ${b.publisher ? `<button onclick="closeDetail();document.getElementById('filterPublisher').value='${b.publisher.replace(/'/g,"\\'")}';doSearch();" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 12px;cursor:pointer;">📚 ${b.publisher} →</button>` : ''}
     </div>`;
   document.getElementById('detailOverlay').classList.add('open');
   // Inline kelime bulutu yükle
@@ -6915,7 +7056,7 @@ document.addEventListener('keydown', function(e) {
   if (!document.getElementById('detailOverlay')?.classList.contains('open')) return;
   if (e.key === 'ArrowRight') { e.preventDefault(); navigateDetail(1); }
   if (e.key === 'ArrowLeft') { e.preventDefault(); navigateDetail(-1); }
-  if (e.key === 'Escape') closeDetail();
+  if (e.key === 'Escape') { closeDetail(); closeProfileModal(); }
 });
 
 // ===== YAZAR SAYFASI =====
@@ -7375,7 +7516,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis','koleksiyon':'panelKoleksiyon'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis','koleksiyon':'panelKoleksiyon','etkinlik':'panelEtkinlik','adminnotes':'panelAdminnotes'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -7387,7 +7528,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis','koleksiyon':'tabKoleksiyon'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis','koleksiyon':'tabKoleksiyon','etkinlik':'tabEtkinlik','adminnotes':'tabAdminNotes'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -7415,6 +7556,8 @@ function switchTab(tab) {
   if (tab === 'temin') loadTeminListesi();
   if (tab === 'satis') initSatisMode();
   if (tab === 'koleksiyon') loadCollections();
+  if (tab === 'etkinlik') renderEventsPanel();
+  if (tab === 'adminnotes') loadAdminNotes();
 }
 
 function renderMissedSearches() {
@@ -8793,6 +8936,8 @@ function renderPanoGrid() {
         <div class="pano-note-date">${date}</div>
         <div class="pano-note-actions">
           <button class="pano-like-btn" onclick="event.stopPropagation();likePanoNote(${note.id},this)">❤ ${note.likes||0}</button>
+          <button onclick="event.stopPropagation();sharePanoNoteWA('${(note.text||'').replace(/'/g,"\\'").slice(0,80)}','${(note.author||'').replace(/'/g,"\\'")}');" style="background:none;border:none;font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);cursor:pointer;padding:0;" title="WhatsApp'ta paylaş">📱</button>
+          <button onclick="event.stopPropagation();replyToPanoNote(${note.id},'${(note.text||'').replace(/'/g,"\\'").slice(0,50)}');" style="background:none;border:none;font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);cursor:pointer;padding:0;" title="Yanıtla">↩</button>
         </div>
       </div>`;
   }).join('');
@@ -12441,6 +12586,888 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ===== PART 6: MOBİL & PWA & ERİŞİLEBİLİRLİK =====
+
+// 164. PWA kurulum rehberi
+function showPWAInstallGuide() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid = /android/i.test(navigator.userAgent);
+  let msg = '';
+  if (isIOS) msg = '📱 iPhone/iPad: Safari\'de aç → Alt menüden "Paylaş" → "Ana Ekrana Ekle"';
+  else if (isAndroid) msg = '📱 Android: Chrome menüsü (⋮) → "Ana ekrana ekle" veya "Uygulamayı yükle"';
+  else msg = '💻 Masaüstü: Adres çubuğundaki ⊕ veya tarayıcı menüsünden "Yükle"';
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:380px;width:100%;padding:24px;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;margin-bottom:16px;">📲 UYGULAMAYA EKLE</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.82rem;color:var(--ink-light);line-height:1.8;">${msg}</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-top:12px;">Uygulamayı ana ekrana ekleyince internet bağlantısı olmadan da çalışır.</div>
+    <button onclick="this.closest('div').parentElement.parentElement.remove()" style="margin-top:16px;width:100%;background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.78rem;padding:10px;cursor:pointer;">Anladım</button>
+  </div>`;
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+// PWA yükleme prompt'u yakala
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // Küçük banner göster
+  setTimeout(() => {
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;bottom:56px;left:0;right:0;background:var(--zone-deep);border-top:1px solid var(--zone-phosphor);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;z-index:500;';
+    b.innerHTML = `<span style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--zone-phosphor);">📲 Uygulamayı yükle</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="_pwaPrompt.prompt();this.closest('div').parentElement.remove()" style="background:var(--zone-phosphor);border:none;color:#000;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:4px 12px;cursor:pointer;">Yükle</button>
+        <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;cursor:pointer;">✕</button>
+      </div>`;
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 10000);
+  }, 3000);
+});
+
+// 167. İki parmakla zoom — kitap kapağı büyütme
+function openCoverLightbox(src, title) {
+  if (!src) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
+  overlay.innerHTML = `<div style="text-align:center;max-width:90vw;">
+    <img src="${src}" alt="${title||''}" style="max-width:100%;max-height:80vh;object-fit:contain;border:1px solid #333;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#888;margin-top:10px;">${title||''}</div>
+  </div>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+// 168. Vibrasyon geri bildirimi
+function vibrate(pattern = [50]) {
+  if ('vibrate' in navigator) navigator.vibrate(pattern);
+}
+
+// toggleFavorite'e vibrasyon ekle — patch
+const _origToggleFavorite = toggleFavorite;
+function toggleFavorite(bookId) {
+  _origToggleFavorite(bookId);
+  vibrate(favorites[bookId] ? [30] : [50, 30, 50]);
+}
+
+// 169. Mobil hız — lazy image threshold artır
+function observeLazyImagesOptimized() {
+  const imgs = document.querySelectorAll('img.lazy-img[data-src]:not([src])');
+  if (!imgs.length) return;
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver((entries, o) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const img = e.target;
+        img.src = img.dataset.src;
+        img.onload = () => { img.style.opacity = '1'; };
+        o.unobserve(img);
+      });
+    }, { rootMargin: '400px' }); // Daha erken yükle
+    imgs.forEach(img => obs.observe(img));
+  } else {
+    imgs.forEach(img => { img.src = img.dataset.src; img.style.opacity='1'; });
+  }
+}
+
+// 170. Güncelleme bildirimi — SW yeni versiyon
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;top:56px;left:0;right:0;background:var(--zone-deep);border-bottom:1px solid var(--zone-phosphor);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;z-index:500;';
+    b.innerHTML = `<span style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--zone-phosphor);">🔄 Yeni sürüm mevcut</span>
+      <button onclick="window.location.reload()" style="background:var(--zone-phosphor);border:none;color:#000;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:4px 12px;cursor:pointer;">Güncelle</button>`;
+    document.body.appendChild(b);
+  });
+}
+
+// 173. Renk körü dostu palet
+function toggleColorBlindMode() {
+  document.body.classList.toggle('colorblind');
+  localStorage.setItem('nora_cb', document.body.classList.contains('colorblind') ? '1' : '0');
+}
+if (localStorage.getItem('nora_cb') === '1') document.body.classList.add('colorblind');
+(function addColorBlindCSS() {
+  const s = document.createElement('style');
+  s.textContent = `
+    body.colorblind { filter: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='cb'><feColorMatrix type='matrix' values='0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0'/></filter></svg>#cb"); }
+    body.colorblind .badge-status.status-yerlesik { background:#0077cc !important; }
+    body.colorblind .nora-badge { background:#0077cc !important; }`;
+  document.head.appendChild(s);
+})();
+
+// 177. Form hata mesajları — daha açıklayıcı
+function showFieldError(fieldId, msg) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  field.style.borderColor = '#c84040';
+  let err = field.parentElement.querySelector('.field-error');
+  if (!err) {
+    err = document.createElement('div');
+    err.className = 'field-error';
+    err.style.cssText = 'font-family:"Courier Prime",monospace;font-size:0.62rem;color:#c84040;margin-top:3px;';
+    field.parentElement.appendChild(err);
+  }
+  err.textContent = msg;
+  field.addEventListener('input', () => {
+    field.style.borderColor = '';
+    err.textContent = '';
+  }, { once: true });
+}
+
+// 178. İlk ziyaretçi rehberi
+function showFirstVisitTour() {
+  if (localStorage.getItem('nora_toured')) return;
+  localStorage.setItem('nora_toured', '1');
+  const steps = [
+    { el: '#searchInput', text: 'Kitap adı, yazar veya etiketle ara.' },
+    { el: '#filterRow', text: 'Hızlı filtreler: tür, yeni gelenler, Nora seçimleri.' },
+    { el: '.btn-readlist', text: '"Okuyacağım" ve "Okudum" listelerine ekleyebilirsin.' },
+  ];
+  let i = 0;
+  function showStep() {
+    const existing = document.getElementById('tourTooltip');
+    if (existing) existing.remove();
+    if (i >= steps.length) return;
+    const step = steps[i];
+    const el = document.querySelector(step.el);
+    if (!el) { i++; showStep(); return; }
+    const rect = el.getBoundingClientRect();
+    const tip = document.createElement('div');
+    tip.id = 'tourTooltip';
+    tip.style.cssText = `position:fixed;top:${Math.min(rect.bottom+8, window.innerHeight-100)}px;left:${Math.max(8,Math.min(rect.left,window.innerWidth-260))}px;background:var(--ink);color:var(--paper);padding:10px 14px;font-family:'Courier Prime',monospace;font-size:0.72rem;z-index:9999;max-width:240px;border-radius:0;`;
+    tip.innerHTML = `<div>${step.text}</div><button onclick="document.getElementById('tourTooltip').remove();i_tour++;showTourStep();" style="margin-top:6px;background:none;border:1px solid rgba(255,255,255,0.4);color:inherit;font-family:'Courier Prime',monospace;font-size:0.6rem;padding:3px 10px;cursor:pointer;">${i < steps.length-1 ? 'İleri →' : 'Tamam ✓'}</button>`;
+    document.body.appendChild(tip);
+    i++;
+  }
+  window.i_tour = 0;
+  window.showTourStep = showStep;
+  setTimeout(showStep, 2000);
+}
+setTimeout(showFirstVisitTour, 1500);
+
+// 180. Dil seçimi — TR/EN arayüz
+let _uiLang = localStorage.getItem('nora_lang') || 'tr';
+const UI_STRINGS = {
+  tr: { search: 'hangi kitabın peşindesin?', results: 'kitap bulundu', favorites: 'Favori', want: 'Okuyacağım', done: 'Okudum' },
+  en: { search: 'which book are you looking for?', results: 'books found', favorites: 'Favourite', want: 'Want to Read', done: 'Read' }
+};
+function t(key) { return UI_STRINGS[_uiLang]?.[key] || UI_STRINGS['tr'][key] || key; }
+function toggleLanguage() {
+  _uiLang = _uiLang === 'tr' ? 'en' : 'tr';
+  localStorage.setItem('nora_lang', _uiLang);
+  // Arama placeholder güncelle
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.placeholder = t('search');
+  showToast(_uiLang === 'en' ? 'Language: English' : 'Dil: Türkçe');
+}
+
+// 187. Otomatik yedek — günlük hatırlatıcı
+function checkBackupReminder() {
+  const lastBackup = localStorage.getItem('nora_last_backup');
+  if (!lastBackup) { localStorage.setItem('nora_last_backup', new Date().toISOString()); return; }
+  const daysSince = Math.floor((Date.now()-new Date(lastBackup).getTime())/(1000*60*60*24));
+  if (daysSince >= 3) {
+    setTimeout(() => showToast(`💾 Son yedek ${daysSince} gün önce — Rapor sekmesinden export al`, 'var(--zone-rust)'), 8000);
+  }
+}
+checkBackupReminder();
+
+// Dil butonu ekle
+setTimeout(() => {
+  const btn = document.createElement('button');
+  btn.className = 'dark-toggle';
+  btn.title = 'Dil / Language';
+  btn.textContent = '🌐';
+  btn.onclick = toggleLanguage;
+  const darkBtn = document.getElementById('darkToggle');
+  if (darkBtn) darkBtn.parentElement.insertBefore(btn, darkBtn);
+}, 500);
+
+// Kapak lightbox — detay sayfasında kapağa tıklayınca
+document.addEventListener('click', e => {
+  const img = e.target.closest('.detail-cover-img');
+  if (img) openCoverLightbox(img.src, img.alt);
+});
+
+// ===== PART 5: ADMİN DENEYİMİ =====
+
+// 152. Özelleştirilebilir dashboard widget'ları
+const DASHBOARD_WIDGETS = ['sales','tags','cover','shelf','dq'];
+let _activeWidgets = JSON.parse(localStorage.getItem('nora_dash_widgets') || JSON.stringify(DASHBOARD_WIDGETS));
+function toggleWidget(key) {
+  if (_activeWidgets.includes(key)) _activeWidgets = _activeWidgets.filter(w=>w!==key);
+  else _activeWidgets.push(key);
+  localStorage.setItem('nora_dash_widgets', JSON.stringify(_activeWidgets));
+  renderStats();
+}
+
+// 153. Toplu durum değiştirme — bulk toolbar zaten var, filtre sonrası tümünü al
+function bulkSetStatusFiltered(status) {
+  const confirm_msg = `Filtrelenen TÜM kitapların durumu "${status}" olarak değiştirilsin mi?`;
+  if (!confirm(confirm_msg)) return;
+  const filtered = Array.from(document.querySelectorAll('.table-row')).map(r=>parseInt(r.dataset.id)).filter(Boolean);
+  if (!filtered.length) { showToast('Hiç kitap seçilmedi'); return; }
+  const promises = filtered.map(id => api(`books?id=eq.${id}`, { method:'PATCH', body:JSON.stringify({ status }) }));
+  Promise.all(promises).then(async () => {
+    await fetchBooks(); renderAdminTable();
+    showToast(`✓ ${filtered.length} kitabın durumu "${status}" yapıldı`, '#2a7a2a');
+  });
+}
+
+// 154. Admin not defteri
+function saveAdminNote() {
+  const text = document.getElementById('adminNotepad')?.value.trim();
+  if (!text) return;
+  const notes = JSON.parse(localStorage.getItem('nora_admin_notes') || '[]');
+  notes.unshift({ text, date: new Date().toISOString() });
+  localStorage.setItem('nora_admin_notes', JSON.stringify(notes.slice(0, 30)));
+  showToast('✓ Not kaydedildi');
+  loadAdminNotes();
+}
+function loadAdminNotes() {
+  const ta = document.getElementById('adminNotepad');
+  const hist = document.getElementById('adminNoteHistory');
+  const notes = JSON.parse(localStorage.getItem('nora_admin_notes') || '[]');
+  if (ta && !ta.value && notes.length) ta.value = notes[0].text;
+  if (hist) {
+    hist.innerHTML = notes.map((n,i) => `
+      <div style="padding:6px 0;border-bottom:1px dashed var(--border);cursor:pointer;" onclick="document.getElementById('adminNotepad').value='${n.text.replace(/'/g,"\\'").replace(/\n/g,'\\n')}'">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);">${new Date(n.date).toLocaleDateString('tr-TR')} ${new Date(n.date).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.text.slice(0,80)}</div>
+      </div>`).join('');
+  }
+}
+
+// 155. Terminal modu hızlı kitap ekleme — Ctrl+T
+let _terminalMode = false;
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 't' && document.getElementById('adminView')?.style.display !== 'none') {
+    e.preventDefault();
+    _terminalMode = !_terminalMode;
+    const el = document.getElementById('terminalQuickAdd');
+    if (el) el.style.display = _terminalMode ? 'block' : 'none';
+    if (_terminalMode) document.getElementById('terminalInput')?.focus();
+  }
+});
+function terminalAddBook() {
+  const input = document.getElementById('terminalInput');
+  if (!input) return;
+  const raw = input.value.trim();
+  if (!raw) return;
+  // Format: "Başlık / Yazar / Tür / Raf / Fiyat"
+  const parts = raw.split('/').map(s=>s.trim());
+  if (parts.length < 1) return;
+  const book = {
+    title: parts[0] || null,
+    author: parts[1] || null,
+    genre: parts[2] || null,
+    shelf: parts[3] || null,
+    price: parseFloat(parts[4]) || null,
+    status: 'yerlesik'
+  };
+  api('books', { method:'POST', prefer:'return=minimal', body: JSON.stringify(book) })
+    .then(async r => {
+      if (r.ok) {
+        input.value = '';
+        showToast(`✓ "${book.title}" eklendi`);
+        await fetchBooks(); renderAdminTable();
+      } else showToast('✗ Eklenemedi', '#c84040');
+    });
+}
+
+// 156. Son 10 işlem logu
+const _actionLog = [];
+function logAction(action, bookId, detail) {
+  _actionLog.unshift({ action, bookId, detail, time: Date.now() });
+  if (_actionLog.length > 10) _actionLog.pop();
+}
+function showActionLog() {
+  if (!_actionLog.length) { showToast('Henüz işlem yok'); return; }
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;bottom:80px;right:16px;background:var(--paper);border:2px solid var(--ink);z-index:9999;padding:16px;width:300px;max-height:300px;overflow-y:auto;font-family:"Courier Prime",monospace;';
+  overlay.innerHTML = `<div style="font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;">SON İŞLEMLER</div>` +
+    _actionLog.map(a => `<div style="font-size:0.7rem;padding:4px 0;border-bottom:1px dashed var(--border);color:var(--ink-light);">
+      <span style="color:var(--ink-faint);">${new Date(a.time).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</span> — ${a.action}${a.detail?' "'+a.detail.slice(0,20)+'"':''}
+    </div>`).join('') +
+    `<button onclick="this.parentElement.remove()" style="margin-top:8px;background:none;border:none;color:var(--ink-faint);cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.6rem;">✕ Kapat</button>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 8000);
+}
+
+// 158. Birden fazla admin — localStorage tabanlı basit çözüm
+function addAdminUser() {
+  const code = prompt('Yeni admin kodu (min 6 karakter):');
+  if (!code || code.length < 6) { showToast('En az 6 karakter gerekli', '#c84040'); return; }
+  const codes = JSON.parse(localStorage.getItem('nora_admin_codes') || '[]');
+  if (codes.includes(code)) { showToast('Bu kod zaten var', '#c84040'); return; }
+  codes.push(code);
+  localStorage.setItem('nora_admin_codes', JSON.stringify(codes));
+  showToast(`✓ Yeni admin kodu eklendi: ${code}`);
+}
+
+// 159. Admin aktivite logu — action log'u görsel olarak göster
+function showActivityLog() { showActionLog(); }
+
+// 161. Mobil swipe down yenile
+(function mobileSwipeRefresh() {
+  if (!('ontouchstart' in window)) return;
+  let startY = 0, pulling = false;
+  document.addEventListener('touchstart', e => { if (window.scrollY === 0) { startY = e.touches[0].clientY; pulling = true; } }, { passive:true });
+  document.addEventListener('touchend', e => {
+    if (!pulling) return; pulling = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy > 80) {
+      showToast('🔄 Yenileniyor...');
+      setTimeout(() => fetchBooks().then(()=>{ doSearch(); renderPopularTags(); showToast('✓ Güncellendi'); }), 300);
+    }
+  }, { passive:true });
+})();
+
+// 162. Mobil uzun basma — hızlı menü
+(function mobileLongPress() {
+  let timer = null;
+  document.addEventListener('touchstart', e => {
+    const card = e.target.closest('.book-card');
+    if (!card) return;
+    timer = setTimeout(() => {
+      const id = parseInt(card.getAttribute('onclick')?.match(/\d+/)?.[0]);
+      if (!id) return;
+      const b = books.find(x=>x.id===id); if (!b) return;
+      const isFav = favorites[id];
+      const opts = [
+        { label: isFav ? '♥ Favoriden Çıkar' : '♡ Favoriye Ekle', action: ()=>toggleFavorite(id) },
+        { label: '📖 Okuyacağım', action: ()=>toggleReadList(id,'want') },
+        { label: '✓ Okudum', action: ()=>toggleReadList(id,'done') },
+      ];
+      const m = document.createElement('div');
+      m.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--paper);border:2px solid var(--ink);z-index:9999;padding:12px;min-width:200px;';
+      m.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);margin-bottom:8px;">${b.title.slice(0,30)}</div>` +
+        opts.map(o=>`<div onclick="(${o.action.toString()})();this.closest('div[style]').remove()" style="font-family:'Courier Prime',monospace;font-size:0.78rem;padding:8px 0;cursor:pointer;border-bottom:1px dashed var(--border);">${o.label}</div>`).join('') +
+        `<div onclick="this.closest('div[style]').remove()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);padding-top:6px;cursor:pointer;">✕ Kapat</div>`;
+      document.body.appendChild(m);
+      setTimeout(()=>m.remove(), 5000);
+    }, 600);
+  }, { passive:true });
+  document.addEventListener('touchend', ()=>clearTimeout(timer), { passive:true });
+  document.addEventListener('touchmove', ()=>clearTimeout(timer), { passive:true });
+})();
+
+// 163. Offline mod göstergesi
+window.addEventListener('online', ()=>showToast('✓ Bağlantı kuruldu', '#2a7a2a'));
+window.addEventListener('offline', ()=>showToast('⚠ Çevrimdışı — önbellek gösteriliyor', 'var(--zone-rust)'));
+if (!navigator.onLine) setTimeout(()=>showToast('⚠ Çevrimdışı modu', 'var(--zone-rust)'), 1000);
+
+// Terminal quick add HTML — body'e ekle
+(function addTerminalUI() {
+  const d = document.createElement('div');
+  d.id = 'terminalQuickAdd';
+  d.style.cssText = 'display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--zone-phosphor);padding:12px 16px;z-index:9999;width:90%;max-width:500px;';
+  d.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--zone-phosphor);letter-spacing:2px;margin-bottom:6px;">> HIZLI EKLE: Başlık / Yazar / Tür / Raf / Fiyat</div>
+    <div style="display:flex;gap:8px;">
+      <input id="terminalInput" placeholder="Suç ve Ceza / Dostoyevski / Roman / A-3 / 120" onkeydown="if(event.key==='Enter')terminalAddBook()"
+        style="flex:1;background:#000;color:var(--zone-phosphor);border:none;border-bottom:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.82rem;padding:4px 0;outline:none;">
+      <button onclick="terminalAddBook()" style="background:none;border:none;color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.8rem;cursor:pointer;">↵</button>
+    </div>`;
+  document.body.appendChild(d);
+})();
+
+// Log butonunu admin header'a ekle
+setTimeout(() => {
+  const logBtn = document.createElement('button');
+  logBtn.textContent = '⏱ Log';
+  logBtn.title = 'Son işlemler';
+  logBtn.onclick = showActionLog;
+  logBtn.style.cssText = 'background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:"Courier Prime",monospace;font-size:0.7rem;padding:7px 10px;cursor:pointer;';
+  const lockBtn = document.querySelector('button[onclick="lockAdmin()"]');
+  if (lockBtn) lockBtn.parentElement.insertBefore(logBtn, lockBtn);
+}, 1000);
+
+// ===== PART 4: ETKİNLİK & PANO =====
+
+// 125. Katılımcı güncelle
+function updateParticipants(id) {
+  const n = prompt('Katılımcı sayısı:'); if(!n) return;
+  const ev = getEvents().map(e=>e.id===id?{...e,participants:parseInt(n)||0}:e);
+  saveEvents(ev); renderEventsPanel();
+}
+
+// 128. Etkinlik sonrası rapor
+function addEventReport(id) {
+  const r = prompt('Etkinlik raporu (kısa not):'); if(!r) return;
+  const ev = getEvents().map(e=>e.id===id?{...e,report:r}:e);
+  saveEvents(ev); renderEventsPanel(); showToast('✓ Rapor kaydedildi');
+}
+
+// 129. Etkinlik QR
+function downloadEventQR(name) {
+  const url = encodeURIComponent('https://izzetfiratorfa.github.io/stalcker/?etkinlik='+encodeURIComponent(name));
+  const a = document.createElement('a');
+  a.href = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${url}&bgcolor=f2efe8&color=111111`;
+  a.download = 'etkinlik-qr.png'; a.target='_blank'; a.click();
+  showToast('↓ Etkinlik QR indiriliyor...');
+}
+
+// 131. Pano notuna bağlı kitap linki
+function getPanoBookLink(noteText) {
+  // Metinde tırnak içindeki kitap adını ara ve kataloğa bağla
+  const match = noteText.match(/"([^"]+)"/);
+  if (!match) return null;
+  const title = match[1];
+  const found = books.find(b => normalize(b.title||'').includes(normalize(title)));
+  return found ? found.id : null;
+}
+
+// 132. Pano notunu WhatsApp'a gönder
+function sharePanoNoteWA(text, author) {
+  const phone = localStorage.getItem('nora_whatsapp') || '';
+  const msg = `📌 Nora Pano:\n"${text}"${author?' — '+author:''}`;
+  if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
+  else navigator.clipboard?.writeText(msg).then(()=>showToast('✓ Pano notu kopyalandı'));
+}
+
+// 133. Pano doluluk uyarısı
+function checkPanoCapacity() {
+  // Pano notlarını api'den çek ve say
+  api('pano?is_fulfilled=eq.false&select=id').then(async res => {
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (rows.length > 20) showToast(`⚠ Panoda ${rows.length} ilan var — en eskiyi kaldır`, 'var(--zone-rust)');
+  }).catch(()=>{});
+}
+
+// 134. Pano istatistiği
+async function showPanoStats() {
+  const res = await api('pano?select=category,is_fulfilled');
+  if (!res.ok) return;
+  const rows = await res.json();
+  const open = rows.filter(r=>!r.is_fulfilled).length;
+  const cats = {};
+  rows.forEach(r=>{ cats[r.category||'genel']=(cats[r.category||'genel']||0)+1; });
+  const top = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+  showToast(`📊 Pano: ${open} açık ilan · En çok: ${top?top[0]:'—'}`, 'var(--zone-sepia)');
+}
+
+// 136. Kalıcı pano notu — her zaman üstte
+// (Pano tabloya priority=999 ile eklenir, normal notların üstüne çıkar)
+async function addPermanentPanoNote() {
+  const text = prompt('Kalıcı duyuru metni:'); if(!text) return;
+  await api('pano', { method:'POST', prefer:'return=minimal',
+    body: JSON.stringify({ text, category:'duyuru', priority:999, is_permanent:true })
+  });
+  showToast('✓ Kalıcı duyuru eklendi');
+  if (typeof loadPanoNotes==='function') loadPanoNotes();
+}
+
+// 137. Instagram story formatı — pano notunu kopyala
+function sharePanoAsStory(text) {
+  const storyText = `📌 Nora Kitap Evi\n\n${text}\n\n@norakitapevi`;
+  navigator.clipboard?.writeText(storyText).then(()=>showToast('✓ Story metni kopyalandı — Instagram\'a yapıştır'));
+}
+
+// 138. Pano yanıt butonu
+function replyToPanoNote(noteId, noteText) {
+  const phone = localStorage.getItem('nora_whatsapp') || '';
+  const msg = `Pano ilanı hakkında: "${noteText.slice(0,50)}..."`;
+  if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
+  else showToast('WhatsApp numarası admin ayarlarına eklenmemiş');
+}
+
+// 139. Pano arşivi
+async function showPanoArchive() {
+  const res = await api('pano?is_fulfilled=eq.true&order=updated_at.desc&limit=20&select=*');
+  if (!res.ok) return;
+  const rows = await res.json();
+  if (!rows.length) { showToast('Arşiv boş'); return; }
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:500px;width:100%;max-height:80vh;overflow-y:auto;padding:20px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">📋 PANO ARŞİVİ</div>
+      <button onclick="this.closest('div').parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:1rem;">✕</button>
+    </div>
+    ${rows.map(r=>`<div style="padding:8px 0;border-bottom:1px dashed var(--border);">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink);">${r.text||''}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;color:var(--ink-faint);margin-top:3px;">${r.author||'Anonim'} · ${r.updated_at?new Date(r.updated_at).toLocaleDateString('tr-TR'):''}</div>
+    </div>`).join('')}
+  </div>`;
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+// 151. Admin karanlık mod
+function toggleAdminDark() {
+  const body = document.body;
+  body.classList.toggle('admin-dark');
+  localStorage.setItem('nora_admin_dark', body.classList.contains('admin-dark') ? '1' : '0');
+}
+if (localStorage.getItem('nora_admin_dark')==='1') document.body.classList.add('admin-dark');
+
+// Admin dark CSS
+(function addAdminDarkCSS() {
+  const s = document.createElement('style');
+  s.textContent = `
+    body.admin-dark { --paper:#121212;--paper-dark:#1a1a1a;--ink:#e8e2d6;--ink-light:#b0a898;--ink-faint:#6a6258;--white:#1e1b16;--black:#ede8de;--border:#2a2a2a;--border-dark:#3a3a3a;--gold:#c8a030;--gold-bg:#1a1400;background:#121212 !important;color:#e8e2d6; }
+    body.admin-dark .table-row { background:#1a1a1a;border-color:#2a2a2a; }
+    body.admin-dark .tab-btn { background:#0a0a0a;color:#8a8278; }
+    body.admin-dark .tab-btn.active { background:#2a2a2a;color:#e8e2d6; }
+    body.admin-dark input, body.admin-dark select, body.admin-dark textarea { background:#1e1b16;color:#e8e2d6;border-color:#3a3a3a; }
+    body.admin-dark .modal-overlay { background:rgba(0,0,0,0.9); }
+    body.admin-dark .modal-box { background:#1a1a1a;border-color:#3a3a3a; }`;
+  document.head.appendChild(s);
+})();
+
+setTimeout(checkPanoCapacity, 6000);
+
+// ===== PART 3: KOLEKSİYON & ENVANTER =====
+
+function printAllCollections() {
+  const w = window.open('','_blank');
+  let html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Koleksiyonlar</title><style>*{margin:0;padding:0}body{font-family:"Courier New",monospace;padding:15mm;font-size:9pt}h1{font-size:13pt;border-bottom:2px solid #000;margin-bottom:14px;padding-bottom:6px}h2{font-size:10pt;margin:14px 0 6px;border-left:3px solid #333;padding-left:8px}p{padding:2px 0;font-size:8pt;color:#444}@media print{body{padding:10mm}}</style></head><body><h1>NORA KİTAP EVİ — KOLEKSİYONLAR</h1><p style="font-size:7pt;color:#888;margin-bottom:12px">'+new Date().toLocaleDateString('tr-TR')+'</p>';
+  _collections.forEach(col => { html += `<h2>${col.name}${col.description?' — '+col.description:''}</h2>`; });
+  html += '</body></html>';
+  w.document.write(html); w.document.close(); w.print();
+}
+
+function openFindMeModal(title, type) {
+  const msg = type === 'bul'
+    ? `"${title}" kitabını arıyorum. Bulduğunuzda haber verir misiniz?`
+    : `"${title}" için takas teklif etmek istiyorum.`;
+  const phone = localStorage.getItem('nora_whatsapp') || '';
+  if (phone) {
+    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+  } else {
+    navigator.clipboard?.writeText(msg).then(()=>showToast('✓ Kopyalandı — WhatsApp\'ta yapıştır','#2a7a2a')).catch(()=>alert(msg));
+  }
+}
+
+function checkStockReminder() {
+  const ago = new Date(Date.now()-30*24*60*60*1000).toISOString();
+  const recent = books.filter(b=>b.status==='satildi'&&b.sold_at&&b.sold_at>ago);
+  const tc = {};
+  recent.forEach(b=>{tc[b.title]=(tc[b.title]||0)+1;});
+  const hot = Object.entries(tc).filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if (hot.length) setTimeout(()=>{hot.forEach(([t,n])=>showToast(`📈 "${t.slice(0,20)}" 30g'de ${n}x satıldı`,'var(--zone-rust)'));},4000);
+}
+
+const EVENTS_KEY = 'nora_events';
+function getEvents() { try{return JSON.parse(localStorage.getItem(EVENTS_KEY)||'[]');}catch(e){return[];} }
+function saveEvents(ev) { localStorage.setItem(EVENTS_KEY,JSON.stringify(ev)); }
+
+function addEvent() {
+  const name=prompt('Etkinlik adı:'); if(!name) return;
+  const date=prompt('Tarih (YYYY-AA-GG):'); if(!date) return;
+  const desc=prompt('Açıklama:')||'';
+  const bookTitle=prompt('Bağlı kitap (opsiyonel):')||'';
+  const ev=getEvents();
+  ev.push({id:Date.now(),name,date,desc,bookTitle,participants:0});
+  ev.sort((a,b)=>a.date.localeCompare(b.date));
+  saveEvents(ev); renderEventsPanel(); showToast('✓ Etkinlik eklendi');
+}
+
+function renderEventsPanel() {
+  const el=document.getElementById('eventsPanel'); if(!el) return;
+  const ev=getEvents();
+  const today=new Date().toISOString().slice(0,10);
+  const upcoming=ev.filter(e=>e.date>=today);
+  const past=ev.filter(e=>e.date<today);
+  if(!ev.length){el.innerHTML=zoneEmptyState('Henüz etkinlik yok.');return;}
+  const row=(e,ip)=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px dashed var(--border);${ip?'opacity:0.6':''}">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--zone-sepia);min-width:80px;">${e.date}</div>
+    <div style="flex:1;">
+      <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;">${e.name}</div>
+      ${e.desc?`<div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">${e.desc}</div>`:''}
+      ${e.bookTitle?`<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--zone-phosphor);">📚 ${e.bookTitle}</div>`:''}
+      <!-- 125. Katılımcı sayısı -->
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+        <span style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);">👥 ${e.participants||0} kişi</span>
+        ${!ip?`<button onclick="updateParticipants(${e.id})" style="background:none;border:1px solid var(--border);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.58rem;padding:2px 7px;cursor:pointer;">Güncelle</button>`:''}
+        <!-- 128. Etkinlik sonrası rapor -->
+        ${ip&&e.report?`<span style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--zone-phosphor);">📝 Rapor mevcut</span>`:''}
+        ${ip&&!e.report?`<button onclick="addEventReport(${e.id})" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.58rem;padding:2px 7px;cursor:pointer;">+ Rapor</button>`:''}
+      </div>
+      ${e.report?`<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-light);margin-top:4px;font-style:italic;">${e.report}</div>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <!-- 129. QR -->
+      ${!ip?`<button onclick="downloadEventQR('${e.name.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--zone-water);color:var(--zone-water);font-family:'Courier Prime',monospace;font-size:0.58rem;padding:3px 7px;cursor:pointer;">QR</button>`:''}
+      <button onclick="deleteEvent(${e.id})" style="background:none;border:none;color:#c84040;cursor:pointer;font-size:0.8rem;">✕</button>
+    </div>
+  </div>`;
+  el.innerHTML=`<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;">${upcoming.length} YAKLAŞAN · ${past.length} GEÇMİŞ</div>
+    ${upcoming.map(e=>row(e,false)).join('')}
+    ${past.length?`<div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--ink-faint);margin:14px 0 8px;">GEÇMİŞ</div>${past.slice(-5).reverse().map(e=>row(e,true)).join('')}`:''}`;
+}
+function deleteEvent(id){if(!confirm('Silinsin mi?'))return;saveEvents(getEvents().filter(e=>e.id!==id));renderEventsPanel();}
+
+setTimeout(checkStockReminder,5000);
+
+// ===== PART 2: ARAMA & GÖRSEL İYİLEŞTİRMELER =====
+
+function renderShelfView() {
+  const el = document.getElementById('shelfViewContent');
+  if (!el) return;
+  const active = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'satildi');
+  const shelfGroups = {};
+  active.forEach(b => { const s=(b.shelf||'—').trim().toUpperCase(); if(!shelfGroups[s])shelfGroups[s]=[]; shelfGroups[s].push(b); });
+  const shelves = Object.keys(shelfGroups).sort((a,b)=>a.localeCompare(b,'tr'));
+  el.innerHTML = shelves.map(shelf => {
+    const bks = shelfGroups[shelf];
+    return `<div style="margin-bottom:24px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:3px;color:var(--ink-faint);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">RAF ${shelf} · ${bks.length} kitap</div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin;">
+        ${bks.map(b => {
+          const gc = getGenreColor(b.genre);
+          const letter = (b.title||'?').charAt(0).toUpperCase();
+          return `<div onclick="openDetail(${b.id})" title="${b.title} — ${b.author||'?'}" style="flex-shrink:0;width:50px;cursor:pointer;text-align:center;">
+            <div style="width:46px;height:65px;background:${gc||'#2a2a2a'};display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.08);border-radius:2px;margin:0 auto;overflow:hidden;position:relative;">
+              ${b.cover_url?`<img src="${b.cover_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:''}
+              <div style="${b.cover_url?'display:none;':''}width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;">${letter}</div>
+              ${b.nora_pick?'<div style="position:absolute;top:1px;right:1px;width:5px;height:5px;background:var(--gold);border-radius:50%;"></div>':''}
+            </div>
+            <div style="font-family:'Courier Prime',monospace;font-size:0.48rem;color:var(--ink-faint);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:50px;">${(b.title||'').slice(0,7)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+(function addSwipeSupport() {
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive:true });
+  document.addEventListener('touchend', e => {
+    if (!document.getElementById('detailOverlay')?.classList.contains('open')) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < 60) return;
+    if (dx < 0) navigateDetail(1); else navigateDetail(-1);
+  }, { passive:true });
+})();
+
+function getInstagramSearchUrl(title) {
+  return `https://www.instagram.com/explore/tags/${encodeURIComponent((title||'').replace(/\s+/g,'').toLowerCase())}/`;
+}
+
+async function moveBookBetweenCollections(bookId, fromColId, toColId) {
+  if (fromColId) await api(`book_collections?book_id=eq.${bookId}&collection_id=eq.${fromColId}`, { method:'DELETE' });
+  if (toColId) await api('book_collections', { method:'POST', prefer:'return=minimal', body:JSON.stringify({ book_id:bookId, collection_id:toColId }) });
+  loadCollections(); showToast('✓ Kitap koleksiyona taşındı');
+}
+
+async function showCollectionStats(colId) {
+  const col = _collections.find(c=>c.id===colId); if(!col) return;
+  const res = await api('book_collections?collection_id=eq.'+colId+'&select=book_id');
+  if (!res.ok) return;
+  const rows = await res.json();
+  const colBooks = books.filter(b=>rows.some(r=>r.book_id===b.id));
+  const genres = {};
+  colBooks.forEach(b=>{if(b.genre)b.genre.split(',').forEach(g=>{const t=g.trim();genres[t]=(genres[t]||0)+1;});});
+  const topGenre = Object.entries(genres).sort((a,b)=>b[1]-a[1])[0];
+  const oldest = colBooks.filter(b=>b.year).sort((a,b)=>a.year-b.year)[0];
+  showToast(`📂 ${col.name}: ${colBooks.length} kitap · ${Object.keys(genres).length} tür${topGenre?' · '+topGenre[0]:''}${oldest?' · en eski: '+oldest.year:''}`, 'var(--zone-sepia)');
+}
+
+// ===== PART 1: MÜŞTERİ DENEYİMİ & KEŞİF =====
+
+// 4. Raf ömrü — kitabın kaç gündür rafta beklediği
+function getShelfAge(b) {
+  if (!b.created_at) return null;
+  return Math.floor((Date.now() - new Date(b.created_at).getTime()) / (1000*60*60*24));
+}
+function shelfAgeBadge(b) {
+  const days = getShelfAge(b);
+  if (!days || days < 30) return '';
+  if (days > 365) return `<span title="${days} gündür rafta" style="font-family:'Courier Prime',monospace;font-size:0.58rem;color:var(--zone-rust);border:1px solid var(--zone-rust);padding:1px 5px;cursor:help;">📅 ${Math.floor(days/365)}y+</span>`;
+  if (days > 90)  return `<span title="${days} gündür rafta" style="font-family:'Courier Prime',monospace;font-size:0.58rem;color:var(--zone-sepia);border:1px solid var(--zone-sepia);padding:1px 5px;cursor:help;">📅 ${days}g</span>`;
+  return '';
+}
+
+// 11-12-15. Müşteri profili
+let _customerProfile = {};
+function loadProfile() {
+  try { _customerProfile = JSON.parse(localStorage.getItem('nora_profile') || '{}'); } catch(e) {}
+}
+function saveProfile() {
+  _customerProfile = {
+    name: document.getElementById('profileName')?.value.trim() || '',
+    genres: document.getElementById('profileGenres')?.value.trim() || '',
+    authors: document.getElementById('profileAuthors')?.value.trim() || '',
+    birthday: document.getElementById('profileBirthday')?.value || '',
+  };
+  localStorage.setItem('nora_profile', JSON.stringify(_customerProfile));
+  closeProfileModal();
+  showToast('✓ Profil kaydedildi', '#2a7a2a');
+  checkBirthdayToday();
+}
+function openProfileModal() {
+  loadProfile();
+  const m = document.getElementById('profileModal');
+  if (!m) return;
+  m.style.display = 'flex';
+  if (_customerProfile.name) document.getElementById('profileName').value = _customerProfile.name;
+  if (_customerProfile.genres) document.getElementById('profileGenres').value = _customerProfile.genres;
+  if (_customerProfile.authors) document.getElementById('profileAuthors').value = _customerProfile.authors;
+  if (_customerProfile.birthday) document.getElementById('profileBirthday').value = _customerProfile.birthday;
+  // 12. Benim rafım özeti
+  const shelf = document.getElementById('profileShelfSummary');
+  if (shelf) {
+    const done = Object.values(readingList).filter(v=>v==='done').length;
+    const want = Object.values(readingList).filter(v=>v==='want').length;
+    const fav = Object.keys(favorites).length;
+    shelf.innerHTML = `<span style="color:#2a7a2a">✓ ${done} okudum</span> &nbsp; <span style="color:var(--gold)">📖 ${want} okuyacağım</span> &nbsp; <span style="color:#c84040">♥ ${fav} favori</span>`;
+  }
+}
+function closeProfileModal() {
+  const m = document.getElementById('profileModal');
+  if (m) m.style.display = 'none';
+}
+
+// 15. Kişiselleştirilmiş karşılama
+function getPersonalizedGreeting() {
+  loadProfile();
+  if (!_customerProfile.name) return null;
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Günaydın' : hour < 18 ? 'Merhaba' : 'İyi akşamlar';
+  return `${greet}, ${_customerProfile.name}.`;
+}
+
+// 18. Arama geçmişini temizle — recentSearchesRow'a buton ekle
+function clearRecentSearchesWithFeedback() {
+  clearRecentSearches();
+  showToast('Arama geçmişi temizlendi');
+}
+
+// 20. Doğum günü kontrolü
+function checkBirthdayToday() {
+  loadProfile();
+  if (!_customerProfile.birthday) return;
+  const today = new Date();
+  const bd = new Date(_customerProfile.birthday);
+  if (bd.getMonth() === today.getMonth() && bd.getDate() === today.getDate()) {
+    setTimeout(() => {
+      showToast(`🎂 İyi doğum günleri ${_customerProfile.name||''}! Kitaplarla dolu bir yıl.`, 'var(--gold)');
+      showConfetti();
+    }, 2000);
+  }
+}
+
+// 21-22. Kaç saatin var — sayfa sayısına göre filtre (250 sf/saat)
+let _timeFilter = null;
+function setTimeFilter(hours) {
+  _timeFilter = hours;
+  ['tf_all','tf_2','tf_6','tf_15','tf_40'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  const idMap = { null:'tf_all', 2:'tf_2', 6:'tf_6', 15:'tf_15', 40:'tf_40' };
+  document.getElementById(idMap[hours] || 'tf_all')?.classList.add('active');
+  doSearch();
+}
+
+// 23. Raf ömrü badge kitap kartında — renderBookCard'a eklendi
+
+// 30. "Nora'nın bu hafta konuştuğu kitabı" — Günün kitabından alınır
+function renderWeeklyPick() {
+  const weeklyId = parseInt(localStorage.getItem('nora_weekly_pick_id') || '0');
+  if (!weeklyId || !books.length) return;
+  const b = books.find(x => x.id === weeklyId);
+  if (!b) return;
+  const banner = document.getElementById('curatedBanner');
+  const text = document.getElementById('curatedBannerText');
+  if (banner && text) {
+    text.textContent = '✦ Bu hafta Nora konuşuyor: "' + b.title + '"';
+    banner.style.display = 'block';
+    banner.onclick = (e) => {
+      if (e.target.tagName !== 'SPAN' || !e.target.style.float) openDetail(b.id);
+      else banner.style.display = 'none';
+    };
+  }
+}
+
+// 35. Rastgele raf yolculuğu
+function randomShelfJourney() {
+  const shelves = [...new Set(books.filter(b=>b.shelf&&b.genre!=='gizli-raf').map(b=>b.shelf))];
+  if (!shelves.length) return;
+  const randomShelf = shelves[Math.floor(Math.random()*shelves.length)];
+  activeTag = null; activeFilter = 'Tümü';
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.value = randomShelf;
+  doSearch();
+  showToast(`🗺 Raf ${randomShelf} yolculuğu`, 'var(--zone-khaki)');
+}
+
+// 36. "Devam et" önerisi — okunan yazarın başka kitabı
+function getContinueReading() {
+  const doneIds = Object.entries(readingList).filter(([,v])=>v==='done').map(([id])=>parseInt(id));
+  if (!doneIds.length) return null;
+  const doneBooks = doneIds.map(id=>books.find(b=>b.id===id)).filter(Boolean);
+  const authorsSeen = new Set(doneBooks.flatMap(b=>(b.author||'').split(',').map(a=>a.trim())));
+  const candidates = books.filter(b =>
+    b.status !== 'satildi' && b.genre !== 'gizli-raf' &&
+    !doneIds.includes(b.id) &&
+    (b.author||'').split(',').some(a => authorsSeen.has(a.trim()))
+  );
+  if (!candidates.length) return null;
+  return candidates[Math.floor(Math.random()*candidates.length)];
+}
+
+// 38. 100 yıllık kitaplar — hızlı filtre
+function filterCenturyOld() {
+  const cutoff = new Date().getFullYear() - 100;
+  activeTag = null; activeFilter = 'Tümü';
+  _customYearFilter = { max: cutoff };
+  doSearch();
+  showToast(`📜 ${cutoff} ve öncesi — Yüz yıllık kitaplar`);
+}
+let _customYearFilter = null;
+
+// 39. Dönemsel kürasyon — sezona göre banner
+function showSeasonalCuration() {
+  const month = new Date().getMonth();
+  const seasons = {
+    0:'Ocak soğuklarında roman: kapat kapıyı, aç kitabı.',
+    1:'Şubat kısa, kitaplar uzun.',
+    2:'İlkbahar — yeniden başlayanlar için.',
+    3:'Nisan yağmurunda şiir.',
+    4:'Mayıs: Piknik çantana ne koyacaksın?',
+    5:'Yaz başlıyor — uzun yolculuklar için kitap.',
+    6:'Temmuz: Plajda ne okuyorsun?',
+    7:'Ağustos yavaşlar, roman hızlanır.',
+    8:'Eylül — okul başlamadan önce bir kitap daha.',
+    9:'Ekim: Gotik ve karanlık edebiyat mevsimi.',
+    10:'Kasım: İçeri gir, bir çay koy, Dostoyevski aç.',
+    11:'Aralık: Yılı bir kitapla kapat.'
+  };
+  const banner = document.getElementById('curatedBanner');
+  const text = document.getElementById('curatedBannerText');
+  if (banner && text && !banner._weeklySet) {
+    text.textContent = '🍂 ' + seasons[month];
+    banner.style.display = 'block';
+  }
+}
+
+// 44. Türkçe karakter normalize — zaten var ama alias
+function normalizeForSearch(s) { return normalize(s); }
+
+// 45. Yazar soyadıyla arama — zaten normalize + fuzzy çalışıyor
+// 49. Sayfa sıralaması — doSearch'e eklenecek
+function applyCustomerSort(arr) {
+  const sort = document.getElementById('customerSort')?.value || '';
+  if (!sort) return arr;
+  const sorted = [...arr];
+  if (sort === 'title') return sorted.sort((a,b)=>(a.title||'').localeCompare(b.title||'','tr'));
+  if (sort === 'author') return sorted.sort((a,b)=>(a.author||'').localeCompare(b.author||'','tr'));
+  if (sort === 'year_desc') return sorted.sort((a,b)=>(b.year||0)-(a.year||0));
+  if (sort === 'year_asc') return sorted.sort((a,b)=>(a.year||0)-(b.year||0));
+  if (sort === 'pages_asc') return sorted.sort((a,b)=>(a.pages||999)-(b.pages||999));
+  if (sort === 'pages_desc') return sorted.sort((a,b)=>(b.pages||0)-(a.pages||0));
+  if (sort === 'shelf') return sorted.sort((a,b)=>(a.shelf||'').localeCompare(b.shelf||'','tr'));
+  return sorted;
+}
+
+// Init
+setTimeout(() => { loadProfile(); checkBirthdayToday(); showSeasonalCuration(); renderWeeklyPick(); }, 2000);
+
 // ===== BÖLÜM 10: TEMİN & KÜÇÜK DOKUNUŞLAR =====
 
 async function teminSetPriority(id, priority) {
@@ -13264,6 +14291,7 @@ function renderCollections() {
         </div>
         <div style="display:flex;gap:6px;">
           <button onclick="shareCollection(${c.id})" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Paylaş</button>
+          <button onclick="showCollectionStats(${c.id})" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">İstatistik</button>
           <button onclick="editCollection(${c.id})" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Düzenle</button>
           <button onclick="deleteCollection(${c.id})" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Sil</button>
         </div>
