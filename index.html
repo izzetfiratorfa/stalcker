@@ -2045,6 +2045,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="tab-btn" id="tabQuotes" onclick="switchTab('quotes')" style="color:var(--zone-sepia);">ALINTILAR</button>
         <button class="tab-btn" id="tabStats" onclick="switchTab('stats')" style="color:var(--zone-phosphor);">İSTATİSTİK</button>
         <button class="tab-btn" id="tabAdminNotes" onclick="switchTab('adminnotes')" style="color:var(--zone-sepia);">📝 NOT DEFTERİ</button>
+        <button class="tab-btn" id="tabSecretNotes" onclick="switchTab('secretnotes')" style="color:var(--zone-rust);">🔐 GİZLİ NOT</button>
         <button class="tab-btn" id="tabKoleksiyon" onclick="switchTab('koleksiyon')" style="color:var(--zone-rust);">📂 KOLEKSİYONLAR</button>
       </div>
       <!-- GRUP: İŞLETME -->
@@ -2479,7 +2480,14 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#1a6a6a;letter-spacing:2px;margin-bottom:20px;">> GÜNLÜK RAPOR — bugünün özeti + arama analitiği</div>
       <div id="reportContent" style="display:grid;gap:16px;"></div>
 
-      <!-- 66-70. VERİ TEMİZLEME RAPORLARI -->
+      <!-- 253. Aranan ama rafta olmayan kitaplar -->
+      <div style="margin-top:24px;border-top:2px solid var(--ink);padding-top:20px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);margin-bottom:12px;">✦ ARANAN AMA BULUNAMAYAN</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:10px;">Arama yapılmış ama hiç sonuç çıkmamış sorgular:</div>
+        <div id="missedSearchesPanel" style="max-height:300px;overflow-y:auto;"></div>
+        <button onclick="renderMissedSearches()" style="margin-top:8px;background:none;border:1px solid var(--zone-rust);color:var(--zone-rust);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">🔍 Analiz Et</button>
+        <button onclick="clearMissedSearches()" style="margin-top:8px;margin-left:6px;background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">Temizle</button>
+      </div>
       <div style="margin-top:32px;border-top:2px solid var(--ink);padding-top:20px;">
         <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);margin-bottom:16px;">✦ VERİ TEMİZLEME</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -2627,6 +2635,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <button onclick="shelfMapZoom(-1)" style="background:none;border:1px solid var(--border);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:3px 8px;cursor:pointer;color:var(--ink-faint);">−</button>
           <button onclick="shelfMapZoom(0)" style="background:none;border:1px solid var(--border);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:3px 8px;cursor:pointer;color:var(--ink-faint);">↺</button>
           <button onclick="shelfMapZoom(1)" style="background:none;border:1px solid var(--border);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:3px 8px;cursor:pointer;color:var(--ink-faint);">+</button>
+          <!-- 245. Yeni raf ekle -->
+          <button onclick="addNewShelfToMap()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:3px 10px;cursor:pointer;margin-left:8px;">+ Raf</button>
         </div>
       </div>
       <div id="shelfMapContent" style="transform-origin:top left;transition:transform 0.2s;"></div>
@@ -2846,6 +2856,24 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         </div>
       </div>
 
+    </div>
+
+    <!-- 280. ŞİFRELİ NOT DEFTERİ -->
+    <div id="panelSecretNotes" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--zone-rust);margin-bottom:20px;">🔐 ŞİFRELİ NOT DEFTERİ — yalnızca sen görebilirsin</div>
+      <div id="secretNoteLock" style="text-align:center;padding:40px 0;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:12px;">Bu bölüm şifre korumalıdır.</div>
+        <input type="password" id="secretNotePin" placeholder="PIN gir..." style="font-family:'Courier Prime',monospace;font-size:1rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);padding:10px 16px;width:180px;text-align:center;" onkeydown="if(event.key==='Enter')unlockSecretNote()">
+        <button onclick="unlockSecretNote()" style="margin-left:8px;background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:11px 16px;cursor:pointer;">Aç →</button>
+      </div>
+      <div id="secretNoteContent" style="display:none;">
+        <textarea id="secretNoteText" placeholder="Gizli notlar..." style="width:100%;min-height:300px;padding:14px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);resize:vertical;box-sizing:border-box;line-height:1.8;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button onclick="saveSecretNote()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:8px 16px;cursor:pointer;letter-spacing:1px;">Kaydet</button>
+          <button onclick="lockSecretNote()" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:8px 16px;cursor:pointer;">🔒 Kilitle</button>
+          <button onclick="changeSecretPin()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:8px 16px;cursor:pointer;">PIN Değiştir</button>
+        </div>
+      </div>
     </div>
 
     <!-- ETKİNLİK PANELİ -->
@@ -6807,6 +6835,12 @@ function doSearch() {
     showTerminal(terminalMsg('found') + ' ' + filtered.length + ' records.', '#39ff14');
     // 20. Sonuç sayısı
     titleEl.textContent = filtered.length + ' kitap bulundu' + (q ? ' — "' + q + '"' : '');
+    // 253. Sonuç yoksa kaydet
+    if (q && filtered.length === 0) {
+      const missed = JSON.parse(localStorage.getItem('nora_missed_searches') || '{}');
+      missed[q] = (missed[q] || 0) + 1;
+      localStorage.setItem('nora_missed_searches', JSON.stringify(missed));
+    }
     const sortedFiltered = applyCustomerSort(filtered);
     renderWithInfiniteScroll(sortedFiltered, container);
     if (q) {
@@ -7616,7 +7650,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis','koleksiyon':'panelKoleksiyon','etkinlik':'panelEtkinlik','adminnotes':'panelAdminnotes'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis','koleksiyon':'panelKoleksiyon','etkinlik':'panelEtkinlik','adminnotes':'panelAdminnotes','secretnotes':'panelSecretNotes'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -7628,7 +7662,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis','koleksiyon':'tabKoleksiyon','etkinlik':'tabEtkinlik','adminnotes':'tabAdminNotes'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis','koleksiyon':'tabKoleksiyon','etkinlik':'tabEtkinlik','adminnotes':'tabAdminNotes','secretnotes':'tabSecretNotes'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -7658,6 +7692,7 @@ function switchTab(tab) {
   if (tab === 'koleksiyon') loadCollections();
   if (tab === 'etkinlik') renderEventsPanel();
   if (tab === 'adminnotes') loadAdminNotes();
+  if (tab === 'secretnotes') initSecretNote();
 }
 
 function renderMissedSearches() {
@@ -12696,6 +12731,91 @@ document.addEventListener('keydown', function(e) {
     openPalette();
   }
 });
+
+// ===== PART 10: HARİTA, RAPORLAMA & KUTLAMA =====
+
+// 245. Yeni raf ekle
+function addNewShelfToMap() {
+  const name=prompt('Yeni raf adı (örn: C-4):'); if(!name) return;
+  const custom=JSON.parse(localStorage.getItem('nora_custom_shelves')||'[]');
+  if(custom.includes(name.trim().toUpperCase())){showToast('Bu raf zaten var');return;}
+  custom.push(name.trim().toUpperCase());
+  localStorage.setItem('nora_custom_shelves',JSON.stringify(custom));
+  renderShelfMap(); showToast(`✓ Raf ${name.toUpperCase()} eklendi`);
+}
+
+// 253. Aranan ama bulunamayan
+function renderMissedSearches() {
+  const el=document.getElementById('missedSearchesPanel'); if(!el) return;
+  const missed=JSON.parse(localStorage.getItem('nora_missed_searches')||'{}');
+  const sorted=Object.entries(missed).sort((a,b)=>b[1]-a[1]);
+  if(!sorted.length){el.innerHTML='<div style="font-family:\'Courier Prime\',monospace;font-size:0.72rem;color:var(--ink-faint);">Henüz kayıp arama yok.</div>';return;}
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.72rem;">
+    <thead><tr style="border-bottom:2px solid var(--ink);">
+      <th style="padding:5px 8px;text-align:left;font-weight:normal;color:var(--ink-faint);">Aranan</th>
+      <th style="padding:5px 8px;text-align:right;font-weight:normal;color:var(--ink-faint);">Kez</th>
+      <th style="padding:5px 8px;"></th>
+    </tr></thead>
+    <tbody>${sorted.slice(0,20).map(([q,n])=>`<tr style="border-bottom:1px dashed var(--border);">
+      <td style="padding:6px 8px;color:var(--zone-rust);">${q}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--ink-faint);">${n}</td>
+      <td style="padding:6px 8px;"><button onclick="addToTeminFromMissed('${q.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.58rem;padding:2px 7px;cursor:pointer;">Temine Ekle</button></td>
+    </tr>`).join('')}</tbody></table>
+    ${sorted.length>20?`<div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);margin-top:8px;">...ve ${sorted.length-20} arama daha</div>`:''}`;
+}
+function clearMissedSearches(){if(!confirm('Geçmiş silinsin mi?'))return;localStorage.removeItem('nora_missed_searches');const el=document.getElementById('missedSearchesPanel');if(el)el.innerHTML='';showToast('✓ Temizlendi');}
+function addToTeminFromMissed(title){api('temin_listesi',{method:'POST',prefer:'return=minimal',body:JSON.stringify({title,priority:'normal'})}).then(r=>{if(r.ok)showToast(`✓ "${title}" temin listesine eklendi`);});}
+
+// 280. Şifreli not
+const SECRET_NOTE_KEY='nora_secret_note', SECRET_PIN_KEY='nora_secret_pin';
+function initSecretNote(){
+  const hasPin=!!localStorage.getItem(SECRET_PIN_KEY);
+  if(!hasPin){const pin=prompt('İlk kullanım: PIN belirle (min 4 karakter):');if(!pin||pin.length<4){showToast('Geçersiz PIN','#c84040');return;}localStorage.setItem(SECRET_PIN_KEY,btoa(pin));showToast('✓ PIN kaydedildi');}
+  document.getElementById('secretNoteLock').style.display='block';
+  document.getElementById('secretNoteContent').style.display='none';
+}
+function unlockSecretNote(){
+  const pin=document.getElementById('secretNotePin')?.value;
+  if(btoa(pin)!==localStorage.getItem(SECRET_PIN_KEY)){showToast('Yanlış PIN','#c84040');return;}
+  document.getElementById('secretNoteLock').style.display='none';
+  document.getElementById('secretNoteContent').style.display='block';
+  const ta=document.getElementById('secretNoteText');
+  if(ta) ta.value=localStorage.getItem(SECRET_NOTE_KEY)||'';
+}
+function saveSecretNote(){localStorage.setItem(SECRET_NOTE_KEY,document.getElementById('secretNoteText')?.value||'');showToast('✓ Gizli not kaydedildi');}
+function lockSecretNote(){document.getElementById('secretNoteLock').style.display='block';document.getElementById('secretNoteContent').style.display='none';document.getElementById('secretNotePin').value='';document.getElementById('secretNoteText').value='';}
+function changeSecretPin(){
+  const old=prompt('Mevcut PIN:');
+  if(btoa(old)!==localStorage.getItem(SECRET_PIN_KEY)){showToast('Yanlış PIN','#c84040');return;}
+  const np=prompt('Yeni PIN (min 4):'); if(!np||np.length<4){showToast('Geçersiz','#c84040');return;}
+  localStorage.setItem(SECRET_PIN_KEY,btoa(np)); showToast('✓ PIN değiştirildi');
+}
+
+// 293. Doğum günü banner
+function checkBirthdayBanner(){
+  loadProfile(); if(!_customerProfile?.birthday) return;
+  const today=new Date(),bd=new Date(_customerProfile.birthday);
+  if(bd.getMonth()===today.getMonth()&&bd.getDate()===today.getDate()){
+    const b=document.createElement('div');
+    b.style.cssText='background:var(--gold-bg);border-bottom:2px solid var(--gold);padding:10px 20px;text-align:center;font-family:"Courier Prime",monospace;font-size:0.75rem;color:var(--gold);letter-spacing:2px;';
+    b.textContent=`🎂 İyi doğum günleri${_customerProfile.name?', '+_customerProfile.name:''}! Nora'da doğum günü konfetisi 🎉`;
+    const hero=document.querySelector('.customer-hero');
+    if(hero) hero.insertAdjacentElement('afterend',b);
+    showConfetti();
+  }
+}
+setTimeout(checkBirthdayBanner,2500);
+
+// 297. Nora yıl dönümü
+function checkNoraAnniversary(){
+  const od=localStorage.getItem('nora_opening_date'); if(!od) return;
+  const op=new Date(od),today=new Date();
+  if(op.getMonth()===today.getMonth()&&op.getDate()===today.getDate()){
+    const years=today.getFullYear()-op.getFullYear();
+    setTimeout(()=>{showConfetti();showToast(`🎂 Nora ${years}. yaşında! Mutlu yıllar!`,'var(--gold)');},1500);
+  }
+}
+setTimeout(checkNoraAnniversary,3000);
 
 // ===== PART 9: İLETİŞİM & SOSYAL & İÇERİK =====
 
