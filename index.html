@@ -657,9 +657,20 @@ body.dark .serendipity-msg { background:#111;border-color:#333;color:#b0aa9f; }
 /* ===== YENİ EKLENENLER ROZET ===== */
 .badge-new { display:inline-block;background:#0d3a0d;color:#39ff14;font-size:0.58rem;letter-spacing:2px;padding:2px 6px;text-transform:uppercase;font-family:'Courier Prime',monospace;border:1px solid #1a5a1a;margin-left:6px;vertical-align:middle;animation:newpulse 2s infinite; }
 @keyframes newpulse { 0%,100%{opacity:1;box-shadow:0 0 4px rgba(57,255,20,0.3)} 50%{opacity:0.6;box-shadow:none} }
-/* Artefakt kart parlama */
-.artefakt-card { box-shadow:0 0 8px rgba(58,122,58,0.25) !important; }
-.artefakt-card:hover { box-shadow:0 0 16px rgba(58,122,58,0.5) !important; }
+/* Skeleton Loader */
+.skeleton-card { display:flex;gap:14px;padding:16px 18px;margin-bottom:10px;border:1.5px solid var(--border-dark);background:var(--white);animation:skeletonPulse 1.4s ease-in-out infinite; }
+.skeleton-spine { width:42px;height:60px;background:var(--border-dark);flex-shrink:0;border-radius:1px; }
+.skeleton-body { flex:1; }
+.skeleton-line { height:12px;background:var(--border-dark);border-radius:2px;margin-bottom:8px; }
+.skeleton-line.w70 { width:70%; }
+.skeleton-line.w45 { width:45%; }
+.skeleton-line.w30 { width:30%; }
+.skeleton-badges { display:flex;gap:6px;margin-top:10px; }
+.skeleton-badge { width:60px;height:20px;background:var(--border-dark);border-radius:2px; }
+@keyframes skeletonPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+/* Başarı animasyonu */
+@keyframes successPop { 0%{transform:scale(0.8);opacity:0} 50%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+.save-success { animation:successPop 0.4s ease; }
 
 /* ===== KİTAP ÇARKI ===== */
 .wheel-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;flex-direction:column;padding:20px; }
@@ -3703,6 +3714,7 @@ function fuzzyMatch(text, query) {
 
 // ===== API =====
 async function fetchBooks() {
+  startSlowConnectionWarning();
   try {
     let all = [];
     let offset = 0;
@@ -3718,7 +3730,8 @@ async function fetchBooks() {
     books = all;
     console.log('Toplam yüklenen kitap:', books.length);
     fetchBookRatings();
-  } catch(e) { books = []; console.error('fetchBooks hatası:', e); }
+    stopSlowConnectionWarning();
+  } catch(e) { books = []; console.error('fetchBooks hatası:', e); stopSlowConnectionWarning(); }
 }
 
 async function fetchBookRatings() {
@@ -3796,7 +3809,8 @@ function filterQuotesList() {
 function showLoading(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.innerHTML = '<div class="term-loading">> ACCESSING NORA ARCHIVE</div>';
+  const sk = () => `<div class="skeleton-card"><div class="skeleton-spine"></div><div class="skeleton-body"><div class="skeleton-line w70"></div><div class="skeleton-line w45"></div><div class="skeleton-line w30"></div><div class="skeleton-badges"><div class="skeleton-badge"></div><div class="skeleton-badge"></div></div></div></div>`;
+  el.innerHTML = Array(5).fill(0).map(sk).join('');
 }
 
 function showEmptyState(id, icon, title, msg) {
@@ -3890,7 +3904,7 @@ async function showView(v) {
   if (v === 'iletisim') { renderShopStatus(); renderShopInfo(); renderSozluk(); }
   if (v === 'sozluk') renderSozluk();
   if (v === 'manifesto') {}  // static content
-  if (v === 'admin') { showLoading('adminTableBody'); await fetchBooks(); renderAdminTable(); renderStats(); setTimeout(()=>{ checkUntaggedWarning(); checkUnpricedWarning(); }, 2000); }
+  if (v === 'admin') { showAdminSkeleton(); await fetchBooks(); renderAdminTable(); renderStats(); setTimeout(()=>{ checkUntaggedWarning(); checkUnpricedWarning(); }, 2000); }
   if (v === 'quotes') { await fetchQuotes(); }
   if (v === 'profile') { renderProfile(); }
   if (v === 'askida') { loadAskidaView(); }
@@ -11607,7 +11621,7 @@ function renderShelfMap() {
       // Tooltip için kitap listesi
       const titles = booksOnShelf.slice(0,5).map(b => b.title).join(', ') + (booksOnShelf.length > 5 ? '...' : '');
 
-      html += `<div onclick="adminFilterByShelf('${shelf}')"
+      html += `<div onclick="_adminUnlocked?adminFilterByShelf('${shelf}'):showShelfDrawer('${shelf}')" data-shelf="${shelf}"
         title="${shelf}: ${titles}"
         style="min-width:64px;padding:10px 10px 6px;background:${bg};border:2px solid ${border};cursor:pointer;text-align:center;transition:transform 0.15s;"
         onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">
@@ -12803,6 +12817,66 @@ document.addEventListener('keydown', function(e) {
     openPalette();
   }
 });
+
+// ===== PART D: YÜKLENİYOR & RAF KÖPRÜSÜ =====
+
+function showAdminSkeleton() {
+  const el=document.getElementById('adminTableBody'); if(!el) return;
+  const row=()=>`<div class="table-row" style="pointer-events:none;">${['35%','20%','12%','10%','10%'].map(w=>`<div class="table-cell"><div style="height:10px;background:var(--border-dark);width:${w};border-radius:2px;animation:skeletonPulse 1.4s ease-in-out infinite;"></div></div>`).join('')}</div>`;
+  el.innerHTML=Array(8).fill(0).map(row).join('');
+}
+
+// Yavaş bağlantı uyarısı
+let _fetchSlowTimer=null;
+function startSlowConnectionWarning() {
+  _fetchSlowTimer=setTimeout(()=>toastWarning('⏳ Sunucu yavaş yanıt veriyor...'),5000);
+}
+function stopSlowConnectionWarning() { clearTimeout(_fetchSlowTimer); }
+
+// Başarılı kayıt animasyonu
+function showSaveSuccess(el) {
+  if (!el) return;
+  el.classList.add('save-success');
+  setTimeout(()=>el.classList.remove('save-success'),500);
+}
+
+// Raf drawer — haritadan kitapları göster
+function showShelfDrawer(shelf) {
+  const drawer=document.getElementById('shelfDrawer');
+  const titleEl=document.getElementById('shelfDrawerTitle');
+  const contentEl=document.getElementById('shelfDrawerContent');
+  if(!drawer||!contentEl) return;
+  const shelfBooks=books.filter(b=>(b.shelf||'').trim().toUpperCase()===shelf.trim().toUpperCase()&&b.genre!=='gizli-raf'&&b.status!=='satildi');
+  titleEl.textContent=`RAF ${shelf} — ${shelfBooks.length} KİTAP`;
+  contentEl.innerHTML=shelfBooks.length?shelfBooks.map(b=>{
+    const gc=getGenreColor(b.genre);
+    return `<div onclick="closeShelfDrawer();setTimeout(()=>openDetail(${b.id}),300)" style="display:flex;gap:10px;align-items:center;padding:8px 10px;border-left:3px solid ${gc||'var(--border-dark)'};background:var(--paper-dark);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--paper-dark)'">
+      <div style="width:32px;height:44px;background:${gc||'#2a2a2a'};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.9rem;overflow:hidden;">
+        ${b.cover_url?`<img src="${b.cover_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:((b.title||'?').charAt(0))}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Playfair Display',serif;font-size:0.85rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.title}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">${b.author||'—'}</div>
+      </div>
+      ${b.price&&b.status==='satista'?`<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;font-weight:700;color:var(--gold);flex-shrink:0;">₺${b.price}</div>`:''}
+    </div>`;
+  }).join(''):`<div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-faint);padding:20px;text-align:center;">Bu raf şu an boş.</div>`;
+  drawer.style.display='block';
+  setTimeout(()=>drawer.style.transform='translateY(0)',10);
+}
+
+function closeShelfDrawer() {
+  const d=document.getElementById('shelfDrawer'); if(!d) return;
+  d.style.transform='translateY(100%)';
+  setTimeout(()=>d.style.display='none',300);
+}
+
+// Drawer swipe down kapatma
+(function(){
+  let sy=0;
+  document.addEventListener('touchstart',e=>{const d=document.getElementById('shelfDrawer');if(d?.style.display==='block')sy=e.touches[0].clientY;},{passive:true});
+  document.addEventListener('touchend',e=>{const d=document.getElementById('shelfDrawer');if(!d||d.style.display!=='block')return;if(e.changedTouches[0].clientY-sy>60)closeShelfDrawer();},{passive:true});
+})();
 
 // ===== PART C: MODAL DİYALOG & FORM DOĞRULAMA =====
 
@@ -16175,6 +16249,14 @@ function observeLazyImages() {
 </script>
 <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Sayfa sesi">🔊 SES</button>
 <div id="redStar" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);font-size:1.1rem;z-index:500;cursor:pointer;" onclick="triggerEasterEgg('/samizdat')" title="★">★</div>
+<!-- RAF DRAWER -->
+<div id="shelfDrawer" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--paper);border-top:2px solid var(--ink);z-index:8000;max-height:55vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s ease;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--paper);">
+    <div id="shelfDrawerTitle" style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);"></div>
+    <button onclick="closeShelfDrawer()" style="background:none;border:none;cursor:pointer;font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-faint);">✕ KAPAT</button>
+  </div>
+  <div id="shelfDrawerContent" style="padding:12px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;"></div>
+</div>
 <!-- MODAL DİYALOG SİSTEMİ -->
 <div id="noraModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:20000;align-items:center;justify-content:center;padding:20px;">
   <div id="noraModalBox" style="background:var(--paper);border:2px solid var(--ink);max-width:420px;width:100%;padding:28px;animation:toastIn 0.2s ease;">
