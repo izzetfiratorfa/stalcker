@@ -3849,10 +3849,16 @@ window.addEventListener('scroll', () => {
 
 // Mobil bottom nav aktif durumu
 function updateMobileNav(view) {
+  // Eski nav
   const map = { customer:'mbnCustomer', menu:'mbnMenu', quotes:'mbnQuotes', profile:'mbnProfile' };
   document.querySelectorAll('#mobileBottomNav button').forEach(b => b.classList.remove('active'));
   const activeId = map[view];
   if (activeId) { const el = document.getElementById(activeId); if (el) el.classList.add('active'); }
+  // Yeni mobil alt bar
+  const mobMap = { customer:'mobBtnHome', shelfview:'mobBtnRaf', pano:'mobBtnPano' };
+  document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+  const mobId = mobMap[view];
+  if (mobId) { const el = document.getElementById(mobId); if (el) el.classList.add('active'); }
 }
 
 // Buton success feedback
@@ -12858,9 +12864,8 @@ document.addEventListener('keydown', function(e) {
 // ===== PART E: MOBİL ALT BAR & STİCKY ARAMA =====
 
 function mobNav(view, btn) {
+  // Direkt showView çağır — override yok
   showView(view);
-  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
   closeMobMore();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -12876,8 +12881,12 @@ function focusSearch(btn) {
     inp.style.boxShadow='0 0 0 3px rgba(156,122,60,0.4)';
     setTimeout(()=>inp.style.boxShadow='',1500);
   };
-  if (document.getElementById('viewCustomer')?.style.display==='none') showView('customer').then?showView('customer').then(doFocus):doFocus();
-  else doFocus();
+  const customerView = document.getElementById('viewCustomer');
+  if (!customerView || !customerView.classList.contains('active')) {
+    showView('customer').then ? showView('customer').then(doFocus) : (showView('customer'), setTimeout(doFocus, 400));
+  } else {
+    doFocus();
+  }
 }
 
 function toggleMobMore(btn) {
@@ -12889,16 +12898,6 @@ function toggleMobMore(btn) {
 function closeMobMore() {
   const m=document.getElementById('mobMoreMenu'); if(m) m.style.display='none';
   document.getElementById('mobBtnMore')?.classList.remove('active');
-}
-
-// showView aktif mob buton senkronizasyonu
-const _origShowViewMob = showView;
-async function showView(v) {
-  const r = await _origShowViewMob(v);
-  const vm={customer:'mobBtnHome',shelfview:'mobBtnRaf',pano:'mobBtnPano'};
-  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
-  if(vm[v]) document.getElementById(vm[v])?.classList.add('active');
-  return r;
 }
 
 // iOS klavye jump fix
