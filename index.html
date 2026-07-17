@@ -196,7 +196,17 @@ body.dark .adv-filter-panel { background:#111;border-color:#333; }
 .book-publisher { font-size:0.72rem;color:var(--ink-faint);margin-bottom:6px;letter-spacing:0.5px;font-family:'Courier Prime',monospace; }
 .book-publisher::before { content:'· '; }
 .book-meta { display:flex;gap:6px;flex-wrap:wrap;align-items:center; }
-.badge-shelf { background:var(--black);color:var(--white);padding:3px 10px;font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:'Courier Prime',monospace; }
+.badge-shelf {
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--black);color:var(--white);
+  padding:4px 12px 4px 8px;
+  font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  font-family:'Courier Prime',monospace;
+  border-left:3px solid var(--zone-sepia);
+  cursor:pointer;transition:background 0.15s;
+}
+.badge-shelf:hover { background:#2a2a2a; }
+.badge-shelf .shelf-code { font-size:0.95rem;font-weight:700;color:var(--zone-sepia); }
 .badge-status { padding:3px 10px;font-size:0.72rem;font-weight:700;letter-spacing:1px;font-family:'Courier Prime',monospace;border:1.5px solid; }
 .status-yerlesik { border-color:var(--green);color:var(--green);background:var(--green-bg); }
 .status-borrowed { border-color:var(--red);color:var(--red);background:var(--red-bg); }
@@ -6878,14 +6888,18 @@ function doSearch() {
     } else if (didYouMeanEl) { didYouMeanEl.style.display = 'none'; }
 
     showTerminal(terminalMsg('found') + ' ' + filtered.length + ' records.', '#39ff14');
-    // 20. Sonuç sayısı
-    titleEl.textContent = filtered.length + ' kitap bulundu' + (q ? ' — "' + q + '"' : '');
-    // 253. Sonuç yoksa kaydet
+    // 253. Sonuç yoksa kaydet + özel ekran göster
     if (q && filtered.length === 0) {
       const missed = JSON.parse(localStorage.getItem('nora_missed_searches') || '{}');
       missed[q] = (missed[q] || 0) + 1;
       localStorage.setItem('nora_missed_searches', JSON.stringify(missed));
+      titleEl.textContent = '';
+      container.innerHTML = renderZeroResults(q);
+      updateAdvFilterSummary();
+      return;
     }
+    // 20. Sonuç sayısı
+    titleEl.innerHTML = `<span>${filtered.length} kitap</span>${q ? `<span style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);font-weight:normal;"> — "${q}"</span>` : ''}`;
     const sortedFiltered = applyCustomerSort(filtered);
     renderWithInfiniteScroll(sortedFiltered, container);
     if (q) {
@@ -6986,7 +7000,7 @@ function renderBookCard(b) {
       <div class="book-author">${authorLinks(b.author)}${ratingHtml}</div>
       ${b.publisher ? `<div class="book-publisher">${b.publisher}</div>` : ''}
       <div class="book-meta">
-        <span class="badge-shelf">📍 Raf ${b.shelf || '?'}</span>
+        <span class="badge-shelf" onclick="event.stopPropagation();filterByShelf('${(b.shelf||'').replace(/'/g,"\\'")}');" title="${b.shelf ? 'Raf '+b.shelf+'\'nin tüm kitapları' : 'Raf bilgisi yok'}">📍 <span class="shelf-code">${b.shelf || '?'}</span></span>
         ${statusBadge}
         ${b.pages ? `<span style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);">${b.pages} sf.${readTime ? ' · ~'+readTime+'sa' : ''}</span>` : ''}
         ${b.condition ? `<span style="font-family:'Courier Prime',monospace;font-size:0.65rem;padding:2px 6px;border:1px solid var(--zone-sepia);color:var(--zone-sepia);">${{cok_iyi:'Çok İyi',iyi:'İyi',orta:'Orta',kotu:'Kötü'}[b.condition]||b.condition}</span>` : ''}
@@ -7102,7 +7116,10 @@ async function openDetail(id) {
     </div>
     `}
     <div class="detail-shelf-label">rafını bul</div>
-    <div class="detail-shelf-big">RAF ${b.shelf}</div>
+    <div class="detail-shelf-big" onclick="if(_adminUnlocked)showBookOnMap('${(b.shelf||'').replace(/'/g,"\\'")}');" style="cursor:${b.shelf?'pointer':'default'};" title="${b.shelf?'Raf haritasında göster':''}">
+      RAF ${b.shelf || '?'}
+      ${b.shelf ? `<span style="font-family:'Courier Prime',monospace;font-size:0.55rem;color:var(--ink-faint);letter-spacing:2px;display:block;margin-top:-4px;">↗ haritada göster</span>` : `<span style="font-family:'Courier Prime',monospace;font-size:0.55rem;color:var(--zone-rust);letter-spacing:2px;display:block;margin-top:-4px;">raf bilgisi yok</span>`}
+    </div>
     ${b.pages ? `<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);letter-spacing:1px;margin-bottom:8px;">${b.pages} sayfa</div>` : ''}
     ${passportHtml}
     ${b.description ? `
@@ -12776,6 +12793,62 @@ document.addEventListener('keydown', function(e) {
     openPalette();
   }
 });
+
+// ===== PART A: RAF BİLGİSİ & ARAMA DENEYİMİ =====
+
+function filterByShelf(shelf) {
+  if (!shelf) return;
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.value = '';
+  activeFilter = 'Tümü'; activeTag = null;
+  if (_adminUnlocked) {
+    const sel = document.getElementById('adminFilterShelf');
+    if (sel) { sel.value = shelf; adminTableReset(); switchTab('books'); return; }
+  }
+  const container = document.getElementById('bookResults');
+  const titleEl = document.getElementById('resultsTitle');
+  const shelfBooks = books.filter(b => (b.shelf||'').trim().toUpperCase() === shelf.trim().toUpperCase() && b.genre !== 'gizli-raf' && b.status !== 'satildi');
+  titleEl.innerHTML = `<span>${shelfBooks.length} kitap</span><span style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--zone-sepia);font-weight:normal;"> — Raf ${shelf}</span> <button onclick="clearShelfFilter()" style="background:none;border:none;color:var(--zone-rust);font-family:'Courier Prime',monospace;font-size:0.65rem;cursor:pointer;margin-left:8px;">✕ filtreyi kaldır</button>`;
+  renderWithInfiniteScroll(shelfBooks, container);
+  container.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function clearShelfFilter() {
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.value = '';
+  doSearch();
+}
+
+function renderZeroResults(q) {
+  const suggestions = books.filter(b =>
+    b.genre !== 'gizli-raf' && b.status !== 'satildi' &&
+    (normalize(b.title||'').includes(normalize(q.slice(0,3))) ||
+     normalize(b.author||'').includes(normalize(q.slice(0,4))))
+  ).slice(0, 3);
+  const sug = suggestions.length ? `
+    <div style="margin-top:20px;text-align:left;max-width:400px;margin-left:auto;margin-right:auto;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">BELKİ BUNLARI ARIYORDUN</div>
+      ${suggestions.map(b=>`<div onclick="openDetail(${b.id})" style="padding:8px 12px;border-left:3px solid var(--zone-sepia);margin-bottom:6px;cursor:pointer;background:var(--paper-dark);transition:background 0.15s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--paper-dark)'">
+        <div style="font-family:'Playfair Display',serif;font-size:0.88rem;color:var(--ink);">${b.title}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">${b.author||''} ${b.shelf?'· <strong style="color:var(--zone-sepia)">Raf '+b.shelf+'</strong>':''}</div>
+      </div>`).join('')}
+    </div>` : '';
+  return `<div style="text-align:center;padding:40px 20px;">
+    <div style="font-size:2.5rem;margin-bottom:16px;">📭</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ink);margin-bottom:8px;">"${q}" raflarımızda yok.</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:20px;">Belki henüz gelmedi, belki az önce gitti.</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="addMissedToTemin('${q.replace(/'/g,"\\'")}');" style="background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 16px;cursor:pointer;letter-spacing:1px;">📋 Temin Listesine Ekle</button>
+      <button onclick="clearShelfFilter()" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 16px;cursor:pointer;letter-spacing:1px;">✕ Aramayı Temizle</button>
+    </div>
+    ${sug}
+  </div>`;
+}
+
+function addMissedToTemin(q) {
+  api('temin_listesi',{method:'POST',prefer:'return=minimal',body:JSON.stringify({title:q,priority:'normal'})})
+    .then(r=>r.ok?showToast(`📋 "${q}" temin listesine eklendi`,'#2a7a2a'):showToast('Eklenemedi','#c84040'));
+}
 
 // ===== PART 10: HARİTA, RAPORLAMA & KUTLAMA =====
 
