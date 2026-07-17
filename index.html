@@ -133,7 +133,7 @@ body.dark .adv-filter-panel { background:#111;border-color:#333; }
 .did-you-mean span:hover { color:var(--ink); }
 
 /* RESULTS */
-.results-section { padding:20px 20px 50px;max-width:600px;margin:0 auto; }
+.results-section { padding:12px 20px 50px;max-width:600px;margin:0 auto;scroll-margin-top:70px; }
 .results-title { font-size:0.68rem;color:var(--ink-faint);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border); }
 
 /* BOOK CARD */
@@ -1824,14 +1824,9 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     </div>
   </div>
 
-  <div class="isbn-row">
-    <input type="text" class="isbn-input" id="isbnInput" placeholder="ISBN ile ara (elle gir veya barkod okut)..." oninput="isbnSearch()" inputmode="numeric">
-    <button class="btn-isbn" onclick="openBarcodeScanner()">📷 Barkod Tara</button>
-  </div>
-
-  <!-- Sonuçlar — arama kutusunun hemen altında -->
+  <!-- Sonuçlar — arama kutusunun HEMEN altında -->
   <div class="did-you-mean" id="didYouMean" style="display:none;"></div>
-  <div class="results-section">
+  <div class="results-section" id="resultsSection">
     <div class="results-title" id="resultsTitle"></div>
     <!-- 39. Dönemsel kürasyon banner -->
     <div id="curatedBanner" style="display:none;margin-bottom:12px;padding:10px 14px;border-left:4px solid var(--gold);background:var(--gold-bg);font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--gold);letter-spacing:1px;cursor:pointer;" onclick="document.getElementById('curatedBanner').style.display='none'">
@@ -1840,8 +1835,14 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <div id="bookResults"></div>
   </div>
 
-  <!-- Filtreler & etiketler — sonuçların altında -->
-  <div class="serendipity-msg" id="serendipityMsg"></div>
+  <!-- Gizlenebilir araçlar — arama aktif değilken görünür -->
+  <div id="discoveryTools" style="transition:opacity 0.2s;">
+    <div class="isbn-row">
+      <input type="text" class="isbn-input" id="isbnInput" placeholder="ISBN ile ara..." oninput="isbnSearch()" inputmode="numeric">
+      <button class="btn-isbn" onclick="openBarcodeScanner()">📷 Barkod Tara</button>
+    </div>
+    <div class="serendipity-msg" id="serendipityMsg"></div>
+  </div>
 
   <!-- 21-22. Kaç saatin var + 49. Sayfa sıralaması -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 20px 0;">
@@ -3999,6 +4000,9 @@ function lockAdmin() {
 let _searchDebounceTimer = null;
 function onSearchInput() {
   const val = document.getElementById('searchInput').value.trim();
+  // Arama kutusu boşaldıysa discovery tools'u göster
+  const dt = document.getElementById('discoveryTools');
+  if (!val && dt) dt.style.display = '';
   if (val.startsWith('/')) {
     document.getElementById('autocompleteList').style.display = 'none';
     return;
@@ -6944,6 +6948,19 @@ function doSearch() {
     }
     // 20. Sonuç sayısı
     titleEl.innerHTML = `<span>${filtered.length} kitap</span>${q ? `<span style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);font-weight:normal;"> — "${q}"</span>` : ''}`;
+
+    // Arama yapılınca sonuçlara scroll et + discovery tools gizle
+    const discoveryTools = document.getElementById('discoveryTools');
+    if (q || filtered.length > 0) {
+      if (discoveryTools) discoveryTools.style.display = 'none';
+      // Küçük gecikme — render bitmesini bekle
+      requestAnimationFrame(() => {
+        const resultsEl = document.getElementById('resultsSection') || document.getElementById('bookResults');
+        if (resultsEl) resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    } else {
+      if (discoveryTools) discoveryTools.style.display = '';
+    }
     const sortedFiltered = applyCustomerSort(filtered);
     renderWithInfiniteScroll(sortedFiltered, container);
     if (q) {
