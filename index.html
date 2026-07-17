@@ -1037,6 +1037,8 @@ body.dark .radio-embed-wrap { border-color:#1a3a1a; }
 .dropdown-item { background:transparent;border:none;border-bottom:1px solid #222;color:#888;padding:12px 18px;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;text-align:left;transition:all 0.15s;white-space:nowrap; }
 .dropdown-item:hover { color:#fff;background:#1a1a1a; }
 .dropdown-item.active { color:#fff;background:#222; }
+.dropdown:hover .dropdown-menu { display:flex !important; }
+.btn-mode.dropdown-active { border-bottom:2px solid var(--white) !important;color:var(--white) !important; }
 .dropdown > .btn-mode::after { content:' ▾';font-size:0.6rem;opacity:0.6; }
 
 
@@ -1658,42 +1660,71 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 <header>
   <div class="logo">NORA KİTAPLIĞI</div>
   <div class="header-btns">
+    <!-- Sabit ana butonlar -->
     <button class="btn-mode active" id="btnCustomer" onclick="showView('customer')">Kitap Ara</button>
     <button class="btn-mode" id="btnShelfView" onclick="showView('shelfview')">📚 Raf</button>
-    <button class="btn-mode" id="btnQuotes" onclick="showView('quotes')">Nora Quotes</button>
-    <button class="btn-mode" id="btnUniverse" onclick="showView('universe')">Kitap Evreni</button>
-    <button class="btn-mode" id="btnIletisim" onclick="showView('iletisim')" style="color:var(--zone-sepia);">İletişim</button>
-    <button class="btn-mode" id="btnManifesto" onclick="showView('manifesto')" style="color:var(--zone-sepia);">Manifesto</button>
-    <button class="btn-mode" id="btnSozluk" onclick="showView('sozluk')" style="color:var(--zone-sepia);">Sahaf Sözlüğü</button>
-    <button class="btn-mode" id="btnStats" onclick="showView('stats')">İstatistik</button>
-    <button class="btn-mode" id="btnProfile" onclick="showView('profile')">Profilim</button>
-    <div class="dropdown">
-      <button class="btn-mode" id="btnAskida" style="color:#c8a86b;border-left-color:#3a2a0a;">❤ Askıda Kitap</button>
-      <div class="dropdown-menu">
+
+    <!-- KEŞFET dropdown -->
+    <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
+      <button class="btn-mode" id="btnKesfet" style="color:var(--zone-water);">Keşfet ▾</button>
+      <div class="dropdown-menu" style="display:none;">
+        <button class="dropdown-item" id="btnQuotes" onclick="showView('quotes')">✦ Nora Quotes</button>
+        <button class="dropdown-item" id="btnUniverse" onclick="showView('universe')">🌌 Kitap Evreni</button>
+        <button class="dropdown-item" id="btnStats" onclick="showView('stats')">📊 İstatistik</button>
+        <button class="dropdown-item" id="btnMood" onclick="showView('mood')">✦ Ruh Hali</button>
+        <button class="dropdown-item" id="btnBlind" onclick="showView('blind')">? Kör Buluşma</button>
+        <button class="dropdown-item" id="btnWheel" onclick="openWheel()">🎡 Kitap Çarkı</button>
+      </div>
+    </div>
+
+    <!-- NORA dropdown -->
+    <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
+      <button class="btn-mode" id="btnNoraMenu" style="color:var(--gold);">Nora ▾</button>
+      <div class="dropdown-menu" style="display:none;">
+        <button class="dropdown-item" id="btnPano" onclick="showView('pano')">📌 Pano</button>
+        <button class="dropdown-item" id="btnMenu" onclick="showView('menu')" style="color:#9c7a3c;">☕ Menü</button>
+        <button class="dropdown-item" id="btnDiary" onclick="showView('diary')" style="color:#9c7a3c;">📔 Günlük</button>
+        <button class="dropdown-item" id="btnSahaf" onclick="showView('sahaf')" style="color:#c8a86b;">📦 Nora Sahaf</button>
+        <button class="dropdown-item" id="btnRadio" onclick="showView('radio')" style="color:#1DB954;">📻 NoRa.dio</button>
+        <button class="dropdown-item" id="btnManifesto" onclick="showView('manifesto')">◈ Manifesto</button>
+        <button class="dropdown-item" id="btnSozluk" onclick="showView('sozluk')">📖 Sahaf Sözlüğü</button>
+      </div>
+    </div>
+
+    <!-- ASKIDA dropdown -->
+    <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
+      <button class="btn-mode" id="btnAskida" style="color:#c8a86b;border-left-color:#3a2a0a;">❤ Askıda ▾</button>
+      <div class="dropdown-menu" style="display:none;">
         <button class="dropdown-item" id="btnAskidaKitaplar" onclick="showView('askida')">Kitaplar & Dağıtım</button>
         <button class="dropdown-item" id="btnAskidaBagis" onclick="showView('bagiscilar')">Bağışçılar</button>
       </div>
     </div>
-    <button class="btn-mode" id="btnRadio" onclick="showView('radio')" style="color:#1DB954;border-left-color:#0a2a0a;">📻 NoRa.dio</button>
-    <button class="btn-mode" id="btnMood" onclick="showView('mood')">✦ Ruh Hali</button>
-    <button class="btn-mode" id="btnBlind" onclick="showView('blind')">? Kör Buluşma</button>
-    <button class="btn-mode" id="btnDiary" onclick="showView('diary')" style="color:#9c7a3c;">📔 Günlük</button>
-    <button class="btn-mode" id="btnSahaf" onclick="showView('sahaf')" style="color:#c8a86b;">📦 Nora Sahaf</button>
-    <button class="btn-mode" id="btnPano" onclick="showView('pano')" style="color:#8B4513;">📌 Pano</button>
-    <button class="btn-mode" id="btnMenu" onclick="showView('menu')" style="color:#9c7a3c;">☕ Menü</button>
-    <button class="btn-mode" id="btnWheel" onclick="openWheel()" title="Kitap Çarkı">🎡 Çark</button>
-    <button class="dark-toggle" onclick="changeFontSize(-1)" title="Yazıyı küçült" style="font-size:0.7rem;letter-spacing:0;">A-</button>
-    <button class="dark-toggle" onclick="changeFontSize(1)" title="Yazıyı büyüt" style="font-size:0.9rem;letter-spacing:0;">A+</button>
-    <button class="dark-toggle" id="contrastToggle" onclick="toggleHighContrast()" title="Yüksek kontrast">◑</button>
-    <button class="dark-toggle" onclick="toggleColorBlindMode()" title="Renk körü modu">👁</button>
-    <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Karanlık mod">◐</button>
-    <button class="dark-toggle" onclick="openProfileModal()" title="Profil & tercihler" style="font-size:0.8rem;">👤</button>
-    <div class="user-badge" id="userBadge" style="display:none;">
-      <span id="userLabel"></span>
-      <button onclick="signOut()">çıkış</button>
+
+    <!-- İLETİŞİM dropdown -->
+    <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
+      <button class="btn-mode" id="btnIletisimMenu" style="color:var(--zone-sepia);">İletişim ▾</button>
+      <div class="dropdown-menu" style="display:none;">
+        <button class="dropdown-item" id="btnIletisim" onclick="showView('iletisim')">📞 Bize Ulaşın</button>
+        <button class="dropdown-item" id="btnProfile" onclick="showView('profile')">👤 Profilim</button>
+        <button class="dropdown-item" onclick="showPrivacyPolicy()">🔒 Gizlilik</button>
+        <button class="dropdown-item" onclick="showBadgesPage()">🎖 Rozetlerim</button>
+      </div>
     </div>
-    <button class="btn-mode" id="btnAuthOpen" onclick="openAuth()">Giriş Yap</button>
-    <button class="btn-mode" id="btnAdmin" onclick="showAdminLogin()">Yönetim</button>
+
+    <!-- Sağ taraf: erişilebilirlik + auth + admin -->
+    <div style="margin-left:auto;display:flex;align-items:stretch;gap:0;">
+      <button class="dark-toggle" onclick="changeFontSize(-1)" title="Yazıyı küçült" style="font-size:0.7rem;letter-spacing:0;">A-</button>
+      <button class="dark-toggle" onclick="changeFontSize(1)" title="Yazıyı büyüt" style="font-size:0.9rem;letter-spacing:0;">A+</button>
+      <button class="dark-toggle" id="contrastToggle" onclick="toggleHighContrast()" title="Yüksek kontrast">◑</button>
+      <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Karanlık mod">◐</button>
+      <button class="dark-toggle" onclick="openProfileModal()" title="Profil & tercihler" style="font-size:0.8rem;">👤</button>
+      <div class="user-badge" id="userBadge" style="display:none;">
+        <span id="userLabel"></span>
+        <button onclick="signOut()">çıkış</button>
+      </div>
+      <button class="btn-mode" id="btnAuthOpen" onclick="openAuth()">Giriş Yap</button>
+      <button class="btn-mode" id="btnAdmin" onclick="showAdminLogin()">Yönetim</button>
+    </div>
   </div>
 </header>
 
@@ -3821,9 +3852,23 @@ function loadD3ThenRender() {
 async function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.add('active');
-  ['btnCustomer','btnShelfView','btnQuotes','btnUniverse','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano','btnMenu','btnIletisim','btnManifesto','btnSozluk'].forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('active'); });
-  const btnMap = {customer:'btnCustomer', quotes:'btnQuotes', universe:'btnUniverse', stats:'btnStats', admin:'btnAdmin', profile:'btnProfile', askida:'btnAskida', bagiscilar:'btnAskida', radio:'btnRadio', mood:'btnMood', blind:'btnBlind', diary:'btnDiary', sahaf:'btnSahaf', pano:'btnPano', menu:'btnMenu', iletisim:'btnIletisim', manifesto:'btnManifesto', sozluk:'btnSozluk', shelfview:'btnShelfView'};
-  if (btnMap[v]) document.getElementById(btnMap[v]).classList.add('active');
+  ['btnCustomer','btnShelfView','btnKesfet','btnNoraMenu','btnAskida','btnIletisimMenu','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano','btnMenu','btnIletisim','btnManifesto','btnSozluk','btnQuotes','btnUniverse'].forEach(id => { const el=document.getElementById(id); if(el) { el.classList.remove('active'); el.classList.remove('dropdown-active'); } });
+  const btnMap = {
+    customer:'btnCustomer', shelfview:'btnShelfView',
+    quotes:'btnKesfet', universe:'btnKesfet', stats:'btnKesfet', mood:'btnKesfet', blind:'btnKesfet',
+    pano:'btnNoraMenu', menu:'btnNoraMenu', diary:'btnNoraMenu', sahaf:'btnNoraMenu', radio:'btnNoraMenu', manifesto:'btnNoraMenu', sozluk:'btnNoraMenu',
+    askida:'btnAskida', bagiscilar:'btnAskida',
+    iletisim:'btnIletisimMenu', profile:'btnIletisimMenu',
+    admin:'btnAdmin'
+  };
+  const dropdownParents = ['btnKesfet','btnNoraMenu','btnAskida','btnIletisimMenu'];
+  if (btnMap[v]) {
+    const targetBtn = document.getElementById(btnMap[v]);
+    if (targetBtn) {
+      if (dropdownParents.includes(btnMap[v])) targetBtn.classList.add('dropdown-active');
+      else targetBtn.classList.add('active');
+    }
+  }
   updateMobileNav(v);
   window.scrollTo(0, 0);
   // dropdown item active state
