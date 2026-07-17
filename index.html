@@ -672,6 +672,26 @@ body.dark .serendipity-msg { background:#111;border-color:#333;color:#b0aa9f; }
 @keyframes successPop { 0%{transform:scale(0.8);opacity:0} 50%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
 .save-success { animation:successPop 0.4s ease; }
 
+/* Mobil Alt Bar */
+.mob-nav-btn { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:none;border:none;color:#666;cursor:pointer;gap:2px;padding:6px 0;transition:color 0.15s; }
+.mob-nav-btn.active { color:#fff; }
+.mob-nav-btn:active { background:rgba(255,255,255,0.05); }
+.mob-nav-icon { font-size:1.2rem;line-height:1; }
+.mob-nav-label { font-family:'Courier Prime',monospace;font-size:0.5rem;letter-spacing:1px;text-transform:uppercase; }
+.mob-more-item { background:none;border:none;border-bottom:1px solid #1a1a1a;color:#888;font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;padding:14px 8px;cursor:pointer;text-align:center;transition:background 0.1s; }
+.mob-more-item:hover, .mob-more-item:active { background:#1a1a1a;color:#fff; }
+
+/* Sticky arama — mobilde sabit */
+@media (max-width:600px) {
+  .customer-hero { position:sticky;top:56px;z-index:300;padding-bottom:8px; }
+  #bookResults { scroll-margin-top:120px; }
+  body { padding-bottom:54px; }
+  #mobileBottomBar { display:block !important; }
+  header { position:sticky;top:0;z-index:400; }
+  /* Klavye açılınca kaymasını önle */
+  .search-row input:focus { font-size:16px; }
+}
+
 /* ===== KİTAP ÇARKI ===== */
 .wheel-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;flex-direction:column;padding:20px; }
 .wheel-overlay.open { display:flex; }
@@ -12818,6 +12838,61 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ===== PART E: MOBİL ALT BAR & STİCKY ARAMA =====
+
+function mobNav(view, btn) {
+  showView(view);
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  closeMobMore();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function focusSearch(btn) {
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  closeMobMore();
+  const doFocus = () => {
+    const inp=document.getElementById('searchInput'); if(!inp) return;
+    inp.focus(); inp.scrollIntoView({behavior:'smooth',block:'start'});
+    inp.style.transition='box-shadow 0.3s';
+    inp.style.boxShadow='0 0 0 3px rgba(156,122,60,0.4)';
+    setTimeout(()=>inp.style.boxShadow='',1500);
+  };
+  if (document.getElementById('viewCustomer')?.style.display==='none') showView('customer').then?showView('customer').then(doFocus):doFocus();
+  else doFocus();
+}
+
+function toggleMobMore(btn) {
+  const menu=document.getElementById('mobMoreMenu'); if(!menu) return;
+  if (menu.style.display==='block') { closeMobMore(); return; }
+  menu.style.display='block'; btn?.classList.add('active');
+  setTimeout(()=>document.addEventListener('click',function h(e){if(!e.target.closest('#mobMoreMenu')&&!e.target.closest('#mobBtnMore'))closeMobMore();document.removeEventListener('click',h);},{once:true}),100);
+}
+function closeMobMore() {
+  const m=document.getElementById('mobMoreMenu'); if(m) m.style.display='none';
+  document.getElementById('mobBtnMore')?.classList.remove('active');
+}
+
+// showView aktif mob buton senkronizasyonu
+const _origShowViewMob = showView;
+async function showView(v) {
+  const r = await _origShowViewMob(v);
+  const vm={customer:'mobBtnHome',shelfview:'mobBtnRaf',pano:'mobBtnPano'};
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  if(vm[v]) document.getElementById(vm[v])?.classList.add('active');
+  return r;
+}
+
+// iOS klavye jump fix
+setTimeout(()=>{
+  const inp=document.getElementById('searchInput'); if(!inp) return;
+  inp.addEventListener('focus',()=>{
+    if(window.innerWidth>600) return;
+    setTimeout(()=>inp.scrollIntoView({behavior:'smooth',block:'start'}),300);
+  });
+},1000);
+
 // ===== PART D: YÜKLENİYOR & RAF KÖPRÜSÜ =====
 
 function showAdminSkeleton() {
@@ -16249,6 +16324,46 @@ function observeLazyImages() {
 </script>
 <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Sayfa sesi">🔊 SES</button>
 <div id="redStar" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);font-size:1.1rem;z-index:500;cursor:pointer;" onclick="triggerEasterEgg('/samizdat')" title="★">★</div>
+<!-- MOBİL ALT NAVBAR -->
+<nav id="mobileBottomBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--black);border-top:1px solid #2a2a2a;z-index:7000;height:54px;">
+  <div style="display:flex;height:100%;">
+    <button class="mob-nav-btn active" id="mobBtnHome" onclick="mobNav('customer',this)">
+      <span class="mob-nav-icon">🏠</span>
+      <span class="mob-nav-label">Kitaplar</span>
+    </button>
+    <button class="mob-nav-btn" id="mobBtnRaf" onclick="mobNav('shelfview',this)">
+      <span class="mob-nav-icon">📚</span>
+      <span class="mob-nav-label">Raf</span>
+    </button>
+    <button class="mob-nav-btn" id="mobBtnSearch" onclick="focusSearch(this)">
+      <span class="mob-nav-icon">🔍</span>
+      <span class="mob-nav-label">Ara</span>
+    </button>
+    <button class="mob-nav-btn" id="mobBtnPano" onclick="mobNav('pano',this)">
+      <span class="mob-nav-icon">📌</span>
+      <span class="mob-nav-label">Pano</span>
+    </button>
+    <button class="mob-nav-btn" id="mobBtnMore" onclick="toggleMobMore(this)">
+      <span class="mob-nav-icon">☰</span>
+      <span class="mob-nav-label">Daha</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBİL DAHA FAZLA MENÜ -->
+<div id="mobMoreMenu" style="display:none;position:fixed;bottom:54px;left:0;right:0;background:var(--black);border-top:1px solid #2a2a2a;z-index:6999;padding:8px 0;animation:toastIn 0.2s ease;">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;">
+    <button onclick="mobNav('universe',null);closeMobMore()" class="mob-more-item">🌌 Evren</button>
+    <button onclick="mobNav('stats',null);closeMobMore()" class="mob-more-item">📊 İstatistik</button>
+    <button onclick="mobNav('quotes',null);closeMobMore()" class="mob-more-item">✦ Quotes</button>
+    <button onclick="mobNav('menu',null);closeMobMore()" class="mob-more-item">☕ Menü</button>
+    <button onclick="mobNav('iletisim',null);closeMobMore()" class="mob-more-item">📞 İletişim</button>
+    <button onclick="openProfileModal();closeMobMore()" class="mob-more-item">👤 Profil</button>
+    <button onclick="mobNav('mood',null);closeMobMore()" class="mob-more-item">✦ Ruh Hali</button>
+    <button onclick="mobNav('diary',null);closeMobMore()" class="mob-more-item">📔 Günlük</button>
+    <button onclick="showAdminLogin();closeMobMore()" class="mob-more-item" style="color:#c8a030;">⚙ Yönetim</button>
+  </div>
+</div>
 <!-- RAF DRAWER -->
 <div id="shelfDrawer" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--paper);border-top:2px solid var(--ink);z-index:8000;max-height:55vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s ease;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--paper);">
