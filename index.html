@@ -6889,12 +6889,22 @@ function doSearch() {
 
     showTerminal(terminalMsg('found') + ' ' + filtered.length + ' records.', '#39ff14');
     // 253. Sonuç yoksa kaydet + özel ekran göster
-    if (q && filtered.length === 0) {
-      const missed = JSON.parse(localStorage.getItem('nora_missed_searches') || '{}');
-      missed[q] = (missed[q] || 0) + 1;
-      localStorage.setItem('nora_missed_searches', JSON.stringify(missed));
-      titleEl.textContent = '';
-      container.innerHTML = renderZeroResults(q);
+    if (filtered.length === 0) {
+      titleEl.innerHTML = '';
+      if (q) {
+        const missed = JSON.parse(localStorage.getItem('nora_missed_searches') || '{}');
+        missed[q] = (missed[q] || 0) + 1;
+        localStorage.setItem('nora_missed_searches', JSON.stringify(missed));
+        container.innerHTML = renderZeroResults(q);
+      } else {
+        // Filtreli sıfır — arama yok ama filtre uygulanmış
+        container.innerHTML = `<div style="text-align:center;padding:32px 20px;">
+          <div style="font-size:1.8rem;margin-bottom:10px;">🔍</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--ink);margin-bottom:8px;">Bu filtre kombinasyonuyla eşleşen kitap yok.</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-bottom:14px;">Farklı bir tür, yayınevi veya fiyat aralığı deneyin.</div>
+          <button onclick="clearAdvFilters();doSearch();" style="background:none;border:1px solid var(--zone-rust);color:var(--zone-rust);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:8px 16px;cursor:pointer;letter-spacing:1px;">✕ Filtreleri Temizle</button>
+        </div>`;
+      }
       updateAdvFilterSummary();
       return;
     }
@@ -12794,6 +12804,155 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ===== PART C: MODAL DİYALOG & FORM DOĞRULAMA =====
+
+let _modalResolve = null;
+
+function noraModal({ title, msg, icon='❓', type='confirm', placeholder='', inputValue='', confirmLabel='Evet', cancelLabel='İptal', danger=false }) {
+  return new Promise(resolve => {
+    _modalResolve = resolve;
+    const modal = document.getElementById('noraModal');
+    const box = document.getElementById('noraModalBox');
+    if (!modal) { resolve(type==='confirm'?false:null); return; }
+    document.getElementById('noraModalIcon').textContent = icon;
+    document.getElementById('noraModalTitle').textContent = title || '';
+    document.getElementById('noraModalMsg').textContent = msg || '';
+    const inputWrap = document.getElementById('noraModalInput');
+    const inputField = document.getElementById('noraModalInputField');
+    if (type === 'prompt') {
+      inputWrap.style.display = 'block';
+      inputField.value = inputValue || '';
+      inputField.placeholder = placeholder || '';
+      setTimeout(() => inputField.focus(), 100);
+      inputField.onkeydown = e => { if(e.key==='Enter') modalConfirm(); if(e.key==='Escape') modalCancel(); };
+    } else { inputWrap.style.display = 'none'; }
+    const bColor = danger ? '#c84040' : '#9c7a3c';
+    box.style.borderColor = bColor;
+    box.style.borderLeftWidth = '4px';
+    const btns = document.getElementById('noraModalBtns');
+    btns.innerHTML = '';
+    if (type !== 'alert') {
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = cancelLabel;
+      cancelBtn.style.cssText = 'background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:"Courier Prime",monospace;font-size:0.72rem;padding:9px 20px;cursor:pointer;letter-spacing:1px;';
+      cancelBtn.onclick = modalCancel;
+      btns.appendChild(cancelBtn);
+    }
+    const confirmBtn = document.createElement('button');
+    confirmBtn.textContent = type === 'alert' ? 'Tamam' : confirmLabel;
+    confirmBtn.style.cssText = `background:${danger?'#c84040':'var(--ink)'};color:${danger?'#fff':'var(--paper)'};border:none;font-family:"Courier Prime",monospace;font-size:0.72rem;padding:9px 24px;cursor:pointer;letter-spacing:1px;`;
+    confirmBtn.onclick = modalConfirm;
+    btns.appendChild(confirmBtn);
+    modal.style.display = 'flex';
+    document.addEventListener('keydown', modalKeyHandler);
+  });
+}
+
+function modalConfirm() {
+  const modal = document.getElementById('noraModal');
+  const inputField = document.getElementById('noraModalInputField');
+  const inputWrap = document.getElementById('noraModalInput');
+  modal.style.display = 'none';
+  document.removeEventListener('keydown', modalKeyHandler);
+  if (_modalResolve) {
+    const val = inputWrap.style.display !== 'none' ? (inputField.value || null) : true;
+    _modalResolve(val); _modalResolve = null;
+  }
+}
+function modalCancel() {
+  document.getElementById('noraModal').style.display = 'none';
+  document.removeEventListener('keydown', modalKeyHandler);
+  if (_modalResolve) { _modalResolve(false); _modalResolve = null; }
+}
+function modalKeyHandler(e) {
+  if (e.key === 'Escape') modalCancel();
+  if (e.key === 'Enter' && document.getElementById('noraModalInput')?.style.display === 'none') modalConfirm();
+}
+setTimeout(() => {
+  document.getElementById('noraModal')?.addEventListener('click', function(e) { if(e.target===this) modalCancel(); });
+}, 500);
+
+function noraConfirm(msg, opts={}) {
+  return noraModal({ title:opts.title||'Emin misin?', msg, icon:opts.icon||'❓', type:'confirm', confirmLabel:opts.confirmLabel||'Evet', cancelLabel:opts.cancelLabel||'İptal', danger:opts.danger||false });
+}
+function noraAlert(msg, opts={}) {
+  return noraModal({ title:opts.title||'Bilgi', msg, icon:opts.icon||'ℹ', type:'alert' });
+}
+function noraPrompt(msg, opts={}) {
+  return noraModal({ title:opts.title||'Giriş', msg, icon:opts.icon||'✏', type:'prompt', placeholder:opts.placeholder||'', inputValue:opts.default||'' });
+}
+function noraDeleteConfirm(itemName) {
+  return noraModal({ title:'Silmek istediğine emin misin?', msg:itemName?`"${itemName}" kalıcı olarak silinecek.`:'Bu kayıt kalıcı olarak silinecek.', icon:'🗑', type:'confirm', confirmLabel:'Evet, Sil', cancelLabel:'İptal', danger:true });
+}
+
+// Kritik silme işlemlerini noraModal'a çevir
+async function deleteBook(id) {
+  const b = books.find(x=>x.id===id);
+  const ok = await noraDeleteConfirm(b?.title||'Bu kitap');
+  if (!ok) return;
+  await api('books?id=eq.'+id, { method:'DELETE' });
+  if (b) await api('books_archive',{method:'POST',prefer:'return=minimal',body:JSON.stringify({original_id:id,data:b,deleted_at:new Date().toISOString(),reason:'manuel silme'})});
+  await fetchBooks(); renderAdminTable(); logAction('silindi',id,b?.title);
+  showToast(`🗑 "${b?.title||'Kitap'}" arşive taşındı`,'#9c7a3c',{action:{label:'Geri Al',fn:async()=>{const {id:_,...rest}=b;await api('books',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rest)});await fetchBooks();renderAdminTable();showToast('↩ Geri yüklendi');}}});
+}
+
+// Form doğrulama
+const FIELD_RULES = {
+  fTitle: { label:'Kitap Adı', required:true },
+  fPrice: { label:'Fiyat', required:false, type:'number', min:0 },
+  fPages: { label:'Sayfa Sayısı', required:false, type:'number', min:1, max:9999 },
+  fYear:  { label:'Yayın Yılı', required:false, type:'number', min:800, max:new Date().getFullYear()+2 },
+};
+
+function validateBookForm() {
+  let valid = true; clearFieldErrors();
+  for (const [fieldId, rule] of Object.entries(FIELD_RULES)) {
+    const el = document.getElementById(fieldId); if (!el) continue;
+    const val = el.value.trim();
+    if (rule.required && !val) { showFieldError(fieldId, `${rule.label} zorunludur`); valid = false; continue; }
+    if (val && rule.type === 'number') {
+      const n = parseFloat(val);
+      if (isNaN(n)) { showFieldError(fieldId, `${rule.label} sayı olmalı`); valid = false; continue; }
+      if (rule.min !== undefined && n < rule.min) { showFieldError(fieldId, `En az ${rule.min} olmalı`); valid = false; continue; }
+      if (rule.max !== undefined && n > rule.max) { showFieldError(fieldId, `En fazla ${rule.max} olmalı`); valid = false; continue; }
+    }
+  }
+  const tagsEl = document.getElementById('fTags');
+  if (tagsEl) { const c=checkTagConflicts(tagsEl.value); if(c) showFieldWarning('fTags',c); }
+  return valid;
+}
+
+function showFieldError(fieldId, msg) {
+  const el = document.getElementById(fieldId); if (!el) return;
+  el.style.borderColor = '#c84040'; el.style.boxShadow = '0 0 0 2px rgba(200,64,64,0.15)';
+  let err = el.parentElement.querySelector('.field-error-msg');
+  if (!err) { err=document.createElement('div'); err.className='field-error-msg'; err.style.cssText='font-family:"Courier Prime",monospace;font-size:0.62rem;color:#c84040;margin-top:3px;'; el.parentElement.appendChild(err); }
+  err.innerHTML = `✗ ${msg}`;
+  el.addEventListener('input', ()=>clearFieldError(fieldId), {once:true});
+}
+function showFieldWarning(fieldId, msg) {
+  const el = document.getElementById(fieldId); if (!el) return;
+  el.style.borderColor = '#c87020';
+  let w = el.parentElement.querySelector('.field-warn-msg');
+  if (!w) { w=document.createElement('div'); w.className='field-warn-msg'; w.style.cssText='font-family:"Courier Prime",monospace;font-size:0.62rem;color:#c87020;margin-top:3px;'; el.parentElement.appendChild(w); }
+  w.innerHTML = `⚠ ${msg}`;
+}
+function clearFieldError(fieldId) {
+  const el=document.getElementById(fieldId); if(!el) return;
+  el.style.borderColor=''; el.style.boxShadow='';
+  el.parentElement.querySelector('.field-error-msg')?.remove();
+  el.parentElement.querySelector('.field-warn-msg')?.remove();
+}
+function clearFieldErrors() { Object.keys(FIELD_RULES).forEach(clearFieldError); }
+
+// Sayısal alanlara harf girilemesin
+setTimeout(() => {
+  ['fPrice','fPages','fYear'].forEach(id => {
+    const el=document.getElementById(id); if(!el) return;
+    el.addEventListener('input', ()=>{ el.value=el.value.replace(/[^0-9.]/g,''); });
+  });
+}, 1000);
+
 // ===== PART A: RAF BİLGİSİ & ARAMA DENEYİMİ =====
 
 function filterByShelf(shelf) {
@@ -13944,7 +14103,7 @@ function renderEventsPanel() {
   const today=new Date().toISOString().slice(0,10);
   const upcoming=ev.filter(e=>e.date>=today);
   const past=ev.filter(e=>e.date<today);
-  if(!ev.length){el.innerHTML=zoneEmptyState('Henüz etkinlik yok.');return;}
+  if(!ev.length){el.innerHTML=zoneEmptyState('Henüz etkinlik yok.',{icon:'📅',action:{label:'+ İlk Etkinliği Ekle',onclick:"addEvent()"}});return;}
   const row=(e,ip)=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px dashed var(--border);${ip?'opacity:0.6':''}">
     <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--zone-sepia);min-width:80px;">${e.date}</div>
     <div style="flex:1;">
@@ -15051,7 +15210,7 @@ async function loadCollections() {
 function renderCollections() {
   const el = document.getElementById('collectionsPanel');
   if (!el) return;
-  if (!_collections.length) { el.innerHTML = zoneEmptyState('Henüz koleksiyon oluşturulmadı.'); return; }
+  if (!_collections.length) { el.innerHTML = zoneEmptyState('Henüz koleksiyon oluşturulmadı.', { icon:'📂', action:{ label:'+ İlk Koleksiyonu Oluştur', onclick:"createCollection()" } }); return; }
   el.innerHTML = _collections.map(c => `
     <div style="border:1.5px solid ${c.color||'var(--border-dark)'};margin-bottom:14px;background:var(--white);">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:${c.color||'var(--gold)'}12;">
@@ -15587,11 +15746,20 @@ const ZONE_QUOTES = [
 ];
 function zoneQuote() { return ZONE_QUOTES[Math.floor(Math.random() * ZONE_QUOTES.length)]; }
 
-function zoneEmptyState(msg) {
+function zoneEmptyState(msg, opts = {}) {
+  // opts: { action: {label, onclick}, icon, subtitle }
+  const icon = opts.icon || '📭';
+  const subtitle = opts.subtitle || zoneQuote();
+  const action = opts.action || null;
+  const hour = new Date().getHours();
+  const nightMsg = (hour >= 23 || hour < 5) ? '<div style="font-family:\'Courier Prime\',monospace;font-size:0.6rem;color:var(--zone-sepia);margin-top:8px;letter-spacing:1px;">— bölge gece yarısı sessiz —</div>' : '';
   return `<div style="text-align:center;padding:48px 20px;">
-    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:16px;">— BÖLGE BOŞ —</div>
-    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-style:italic;color:var(--ink-faint);line-height:1.8;max-width:400px;margin:0 auto;">"${zoneQuote()}"</div>
-    ${msg ? `<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-top:16px;">${msg}</div>` : ''}
+    <div style="font-size:2rem;margin-bottom:12px;opacity:0.5;">${icon}</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:12px;">— BÖLGE BOŞ —</div>
+    <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-style:italic;color:var(--ink-faint);line-height:1.8;max-width:380px;margin:0 auto;">"${subtitle}"</div>
+    ${msg ? `<div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-top:14px;">${msg}</div>` : ''}
+    ${action ? `<button onclick="${action.onclick}" style="margin-top:16px;background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:8px 18px;cursor:pointer;letter-spacing:1px;">${action.label}</button>` : ''}
+    ${nightMsg}
   </div>`;
 }
 
@@ -15691,32 +15859,112 @@ function renderSatisRecent() {
 
 // ===== GERİ AL TOAST =====
 function showUndoToast(msg, bookId, oldStatus) {
-  const t = document.createElement('div');
-  t.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--zone-deep);color:#e8e2d6;font-family:'Courier Prime',monospace;font-size:0.75rem;padding:10px 16px;z-index:9999;letter-spacing:1px;box-shadow:0 4px 12px rgba(0,0,0,0.4);display:flex;align-items:center;gap:14px;white-space:nowrap;`;
-  t.innerHTML = `<span>${msg}</span><button style="background:none;border:1px solid var(--zone-phosphor);color:#6abf6a;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:4px 12px;cursor:pointer;letter-spacing:1px;">GERİ AL</button>`;
-  t.querySelector('button').onclick = async () => {
-    const body = { status: oldStatus, sold_at: null };
-    await api('books?id=eq.' + bookId, { method:'PATCH', body: JSON.stringify(body) });
-    const b = books.find(x => x.id === bookId);
-    if (b) { b.status = oldStatus; b.sold_at = null; }
-    _satisRecentSales = _satisRecentSales.filter(s => s.id !== bookId);
-    renderSatisRecent(); renderSalesStats();
-    if (typeof renderAdminTable === 'function') renderAdminTable();
-    t.remove();
-    showToast('↩ Geri alındı');
-  };
-  document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.5s'; setTimeout(()=>t.remove(),500); }, 6000);
+  showToast(msg, '#2a7a2a', {
+    type: 'success', duration: 6000,
+    action: { label: 'GERİ AL', fn: async () => {
+      const body = { status: oldStatus, sold_at: null };
+      await api('books?id=eq.' + bookId, { method:'PATCH', body: JSON.stringify(body) });
+      const b = books.find(x => x.id === bookId);
+      if (b) { b.status = oldStatus; b.sold_at = null; }
+      _satisRecentSales = _satisRecentSales.filter(s => s.id !== bookId);
+      renderSatisRecent(); renderSalesStats();
+      if (typeof renderAdminTable === 'function') renderAdminTable();
+      showToast('↩ Geri alındı');
+    }}
+  });
 }
 
 // ===== TOAST BİLDİRİM =====
-function showToast(msg, color = '#9c7a3c') {
-  const t = document.createElement('div');
-  t.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${color};color:#fff;font-family:'Courier Prime',monospace;font-size:0.75rem;padding:10px 20px;z-index:9999;letter-spacing:1px;box-shadow:0 4px 12px rgba(0,0,0,0.3);white-space:nowrap;`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.5s'; setTimeout(()=>t.remove(),500); }, 3000);
+// ===== TOAST SİSTEMİ — Gelişmiş =====
+const TOAST_TYPES = {
+  success: { bg:'#1a4a1a', border:'#2a7a2a', icon:'✓' },
+  error:   { bg:'#4a1a1a', border:'#c84040', icon:'✗' },
+  warning: { bg:'#3a2a0a', border:'#c87020', icon:'⚠' },
+  info:    { bg:'#0a2a4a', border:'#2a6a9a', icon:'ℹ' },
+  default: { bg:'#2a1a08', border:'#9c7a3c', icon:'·' },
+};
+let _toastQueue = [];
+let _toastContainer = null;
+
+function getToastContainer() {
+  if (!_toastContainer || !document.body.contains(_toastContainer)) {
+    _toastContainer = document.createElement('div');
+    _toastContainer.id = 'toastContainer';
+    _toastContainer.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;min-width:200px;max-width:90vw;';
+    document.body.appendChild(_toastContainer);
+  }
+  return _toastContainer;
 }
+
+function detectToastType(msg, color) {
+  if (color === '#c84040' || color === '#c84040' || msg.startsWith('✗')) return 'error';
+  if (color === '#2a7a2a' || msg.startsWith('✓')) return 'success';
+  if (color === 'var(--zone-rust)' || msg.startsWith('⚠')) return 'warning';
+  if (color === '#2a5a8a' || color === 'var(--zone-water)') return 'info';
+  return 'default';
+}
+
+function showToast(msg, color = '#9c7a3c', opts = {}) {
+  const type = opts.type || detectToastType(msg, color);
+  const theme = TOAST_TYPES[type] || TOAST_TYPES.default;
+  const duration = opts.duration || 3500;
+  const action = opts.action || null; // { label, fn }
+
+  const container = getToastContainer();
+  const t = document.createElement('div');
+  t.style.cssText = `pointer-events:all;background:${theme.bg};border:1px solid ${theme.border};border-left:3px solid ${theme.border};color:#fff;font-family:'Courier Prime',monospace;font-size:0.75rem;padding:10px 16px;letter-spacing:0.5px;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;max-width:420px;animation:toastIn 0.2s ease;`;
+
+  const icon = document.createElement('span');
+  icon.textContent = theme.icon;
+  icon.style.cssText = `color:${theme.border};font-weight:700;flex-shrink:0;font-size:0.85rem;`;
+
+  const text = document.createElement('span');
+  text.textContent = msg;
+  text.style.flex = '1';
+
+  t.appendChild(icon);
+  t.appendChild(text);
+
+  if (action) {
+    const btn = document.createElement('button');
+    btn.textContent = action.label;
+    btn.style.cssText = `background:none;border:1px solid ${theme.border};color:${theme.border};font-family:'Courier Prime',monospace;font-size:0.65rem;padding:3px 8px;cursor:pointer;flex-shrink:0;margin-left:4px;`;
+    btn.onclick = () => { action.fn(); t.remove(); };
+    t.appendChild(btn);
+  }
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:0.7rem;padding:0 0 0 6px;flex-shrink:0;';
+  closeBtn.onclick = () => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); };
+  t.appendChild(closeBtn);
+
+  container.appendChild(t);
+
+  // Maksimum 3 toast
+  if (container.children.length > 3) container.firstChild.remove();
+
+  setTimeout(() => {
+    if (!t.parentElement) return;
+    t.style.transition = 'opacity 0.4s, transform 0.4s';
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(8px)';
+    setTimeout(() => t.remove(), 400);
+  }, duration);
+}
+
+// Toast animasyon CSS
+(function addToastCSS() {
+  const s = document.createElement('style');
+  s.textContent = `@keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }`;
+  document.head.appendChild(s);
+})();
+
+// Kısayol fonksiyonlar
+function toastSuccess(msg, action) { showToast(msg, '#2a7a2a', { type:'success', action }); }
+function toastError(msg) { showToast(msg, '#c84040', { type:'error', duration:5000 }); }
+function toastWarning(msg) { showToast(msg, '#c87020', { type:'warning' }); }
+function toastInfo(msg) { showToast(msg, '#2a5a8a', { type:'info' }); }
 
 // ===== TEMİN LİSTESİ =====
 async function addToTeminListesi(book, sourceId) {
@@ -15741,7 +15989,7 @@ async function loadTeminListesi() {
   const open = list.filter(t => !t.is_fulfilled);
   const done = list.filter(t => t.is_fulfilled);
   if (!list.length) {
-    el.innerHTML = "<div style=\"font-family:'Courier Prime',monospace;font-size:0.78rem;color:var(--ink-faint);padding:20px 0;\">Temin listesi boş.</div>";
+    el.innerHTML = zoneEmptyState('Temin listesi boş. Arama ekranında bulunamayan kitapları buradan takip edebilirsin.', {icon:'📋', action:{label:'Kataloğa Git', onclick:"showView('customer')"}});
     return;
   }
   const titleCount = {};
@@ -15927,5 +16175,17 @@ function observeLazyImages() {
 </script>
 <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Sayfa sesi">🔊 SES</button>
 <div id="redStar" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);font-size:1.1rem;z-index:500;cursor:pointer;" onclick="triggerEasterEgg('/samizdat')" title="★">★</div>
+<!-- MODAL DİYALOG SİSTEMİ -->
+<div id="noraModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:20000;align-items:center;justify-content:center;padding:20px;">
+  <div id="noraModalBox" style="background:var(--paper);border:2px solid var(--ink);max-width:420px;width:100%;padding:28px;animation:toastIn 0.2s ease;">
+    <div id="noraModalIcon" style="font-size:1.8rem;margin-bottom:12px;text-align:center;"></div>
+    <div id="noraModalTitle" style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:8px;text-align:center;font-weight:700;"></div>
+    <div id="noraModalMsg" style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-light);line-height:1.8;text-align:center;margin-bottom:20px;"></div>
+    <div id="noraModalInput" style="display:none;margin-bottom:16px;">
+      <input id="noraModalInputField" type="text" style="width:100%;box-sizing:border-box;padding:10px 12px;font-family:'Courier Prime',monospace;font-size:0.85rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);">
+    </div>
+    <div id="noraModalBtns" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;"></div>
+  </div>
+</div>
 </body>
 </html>
