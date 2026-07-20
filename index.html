@@ -934,7 +934,36 @@ body.dark .serendipity-msg { background:#111;border-color:#333;color:#b0aa9f; }
 /* 9. Modal padding rahat */
 #noraModalBox { padding:28px 32px !important; }
 @media (max-width:480px) { #noraModalBox { padding:20px 16px !important; } }
-/* ===== BÖLÜM 13: MOBİL DENEYİM ===== */
+/* ===== GRUP 1: ADMİN ÇEKİRDEK ===== */
+
+/* Acil notlar banner */
+#acilNotlarBanner { background:#7a1a0a;color:#ffd4c0;border-left:4px solid #ff4040;padding:10px 16px;font-family:'Courier Prime',monospace;font-size:0.78rem;display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;line-height:1.6; }
+#acilNotlarBanner.empty { background:#1a1a0a;color:#6a6a4a;border-color:#4a4a2a; }
+#acilNotlarBanner .acil-icon { font-size:1rem;flex-shrink:0;margin-top:1px; }
+#acilNotlarBanner .acil-text { flex:1; }
+#acilNotlarBanner .acil-edit { background:none;border:1px solid rgba(255,255,255,0.3);color:inherit;font-family:'Courier Prime',monospace;font-size:0.58rem;padding:2px 8px;cursor:pointer;flex-shrink:0; }
+
+/* Sistem sağlık panosu */
+#sistemSaglikBar { display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;margin-bottom:10px;border-bottom:1px dashed var(--border); }
+.saglik-item { display:flex;align-items:center;gap:5px;font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint); }
+.saglik-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+.saglik-ok { background:#2a7a2a; }
+.saglik-warn { background:#c87020; }
+.saglik-err { background:#c84040;animation:blink 1s step-end infinite; }
+.saglik-unk { background:#555; }
+@keyframes blink { 50%{opacity:0} }
+
+/* Kapanış raporu modal */
+#kapanis-modal { position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px; }
+#kapanis-box { background:var(--paper);border:2px solid var(--ink);max-width:480px;width:100%;padding:28px; }
+
+/* Versiyon + kota bar */
+#adminFooterBar { display:flex;justify-content:space-between;align-items:center;padding:6px 0;margin-bottom:8px;font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);border-bottom:1px dashed var(--border);flex-wrap:wrap;gap:6px; }
+.kota-bar { height:3px;background:var(--border);border-radius:2px;width:80px;display:inline-block;vertical-align:middle;margin-left:4px; }
+.kota-fill { height:100%;border-radius:2px;transition:width 0.4s; }
+
+/* Giriş denemesi */
+#loginLockBanner { display:none;background:#6a0a0a;color:#ffd4c0;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:8px 16px;text-align:center;letter-spacing:1px; }
 #pullRefreshIndicator { position:fixed;top:56px;left:50%;transform:translateX(-50%);background:var(--zone-sepia);color:var(--paper);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:6px 14px;z-index:6000;letter-spacing:1px;display:none;border-radius:0 0 4px 4px; }
 @media (max-width:600px) {
   .btn-mode, .filter-chip, .dark-toggle { min-height:40px; }
@@ -2466,6 +2495,23 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 <!-- ADMIN VIEW -->
 <div class="view" id="viewAdmin">
   <div class="admin-wrap">
+    <!-- Giriş kilitleme banner -->
+    <div id="loginLockBanner">⛔ Çok fazla yanlış giriş denemesi — <span id="lockCountdown">30</span> saniye bekle</div>
+    <!-- Acil notlar -->
+    <div id="acilNotlarBanner" class="empty">
+      <span class="acil-icon">📌</span>
+      <span class="acil-text" id="acilNotText">Acil not yok. Eklemek için düzenle.</span>
+      <button class="acil-edit" onclick="editAcilNot()">✏ Düzenle</button>
+    </div>
+    <!-- Sistem sağlık + versiyon + kota -->
+    <div id="adminFooterBar">
+      <div id="sistemSaglikBar"></div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <span id="kotaGostergesi">Supabase: —</span>
+        <span id="versiyonLabel">v<strong>8.0</strong></span>
+        <span id="adminSaatLabel"></span>
+      </div>
+    </div>
     <div class="admin-header">
       <div class="admin-title">Kitap Yönetimi <span id="bookCountLabel"></span></div>
       <div style="display:flex;gap:8px;">
@@ -2481,6 +2527,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <input type="file" id="importJSONFile" accept=".json" style="display:none;" onchange="if(this.files[0])importCatalogJSON(this.files[0])">
         <button onclick="bulkExportCSV()" title="CSV olarak indir" style="background:none;border:1px solid #2a7a2a;color:#2a7a2a;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">↓ CSV</button>
         <button onclick="toggleAdminDark()" title="Karanlık mod" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 10px;cursor:pointer;">◐</button>
+        <button onclick="showKapanis()" title="Kapanış raporu" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">🌙 Kapanış</button>
+        <button onclick="refreshAllData()" title="Verileri yenile" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 10px;cursor:pointer;">⟳</button>
         <button onclick="lockAdmin()" title="Çıkış" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">⏻ Çıkış</button>
       </div>
     </div>
@@ -4463,7 +4511,7 @@ async function showView(v) {
   if (v === 'iletisim') { renderShopStatus(); renderShopInfo(); renderSozluk(); }
   if (v === 'sozluk') renderSozluk();
   if (v === 'manifesto') {}  // static content
-  if (v === 'admin') { showAdminSkeleton(); await fetchBooks(); renderAdminTable(); renderStats(); setTimeout(()=>{ checkUntaggedWarning(); checkUnpricedWarning(); }, 2000); }
+  if (v === 'admin') { showAdminSkeleton(); await fetchBooks(); renderAdminTable(); renderStats(); setTimeout(()=>{ checkUntaggedWarning(); checkUnpricedWarning(); initAdminPanel(); }, 2000); }
   if (v === 'quotes') { await fetchQuotes(); }
   if (v === 'profile') { renderProfile(); }
   if (v === 'askida') { loadAskidaView(); }
@@ -16293,7 +16341,290 @@ function updateSelectionCounter() {
   }
 }
 
-// ===== BÖLÜM 20: GÜNLÜK + GENEL TEMİZLİK =====
+// ===== GRUP 1: ADMİN ÇEKİRDEK =====
+
+// --- Acil Notlar ---
+const ACIL_NOT_KEY = 'nora_acil_not';
+
+function loadAcilNot() {
+  const banner = document.getElementById('acilNotarBanner') || document.getElementById('acilNotlarBanner');
+  const textEl = document.getElementById('acilNotText');
+  if (!banner || !textEl) return;
+  const data = JSON.parse(localStorage.getItem(ACIL_NOT_KEY) || 'null');
+  if (data && data.text) {
+    banner.classList.remove('empty');
+    const tarih = data.updated ? new Date(data.updated).toLocaleDateString('tr-TR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    textEl.innerHTML = `<strong>⚠ ACİL:</strong> ${data.text} <span style="opacity:0.5;font-size:0.65rem;margin-left:8px;">${tarih}</span>`;
+  } else {
+    banner.classList.add('empty');
+    textEl.textContent = 'Acil not yok.';
+  }
+}
+
+async function editAcilNot() {
+  const current = JSON.parse(localStorage.getItem(ACIL_NOT_KEY) || 'null');
+  const text = await noraPrompt('Acil not:', {
+    title: '📌 Acil Not',
+    placeholder: 'Bugün ne oldu, dikkat edilmesi gereken...',
+    default: current?.text || ''
+  });
+  if (text === null) return;
+  if (!text.trim()) {
+    localStorage.removeItem(ACIL_NOT_KEY);
+  } else {
+    localStorage.setItem(ACIL_NOT_KEY, JSON.stringify({ text: text.trim(), updated: new Date().toISOString() }));
+  }
+  loadAcilNot();
+}
+
+// --- Kapanış Raporu + Onay Formu ---
+const KAPANIS_KEY = 'nora_kapanis_log';
+const KAPANIS_CHECKS = [
+  'Kasa kontrol edildi',
+  'Raflar düzenlendi',
+  'Kapılar/pencereler kilitlendi',
+  'Isıtma/klima kapatıldı',
+  'Veri yedeği alındı',
+];
+
+function showKapanis() {
+  const existing = document.getElementById('kapanis-modal');
+  if (existing) existing.remove();
+
+  const logs = JSON.parse(localStorage.getItem(KAPANIS_KEY) || '[]');
+  const lastLog = logs[0];
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('tr-TR');
+
+  const modal = document.createElement('div');
+  modal.id = 'kapanis-modal';
+  modal.innerHTML = `<div id="kapanis-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">🌙 KAPANIS RAPORU — ${todayStr}</div>
+      <button onclick="document.getElementById('kapanis-modal').remove()" style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--ink-faint);">✕</button>
+    </div>
+
+    <!-- Kontrol listesi -->
+    <div style="margin-bottom:16px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">KONTROL LİSTESİ</div>
+      ${KAPANIS_CHECKS.map((c,i) => `<label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);cursor:pointer;">
+        <input type="checkbox" id="kapCheck${i}" style="width:16px;height:16px;cursor:pointer;accent-color:var(--zone-sepia);">
+        <span style="font-family:'Courier Prime',monospace;font-size:0.75rem;">${c}</span>
+      </label>`).join('')}
+    </div>
+
+    <!-- Günün özeti -->
+    <div style="margin-bottom:14px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:6px;">GÜNÜN ÖZETİ</div>
+      <textarea id="kapanisNot" placeholder="Bugün neler oldu? Dikkat edilmesi gereken var mı? (5 satır yeter)" style="width:100%;min-height:80px;resize:vertical;font-family:'Courier Prime',monospace;font-size:0.75rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:8px;box-sizing:border-box;line-height:1.7;"></textarea>
+    </div>
+
+    <!-- Kapanış saati -->
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);">Kapanış saati:</div>
+      <input type="time" id="kapanisSaat" value="${now.toTimeString().slice(0,5)}" style="font-family:'Courier Prime',monospace;font-size:0.78rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:4px 8px;">
+    </div>
+
+    ${lastLog ? `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);margin-bottom:12px;padding:6px 8px;background:var(--paper-dark);">Son kapanış: ${new Date(lastLog.date).toLocaleDateString('tr-TR')} ${lastLog.saat||''} — ${(lastLog.not||'').slice(0,40)}${lastLog.not?.length>40?'...':''}</div>` : ''}
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveKapanis()" style="flex:1;background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.75rem;padding:10px;cursor:pointer;letter-spacing:2px;">✓ KAPAT</button>
+      <button onclick="showKapanisGecmis()" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:10px 14px;cursor:pointer;">Geçmiş</button>
+    </div>
+  </div>`;
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+function saveKapanis() {
+  const checks = KAPANIS_CHECKS.map((c,i) => ({ label:c, done: document.getElementById('kapCheck'+i)?.checked||false }));
+  const not = document.getElementById('kapanisNot')?.value || '';
+  const saat = document.getElementById('kapanisSaat')?.value || '';
+  const tamamlanan = checks.filter(c=>c.done).length;
+
+  const logs = JSON.parse(localStorage.getItem(KAPANIS_KEY) || '[]');
+  logs.unshift({ date: new Date().toISOString(), saat, not, checks, tamamlanan });
+  if (logs.length > 60) logs.pop();
+  localStorage.setItem(KAPANIS_KEY, JSON.stringify(logs));
+
+  document.getElementById('kapanis-modal')?.remove();
+  if (tamamlanan < KAPANIS_CHECKS.length) {
+    showToast(`⚠ Kapanış kaydedildi — ${KAPANIS_CHECKS.length - tamamlanan} madde eksik`, '#c87020');
+  } else {
+    showToast('✓ Kapanış tamamlandı, iyi geceler!', '#2a7a2a');
+  }
+  // Acil not temizleme önerisi
+  const acil = JSON.parse(localStorage.getItem(ACIL_NOT_KEY) || 'null');
+  if (acil?.text) {
+    setTimeout(() => noraConfirm('Acil not hâlâ aktif. Temizlensin mi?').then(ok => {
+      if (ok) { localStorage.removeItem(ACIL_NOT_KEY); loadAcilNot(); }
+    }), 500);
+  }
+}
+
+async function showKapanisGecmis() {
+  const logs = JSON.parse(localStorage.getItem(KAPANIS_KEY) || '[]');
+  if (!logs.length) { showToast('Henüz kapanış kaydı yok'); return; }
+  noraAlert(
+    logs.slice(0,7).map(l => `${new Date(l.date).toLocaleDateString('tr-TR')} ${l.saat||''} — ✓${l.tamamlanan}/${KAPANIS_CHECKS.length} — ${(l.not||'—').slice(0,35)}`).join('\n'),
+    { title:'🌙 Kapanış Geçmişi', icon:'🌙' }
+  );
+}
+
+// --- Cache yenileme ---
+async function refreshAllData() {
+  const btn = document.querySelector('[onclick="refreshAllData()"]');
+  if (btn) { btn.textContent = '⟳'; btn.style.animation = 'noraSpinner 0.8s linear infinite'; }
+  await fetchBooks();
+  renderAdminTable();
+  buildFilters();
+  if (btn) { btn.style.animation = ''; btn.textContent = '⟳'; }
+  showToast(`✓ ${books.length} kitap yüklendi`, '#2a7a2a');
+}
+
+// --- Sistem Sağlık Panosu ---
+async function checkSistemSagligi() {
+  const bar = document.getElementById('sistemSaglikBar');
+  if (!bar) return;
+
+  const checks = [
+    { label:'Supabase', test: async () => { const r = await fetch(`${SUPABASE_URL}/rest/v1/books?limit=1`, {headers:{'apikey':SUPABASE_KEY}}); return r.ok; } },
+    { label:'İnternet', test: async () => navigator.onLine },
+    { label:'LocalStorage', test: async () => { try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; } catch(e) { return false; } } },
+    { label:`Kitaplar (${books.length})`, test: async () => books.length > 0 },
+    { label:'Sync Kuyruğu', test: async () => JSON.parse(localStorage.getItem('nora_sync_queue')||'[]').length === 0, warnOnly: true },
+  ];
+
+  bar.innerHTML = '';
+  for (const c of checks) {
+    const item = document.createElement('div');
+    item.className = 'saglik-item';
+    item.innerHTML = `<span class="saglik-dot saglik-unk"></span><span>${c.label}</span>`;
+    bar.appendChild(item);
+    try {
+      const ok = await c.test();
+      const dot = item.querySelector('.saglik-dot');
+      dot.className = `saglik-dot ${ok ? 'saglik-ok' : (c.warnOnly ? 'saglik-warn' : 'saglik-err')}`;
+    } catch(e) {
+      item.querySelector('.saglik-dot').className = 'saglik-dot saglik-err';
+    }
+  }
+}
+
+// --- Supabase Kota Takibi ---
+async function checkSupabaseKota() {
+  const el = document.getElementById('kotaGostergesi');
+  if (!el) return;
+  try {
+    // Satır sayısı tahmini
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/books?select=id&limit=1`, { headers:{'apikey':SUPABASE_KEY,'Prefer':'count=exact'} });
+    const count = r.headers.get('content-range')?.split('/')[1] || books.length;
+    const pct = Math.min(100, Math.round(parseInt(count) / 500 * 100)); // 500 ücretsiz plan sınırı değil, göreceli
+    const storageKB = Math.round(JSON.stringify(books).length / 1024);
+    el.innerHTML = `Supabase: <strong>${count}</strong> satır · ~${storageKB}KB <span class="kota-bar"><span class="kota-fill" style="width:${pct}%;background:${pct>80?'#c84040':pct>50?'#c87020':'#2a7a2a'};"></span></span>`;
+  } catch(e) {
+    el.textContent = 'Supabase: —';
+  }
+}
+
+// --- Versiyon + Saat ---
+function startAdminClock() {
+  const el = document.getElementById('adminSaatLabel');
+  if (!el) return;
+  const tick = () => {
+    const now = new Date();
+    el.textContent = now.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+// --- Giriş denemesi limiti ---
+const LOGIN_ATTEMPT_KEY = 'nora_login_attempts';
+const LOGIN_LOCK_KEY = 'nora_login_locked_until';
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 30 * 1000; // 30 saniye
+
+function checkLoginLock() {
+  const lockedUntil = parseInt(localStorage.getItem(LOGIN_LOCK_KEY) || '0');
+  if (Date.now() < lockedUntil) {
+    const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+    showLoginLock(remaining);
+    return true; // kilitli
+  }
+  return false;
+}
+
+function showLoginLock(seconds) {
+  const banner = document.getElementById('loginLockBanner');
+  const countdown = document.getElementById('lockCountdown');
+  if (!banner) return;
+  banner.style.display = 'block';
+  if (countdown) countdown.textContent = seconds;
+  const interval = setInterval(() => {
+    const remaining = Math.ceil((parseInt(localStorage.getItem(LOGIN_LOCK_KEY)||'0') - Date.now()) / 1000);
+    if (remaining <= 0) {
+      banner.style.display = 'none';
+      clearInterval(interval);
+    } else if (countdown) {
+      countdown.textContent = remaining;
+    }
+  }, 1000);
+}
+
+function recordLoginAttempt(success) {
+  if (success) {
+    localStorage.removeItem(LOGIN_ATTEMPT_KEY);
+    localStorage.removeItem(LOGIN_LOCK_KEY);
+    return;
+  }
+  const attempts = parseInt(localStorage.getItem(LOGIN_ATTEMPT_KEY) || '0') + 1;
+  localStorage.setItem(LOGIN_ATTEMPT_KEY, attempts);
+  if (attempts >= MAX_LOGIN_ATTEMPTS) {
+    const lockUntil = Date.now() + LOCK_DURATION_MS;
+    localStorage.setItem(LOGIN_LOCK_KEY, lockUntil);
+    localStorage.setItem(LOGIN_ATTEMPT_KEY, '0');
+    showLoginLock(LOCK_DURATION_MS / 1000);
+    toastError(`⛔ ${MAX_LOGIN_ATTEMPTS} yanlış deneme — 30 saniye kilitlendik`);
+  }
+}
+
+// --- Erişim logu ---
+const ACCESS_LOG_KEY = 'nora_access_log';
+function logAdminAccess(action = 'login') {
+  const logs = JSON.parse(localStorage.getItem(ACCESS_LOG_KEY) || '[]');
+  logs.unshift({
+    action,
+    time: new Date().toISOString(),
+    ua: navigator.userAgent.slice(0,60),
+  });
+  if (logs.length > 100) logs.pop();
+  localStorage.setItem(ACCESS_LOG_KEY, JSON.stringify(logs));
+}
+function showAccessLog() {
+  const logs = JSON.parse(localStorage.getItem(ACCESS_LOG_KEY) || '[]');
+  if (!logs.length) { showToast('Erişim logu boş'); return; }
+  noraAlert(
+    logs.slice(0,10).map(l => `${new Date(l.time).toLocaleString('tr-TR')} — ${l.action}`).join('\n'),
+    { title:'🔐 Erişim Logu', icon:'🔐' }
+  );
+}
+
+// Admin paneli açılınca — updateMobileNav içinden tetiklenir
+function initAdminPanel() {
+  setTimeout(() => {
+    loadAcilNot();
+    checkSistemSagligi();
+    checkSupabaseKota();
+    startAdminClock();
+    logAdminAccess('panel-açıldı');
+  }, 300);
+}
+
+// Admin terminali auth'una giriş denemesi entegrasyonu
+const _origTerminalCheck = typeof _terminalCheck === 'function' ? _terminalCheck : null;
+
+// ===== GRUP 1 SONU =====
 
 // 1-2-3. Günlük: kategori, mood, etiket
 function selectDiaryMood(mood, btn) {
