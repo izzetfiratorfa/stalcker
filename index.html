@@ -11689,14 +11689,6 @@ const BACKUP_STORE_KEY = 'nora_backup_versions';
 const MAX_BACKUP_VERSIONS = 10;
 
 // Checksum hesapla (2. checksum)
-function calcChecksum(data) {
-  const str = JSON.stringify(data);
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash).toString(16).padStart(8, '0');
-}
 
 function backupCatalog(opts = {}) {
   const { incremental = false, silent = false } = opts;
@@ -11789,16 +11781,6 @@ async function quickRestoreBackup() {
 }
 
 // 5. Yedek karşılaştırma
-async function compareBackups() {
-  const versions = JSON.parse(localStorage.getItem(BACKUP_STORE_KEY) || '[]');
-  if (versions.length < 1) { showToast('Henüz yedek geçmişi yok'); return; }
-  const current = { count:books.length, checksum:calcChecksum(books), date:new Date().toISOString() };
-  noraAlert(
-    `Güncel: ${current.count} kitap, #${current.checksum.slice(0,6)}\n\n` +
-    versions.slice(0,5).map((v,i) => `${i+1}. ${new Date(v.date).toLocaleDateString('tr-TR')} — ${v.count} kitap, ${v.size_kb}KB, #${v.checksum.slice(0,6)}${v.incremental?' (artımlı)':''}`).join('\n'),
-    { title:'📊 Yedek Geçmişi', icon:'📊' }
-  );
-}
 
 // 10. Boyut takibi paneli
 function showBackupSizeInfo() {
@@ -14753,13 +14735,6 @@ function showPrivacyPolicy(){
 
 // ===== PART 7: VERİ & YEDEK & GÜVENLİK =====
 
-function compareBackups() {
-  const snaps = JSON.parse(localStorage.getItem('nora_snapshots')||'[]');
-  if (snaps.length<2){showToast('Karşılaştırma için en az 2 snapshot gerekli');return;}
-  const last=snaps[snaps.length-1],prev=snaps[snaps.length-2];
-  const diff=last.count-prev.count;
-  showToast(`📊 ${prev.date}: ${prev.count} → ${last.date}: ${last.count} (${diff>0?'+':''}${diff})`, 'var(--zone-sepia)');
-}
 
 function takeSnapshot() {
   const snaps=JSON.parse(localStorage.getItem('nora_snapshots')||'[]');
@@ -14785,15 +14760,6 @@ function getLastBackupInfo() {
   return d===0?'Bugün':d===1?'Dün':`${d} gün önce`;
 }
 
-function filterDiaryEntries() {
-  const q=(document.getElementById('diarySearch')?.value||'').toLowerCase().trim();
-  const f=document.getElementById('diaryFilter')?.value||'';
-  document.querySelectorAll('#diaryAdminList .diary-entry-row').forEach(row=>{
-    const matchQ=!q||row.textContent.toLowerCase().includes(q);
-    const matchF=!f||(f==='special'&&row.dataset.special==='true');
-    row.style.display=(matchQ&&matchF)?'':'none';
-  });
-}
 
 async function showLastYearToday() {
   const res=await api('settings?key=like.diary_%25&select=*&order=key.desc');
@@ -15456,12 +15422,6 @@ function sharePanoAsStory(text) {
 }
 
 // 138. Pano yanıt butonu
-function replyToPanoNote(noteId, noteText) {
-  const phone = localStorage.getItem('nora_whatsapp') || '';
-  const msg = `Pano ilanı hakkında: "${noteText.slice(0,50)}..."`;
-  if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
-  else showToast('WhatsApp numarası admin ayarlarına eklenmemiş');
-}
 
 // 139. Pano arşivi
 async function showPanoArchive() {
@@ -15544,16 +15504,6 @@ const EVENTS_KEY = 'nora_events';
 function getEvents() { try{return JSON.parse(localStorage.getItem(EVENTS_KEY)||'[]');}catch(e){return[];} }
 function saveEvents(ev) { localStorage.setItem(EVENTS_KEY,JSON.stringify(ev)); }
 
-function addEvent() {
-  const name=prompt('Etkinlik adı:'); if(!name) return;
-  const date=prompt('Tarih (YYYY-AA-GG):'); if(!date) return;
-  const desc=prompt('Açıklama:')||'';
-  const bookTitle=prompt('Bağlı kitap (opsiyonel):')||'';
-  const ev=getEvents();
-  ev.push({id:Date.now(),name,date,desc,bookTitle,participants:0});
-  ev.sort((a,b)=>a.date.localeCompare(b.date));
-  saveEvents(ev); renderEventsPanel(); showToast('✓ Etkinlik eklendi');
-}
 
 function renderEventsPanel() {
   const el=document.getElementById('eventsPanel'); if(!el) return;
@@ -16292,23 +16242,6 @@ function restoreFilters() {
 }
 
 // 57. Okuma listesini paylaş
-function shareReadingList() {
-  const wantBooks = Object.entries(readingList).filter(([,v])=>v==='want').map(([id])=>books.find(b=>b.id===parseInt(id))).filter(Boolean);
-  const doneBooks = Object.entries(readingList).filter(([,v])=>v==='done').map(([id])=>books.find(b=>b.id===parseInt(id))).filter(Boolean);
-  if (!wantBooks.length && !doneBooks.length) { showToast('Okuma listeniz boş', '#c84040'); return; }
-  let text = '📚 Nora Kitap Evi — Okuma Listesi\n\n';
-  if (doneBooks.length) {
-    text += '✓ OKUDUM:\n' + doneBooks.map(b=>`  • ${b.title}${b.author?' — '+b.author:''}`).join('\n') + '\n\n';
-  }
-  if (wantBooks.length) {
-    text += '📖 OKUYACAĞIM:\n' + wantBooks.map(b=>`  • ${b.title}${b.author?' — '+b.author:''}`).join('\n');
-  }
-  if (navigator.share) {
-    navigator.share({ title: 'Nora Okuma Listesi', text }).catch(()=>{});
-  } else {
-    navigator.clipboard?.writeText(text).then(()=>showToast('✓ Okuma listesi kopyalandı', '#2a7a2a')).catch(()=>showToast('Paylaşım desteklenmiyor'));
-  }
-}
 
 // 58. Okunan toplam sayfa sayısı
 function getReadTotalPages() {
@@ -16469,42 +16402,10 @@ setTimeout(()=>{
 // ===== KOLEKSİYONLAR =====
 
 // createCollection — noraPrompt ile yeniden yaz
-async function createCollection() {
-  const name = await noraPrompt('Koleksiyon adı:', { title:'+ Koleksiyon Oluştur', placeholder:'Distopya Klasikleri...' });
-  if (!name) return;
-  const desc = await noraPrompt('Açıklama (opsiyonel):', { title:'Açıklama', placeholder:'Bu koleksiyonun amacı...' });
-  // 3. Kapak rengi seç
-  const colors = ['#8a4a2a','#6a6a4a','#3a7a3a','#4a5a5a','#9c7a3c','#2a5a8a','#7a3a5a'];
-  const color = colors[Math.floor(Math.random()*colors.length)];
-  // 1. Public/private
-  const isPublic = await noraConfirm('Bu koleksiyon herkese açık görünsün mü?', { title:'Görünürlük', confirmLabel:'Herkese Açık', cancelLabel:'Sadece Benim' });
-  await api('collections', {
-    method:'POST', prefer:'return=minimal',
-    body: JSON.stringify({ name, description:desc||null, color, is_public:!!isPublic, sort_order:0 })
-  });
-  showToast(`✓ "${name}" koleksiyonu oluşturuldu`, '#2a7a2a');
-  await loadCollections();
-  checkBadgesNew();
-}
 
 // deleteCollection — noraDeleteConfirm ile
-async function deleteCollection(id) {
-  const c = _collections.find(x=>x.id===id);
-  const ok = await noraDeleteConfirm(c?.name || 'Bu koleksiyon');
-  if (!ok) return;
-  await api('collections?id=eq.'+id, { method:'DELETE' });
-  await loadCollections();
-}
 
 // editCollection — noraPrompt ile
-async function editCollection(id) {
-  const c = _collections.find(x=>x.id===id); if (!c) return;
-  const name = await noraPrompt('Koleksiyon adı:', { title:'Düzenle', default:c.name||'' });
-  if (!name) return;
-  const desc = await noraPrompt('Açıklama:', { title:'Açıklama', default:c.description||'' });
-  await api('collections?id=eq.'+id, { method:'PATCH', body:JSON.stringify({ name, description:desc||null }) });
-  await loadCollections();
-}
 
 // 5. Koleksiyon klonlama
 async function cloneCollection(id) {
@@ -17115,12 +17016,13 @@ function loadOfflineBooks() {
 
 // fetchBooks'tan sonra cache güncelle
 const _origFetchBooksCache = fetchBooks;
-async function fetchBooks() {
+// Cache wrapper — fetchBooks'u override etme, sadece başarılı fetch sonrası cache güncelle
+const _fetchBooksOriginal = fetchBooks;
+async function fetchBooksWithCache() {
   try {
-    const result = await _origFetchBooksCache();
-    cacheBooks(); // Başarılı fetch → cache güncelle
+    await _fetchBooksOriginal();
+    cacheBooks();
     updateMobBadge();
-    return result;
   } catch(e) {
     if (!navigator.onLine) loadOfflineBooks();
     throw e;
@@ -17190,10 +17092,6 @@ function showNotifHistory() {
 
 // sendLocalNotification'ı geçmişe kaydet
 const _origSendNotif = sendLocalNotification;
-function sendLocalNotification(title, body) {
-  logNotification(title, body);
-  _origSendNotif(title, body);
-}
 
 // Bildirim tercih paneli
 function showNotifSettings() {
