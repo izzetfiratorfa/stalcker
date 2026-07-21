@@ -2633,6 +2633,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <option value="hastag">Etiketli</option>
         </select>
         <button onclick="showTagStats()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:5px 10px;cursor:pointer;letter-spacing:1px;"># Etiket İstatistiği</button>
+        <button onclick="startCoverCampaign()" style="background:none;border:1px solid #c87020;color:#c87020;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:5px 10px;cursor:pointer;letter-spacing:1px;">🖼 Kapak Kampanyası</button>
+        <button onclick="showArchivedBooks()" style="background:none;border:1px solid #666;color:#888;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:5px 10px;cursor:pointer;letter-spacing:1px;">📦 Arşiv</button>
         <button onclick="clearAllFilters()" style="background:none;border:1px dashed var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:5px 10px;cursor:pointer;letter-spacing:1px;">✕ Temizle</button>
         <span id="adminTableInfo" style="color:var(--ink-faint);margin-left:4px;"></span>
       </div>
@@ -2659,6 +2661,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="bulk-btn" onclick="printLabels()">🏷 Etiket Bas</button>
         <button class="bulk-btn" onclick="bulkExportCSV()">↓ CSV</button>
         <button class="bulk-btn bulk-btn-danger" onclick="bulkDelete()">✕ Sil</button>
+        <button class="bulk-btn" onclick="bulkArchive()" style="border-color:#888;color:#888;">📦 Arşivle</button>
         <button class="bulk-btn" onclick="clearSelection()" style="background:#222;border-color:#444;">İptal</button>
       </div>
       <!-- 1. Sütun görünürlüğü -->
@@ -3200,16 +3203,22 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <span style="display:inline-block;width:12px;height:12px;background:#c8e0c8;border:1px solid #2a7a2a;"></span>4–7
           <span style="display:inline-block;width:12px;height:12px;background:#2a7a2a;border:1px solid #1a5a1a;"></span>8+
           <span style="display:inline-block;width:12px;height:12px;background:#e8e8f0;border:1px solid #5a5a9a;"></span>Ödünçte var
+          <span style="display:inline-block;width:12px;height:12px;background:#ffd4b0;border:1px solid #c84040;"></span>Boş raf
         </div>
-        <!-- 241. Zoom kontrolleri -->
-        <div style="display:flex;gap:4px;margin-left:auto;">
+        <div style="display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;">
+          <!-- Boş raf tespiti -->
+          <button onclick="detectEmptyShelves()" style="background:none;border:1px solid #c87020;color:#c87020;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 10px;cursor:pointer;">⚠ Boş Raflar</button>
+          <!-- Kayıp kitap alarmı -->
+          <button onclick="detectMissingBooks()" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 10px;cursor:pointer;">🔍 Kayıp Kitap</button>
+          <!-- Toplu raf taşıma -->
+          <button onclick="bulkShelfTransfer()" style="background:none;border:1px solid var(--zone-water);color:var(--zone-water);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 10px;cursor:pointer;">→ Toplu Taşı</button>
           <button onclick="shelfMapZoom(-1)" style="background:none;border:1px solid var(--border);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:3px 8px;cursor:pointer;color:var(--ink-faint);">−</button>
           <button onclick="shelfMapZoom(0)" style="background:none;border:1px solid var(--border);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:3px 8px;cursor:pointer;color:var(--ink-faint);">↺</button>
           <button onclick="shelfMapZoom(1)" style="background:none;border:1px solid var(--border);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:3px 8px;cursor:pointer;color:var(--ink-faint);">+</button>
-          <!-- 245. Yeni raf ekle -->
-          <button onclick="addNewShelfToMap()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:3px 10px;cursor:pointer;margin-left:8px;">+ Raf</button>
+          <button onclick="addNewShelfToMap()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:3px 10px;cursor:pointer;margin-left:4px;">+ Raf</button>
         </div>
       </div>
+      <div id="shelfAlarmPanel" style="display:none;margin-bottom:12px;"></div>
       <div id="shelfMapContent" style="transform-origin:top left;transition:transform 0.2s;"></div>
     </div>
 
@@ -16341,7 +16350,316 @@ function updateSelectionCounter() {
   }
 }
 
-// ===== GRUP 1: ADMİN ÇEKİRDEK =====
+// ===== GRUP 2: KİTAP & RAF OPERASYONU =====
+
+// --- Boş Raf Tespiti ---
+function detectEmptyShelves() {
+  const panel = document.getElementById('shelfAlarmPanel');
+  if (!panel) return;
+
+  // Mevcut rafları bul
+  const allShelves = [...new Set(books.filter(b => b.shelf).map(b => b.shelf.toUpperCase()))];
+  // Raf haritasındaki tüm rafları al (data'dan)
+  const shelvesWithBooks = new Set(allShelves);
+
+  // Kayıtlı raf listesiyle karşılaştır (localStorage'da tutuyoruz)
+  const registeredShelves = JSON.parse(localStorage.getItem('nora_registered_shelves') || '[]');
+
+  const emptyShelves = registeredShelves.filter(s => !shelvesWithBooks.has(s.toUpperCase()));
+  const activeBooks = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'satildi');
+  const noCoverBooks = activeBooks.filter(b => !b.cover_url);
+  const noShelfBooks = activeBooks.filter(b => !b.shelf);
+
+  panel.style.display = 'block';
+  panel.innerHTML = `<div style="display:grid;gap:8px;">` +
+    (emptyShelves.length ? `<div style="background:#2a1a00;border:1px solid #c87020;padding:10px 14px;font-family:'Courier Prime',monospace;font-size:0.72rem;">
+      <span style="color:#c87020;">⚠ Boş Raf (${emptyShelves.length}):</span> ${emptyShelves.join(', ')}
+      <button onclick="this.parentElement.parentElement.parentElement.style.display='none'" style="float:right;background:none;border:none;cursor:pointer;color:#666;">✕</button>
+    </div>` : '') +
+    (noShelfBooks.length ? `<div style="background:#1a0a0a;border:1px solid #c84040;padding:10px 14px;font-family:'Courier Prime',monospace;font-size:0.72rem;">
+      <span style="color:#c84040;">⛔ Raf bilgisi eksik (${noShelfBooks.length} kitap):</span>
+      <button onclick="adminFilterNoShelf()" style="margin-left:8px;background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.6rem;padding:2px 8px;cursor:pointer;">Listele →</button>
+    </div>` : '<div style="background:#0a1a0a;border:1px solid #2a7a2a;padding:8px 14px;font-family:\'Courier Prime\',monospace;font-size:0.72rem;color:#2a7a2a;">✓ Tüm aktif kitapların raf bilgisi mevcut</div>') +
+  `</div>`;
+
+  // Raf haritasında boş rafları vurgula
+  renderShelfMap();
+}
+
+function adminFilterNoShelf() {
+  switchTab('books');
+  // Raf filtresi yoklara ayarla
+  const shelfFilter = document.getElementById('adminFilterShelf');
+  if (shelfFilter) { shelfFilter.value = '_yok'; adminTableReset(); }
+}
+
+// --- Kayıp Kitap Alarmı ---
+const LAST_SEEN_KEY = 'nora_last_seen';
+
+function detectMissingBooks() {
+  const panel = document.getElementById('shelfAlarmPanel');
+  if (!panel) return;
+
+  const lastSeen = JSON.parse(localStorage.getItem(LAST_SEEN_KEY) || '{}');
+  const now = Date.now();
+  const MISSING_THRESHOLD_DAYS = 30;
+
+  // Raf bilgisi olan ama uzun süredir güncellenmemiş kitaplar
+  const suspicious = books.filter(b => {
+    if (!b.shelf || b.status === 'satildi' || b.genre === 'gizli-raf') return false;
+    const ls = lastSeen[b.id];
+    if (!ls) return false;
+    const daysSince = (now - ls) / (1000 * 60 * 60 * 24);
+    return daysSince > MISSING_THRESHOLD_DAYS;
+  });
+
+  // Ödünçte ama çok uzun süredir ödünçte olanlar
+  const longBorrowed = books.filter(b => {
+    if (b.status !== 'borrowed') return false;
+    const ls = lastSeen[b.id];
+    if (!ls) return false;
+    return (now - ls) / (1000 * 60 * 60 * 24) > 60; // 60 gün
+  });
+
+  panel.style.display = 'block';
+  panel.innerHTML = `<div style="display:grid;gap:8px;">
+    ${suspicious.length ? `<div style="background:#1a0a0a;border:1px solid #c84040;padding:10px 14px;font-family:'Courier Prime',monospace;font-size:0.72rem;">
+      <div style="color:#c84040;margin-bottom:6px;">🔍 30+ gündür görülmemiş (${suspicious.length} kitap):</div>
+      <div style="max-height:120px;overflow-y:auto;">
+        ${suspicious.slice(0,8).map(b => `<div style="padding:3px 0;border-bottom:1px dashed #333;display:flex;justify-content:space-between;align-items:center;">
+          <span>${b.title} <span style="color:#555;">Raf: ${b.shelf}</span></span>
+          <button onclick="markBookSeen(${b.id})" style="background:none;border:1px solid #2a7a2a;color:#2a7a2a;font-family:'Courier Prime',monospace;font-size:0.55rem;padding:1px 6px;cursor:pointer;">✓ Gördüm</button>
+        </div>`).join('')}
+        ${suspicious.length > 8 ? `<div style="color:#555;padding:3px 0;">...+${suspicious.length - 8} kitap daha</div>` : ''}
+      </div>
+    </div>` : `<div style="background:#0a1a0a;border:1px solid #2a7a2a;padding:8px 14px;font-family:'Courier Prime',monospace;font-size:0.72rem;color:#2a7a2a;">✓ Kayıp kitap şüphesi yok</div>`}
+    ${longBorrowed.length ? `<div style="background:#2a1a00;border:1px solid #c87020;padding:8px 14px;font-family:'Courier Prime',monospace;font-size:0.72rem;">
+      <span style="color:#c87020;">⏳ 60+ gündür ödünçte (${longBorrowed.length}):</span> ${longBorrowed.slice(0,4).map(b=>b.title).join(' · ')}
+    </div>` : ''}
+  </div>`;
+}
+
+function markBookSeen(bookId) {
+  const lastSeen = JSON.parse(localStorage.getItem(LAST_SEEN_KEY) || '{}');
+  lastSeen[bookId] = Date.now();
+  localStorage.setItem(LAST_SEEN_KEY, JSON.stringify(lastSeen));
+  showToast('✓ Kitap görüldü olarak işaretlendi', '#2a7a2a');
+  // Paneli güncelle
+  detectMissingBooks();
+}
+
+// Kitap detay açıldığında "görüldü" işaretle
+const _origOpenDetailSeen = openDetail;
+async function openDetail(id) {
+  const r = await _origOpenDetailSeen(id);
+  const lastSeen = JSON.parse(localStorage.getItem(LAST_SEEN_KEY) || '{}');
+  lastSeen[id] = Date.now();
+  localStorage.setItem(LAST_SEEN_KEY, JSON.stringify(lastSeen));
+  return r;
+}
+
+// --- Toplu Raf Taşıma Onay ---
+async function bulkShelfTransfer() {
+  const ids = [...selectedIds];
+  if (!ids.length) { showToast('Önce kitap seç', '#c84040'); return; }
+
+  const fromShelves = [...new Set(ids.map(id => books.find(b=>b.id===id)?.shelf).filter(Boolean))];
+  const toShelf = await noraPrompt(
+    `${ids.length} kitap taşınacak.\nŞu anki raflar: ${fromShelves.join(', ')}\n\nHedef raf:`,
+    { title: '→ Toplu Raf Taşıma', placeholder: 'A3' }
+  );
+  if (!toShelf) return;
+
+  const ok = await noraConfirm(
+    `${ids.length} kitap Raf ${toShelf.toUpperCase()}'a taşınacak.\n\nRaf: ${fromShelves.join(', ')} → ${toShelf.toUpperCase()}\n\nDevam?`,
+    { title: '→ Toplu Raf Taşıma', confirmLabel: 'Taşı', danger: false }
+  );
+  if (!ok) return;
+
+  showProgress(`${ids.length} kitap taşınıyor...`, ids.length * 100);
+  let moved = 0;
+  await Promise.all(ids.map(async id => {
+    const res = await api(`books?id=eq.${id}`, { method:'PATCH', body:JSON.stringify({ shelf: toShelf.toUpperCase() }) });
+    if (res.ok) { const b = books.find(x=>x.id===id); if(b) b.shelf = toShelf.toUpperCase(); moved++; }
+  }));
+  hideProgress();
+  renderAdminTable();
+  renderShelfMap();
+  showToast(`✓ ${moved} kitap Raf ${toShelf.toUpperCase()}'a taşındı`, '#2a7a2a');
+  clearSelection();
+}
+
+// --- Kapak Güncelleme Kampanyası ---
+let _coverCampaignList = [];
+let _coverCampaignIdx = 0;
+
+async function startCoverCampaign() {
+  _coverCampaignList = books.filter(b =>
+    !b.cover_url && b.genre !== 'gizli-raf' && b.status !== 'satildi' && (b.title || b.isbn)
+  );
+
+  if (!_coverCampaignList.length) {
+    showToast('✓ Tüm kitaplarda kapak görseli var!', '#2a7a2a');
+    return;
+  }
+
+  _coverCampaignIdx = 0;
+  showCoverCampaignModal();
+}
+
+function showCoverCampaignModal() {
+  document.getElementById('coverCampaignModal')?.remove();
+
+  if (_coverCampaignIdx >= _coverCampaignList.length) {
+    showToast(`✓ Kampanya tamamlandı!`, '#2a7a2a');
+    return;
+  }
+
+  const book = _coverCampaignList[_coverCampaignIdx];
+  const remaining = _coverCampaignList.length - _coverCampaignIdx;
+  const pct = Math.round((_coverCampaignIdx / _coverCampaignList.length) * 100);
+
+  const modal = document.createElement('div');
+  modal.id = 'coverCampaignModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:500px;width:100%;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">🖼 KAPAK KAMPANYASI</div>
+      <button onclick="document.getElementById('coverCampaignModal').remove()" style="background:none;border:none;cursor:pointer;color:var(--ink-faint);">✕</button>
+    </div>
+
+    <!-- İlerleme -->
+    <div style="height:3px;background:var(--border);margin-bottom:14px;"><div style="width:${pct}%;height:100%;background:var(--zone-sepia);"></div></div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);margin-bottom:14px;">${_coverCampaignIdx + 1} / ${_coverCampaignList.length} — ${remaining} kaldı</div>
+
+    <!-- Kitap bilgisi -->
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:4px;">${book.title}</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:14px;">${book.author || '—'} ${book.isbn ? '· ISBN: '+book.isbn : ''} ${book.shelf ? '· Raf '+book.shelf : ''}</div>
+
+    <!-- URL girişi -->
+    <div style="margin-bottom:12px;">
+      <label style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);display:block;margin-bottom:4px;">Kapak URL:</label>
+      <input type="url" id="campaignCoverUrl" placeholder="https://..." style="width:100%;box-sizing:border-box;font-family:'Courier Prime',monospace;font-size:0.78rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:8px;">
+    </div>
+
+    <!-- Hızlı arama linkleri -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+      ${book.isbn ? `<a href="https://covers.openlibrary.org/b/isbn/${book.isbn.replace(/[-\s]/g,'')}-L.jpg" target="_blank" style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--zone-sepia);text-decoration:none;border:1px solid var(--zone-sepia);padding:3px 8px;">Open Library</a>` : ''}
+      <a href="https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent((book.title||'')+(book.author?' '+book.author:''))}" target="_blank" style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--zone-water);text-decoration:none;border:1px solid var(--zone-water);padding:3px 8px;">Google Books API</a>
+      <a href="https://www.google.com/search?q=${encodeURIComponent((book.title||'')+' '+( book.author||'')+' kitap kapak')}&tbm=isch" target="_blank" style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#555;text-decoration:none;border:1px solid #555;padding:3px 8px;">Google Görsel</a>
+    </div>
+
+    <!-- Önizleme -->
+    <div id="campaignPreview" style="height:60px;display:flex;align-items:center;justify-content:center;background:var(--paper-dark);margin-bottom:14px;font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">URL gir → önizle</div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveCampaignCover(${book.id})" style="flex:1;background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px;cursor:pointer;">✓ Kaydet & İleri</button>
+      <button onclick="skipCampaignBook()" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 14px;cursor:pointer;">→ Atla</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  // URL değişince önizle
+  const input = document.getElementById('campaignCoverUrl');
+  if (input) input.addEventListener('input', () => {
+    const prev = document.getElementById('campaignPreview');
+    if (!prev || !input.value) return;
+    prev.innerHTML = `<img src="${input.value}" style="max-height:56px;max-width:100%;object-fit:contain;" onerror="this.parentElement.textContent='Görsel yüklenemedi'">`;
+  });
+
+  // Open Library otomatik dene
+  if (book.isbn) {
+    const olUrl = `https://covers.openlibrary.org/b/isbn/${book.isbn.replace(/[-\s]/g,'')}-M.jpg`;
+    if (input) input.value = olUrl;
+    const prev = document.getElementById('campaignPreview');
+    if (prev) prev.innerHTML = `<img src="${olUrl}" style="max-height:56px;max-width:100%;object-fit:contain;" onerror="this.parentElement.textContent='Open Library\'da yok'">`;
+  }
+}
+
+async function saveCampaignCover(bookId) {
+  const url = document.getElementById('campaignCoverUrl')?.value?.trim();
+  if (!url) { skipCampaignBook(); return; }
+  const res = await api(`books?id=eq.${bookId}`, { method:'PATCH', body:JSON.stringify({ cover_url: url }) });
+  if (res.ok) {
+    const b = books.find(x=>x.id===bookId); if(b) b.cover_url = url;
+    showToast('✓ Kapak güncellendi', '#2a7a2a');
+  }
+  _coverCampaignIdx++;
+  showCoverCampaignModal();
+}
+
+function skipCampaignBook() {
+  _coverCampaignIdx++;
+  showCoverCampaignModal();
+}
+
+// --- Kitap Arşiv Modu ---
+const ARCHIVE_KEY = 'nora_archived_books';
+
+async function bulkArchive() {
+  const ids = [...selectedIds];
+  if (!ids.length) { showToast('Önce kitap seç', '#c84040'); return; }
+  const ok = await noraConfirm(
+    `${ids.length} kitap arşive alınacak. Silinmeyecek, istediğinde geri getirebilirsin.`,
+    { title:'📦 Arşivle', confirmLabel:'Arşivle', icon:'📦' }
+  );
+  if (!ok) return;
+
+  const archived = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
+  const booksToArchive = ids.map(id => books.find(b=>b.id===id)).filter(Boolean);
+
+  archived.push(...booksToArchive.map(b => ({ ...b, archived_at: new Date().toISOString() })));
+  localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archived));
+
+  // Supabase'den silmeden "archived" durumuna al
+  await Promise.all(ids.map(id =>
+    api(`books?id=eq.${id}`, { method:'PATCH', body:JSON.stringify({ status:'archived', genre:'gizli-raf' }) })
+  ));
+
+  await fetchBooks(); renderAdminTable();
+  showToast(`✓ ${ids.length} kitap arşive alındı`, '#2a7a2a');
+  clearSelection();
+}
+
+function showArchivedBooks() {
+  const archived = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
+  if (!archived.length) { showToast('Arşiv boş'); return; }
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:560px;width:100%;padding:24px;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">📦 ARŞİV — ${archived.length} kitap</div>
+      <button onclick="this.closest('div').parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;">✕</button>
+    </div>
+    ${archived.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);">
+      <div style="flex:1;">
+        <div style="font-family:'Playfair Display',serif;font-size:0.88rem;font-weight:700;">${b.title}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);">${b.author||'—'} · Arşivlendi: ${new Date(b.archived_at).toLocaleDateString('tr-TR')}</div>
+      </div>
+      <button onclick="restoreFromArchive(${b.id})" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 8px;cursor:pointer;">↩ Geri Al</button>
+    </div>`).join('')}
+  </div>`;
+  modal.onclick = e => { if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+async function restoreFromArchive(bookId) {
+  const archived = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
+  const idx = archived.findIndex(b => b.id === bookId);
+  if (idx < 0) return;
+  const book = archived[idx];
+
+  await api(`books?id=eq.${bookId}`, { method:'PATCH', body:JSON.stringify({ status: book.status||'yerlesik', genre: book.genre||null }) });
+  archived.splice(idx, 1);
+  localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archived));
+
+  await fetchBooks(); renderAdminTable();
+  showToast(`✓ "${book.title}" arşivden çıkarıldı`, '#2a7a2a');
+  document.querySelector('[style*="ARŞİV"]')?.closest('[style*="position:fixed"]')?.remove();
+}
+
+// ===== GRUP 2 SONU =====
 
 // --- Acil Notlar ---
 const ACIL_NOT_KEY = 'nora_acil_not';
