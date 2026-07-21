@@ -14502,7 +14502,7 @@ function shareBadges() {
 }
 
 // Badge check'i ilgili aksiyonlara bağla
-const _origOpenDetail17 = openDetail;
+// REMOVED: const _origOpenDetail17 = openDetail;
 
 // Manifestoyu oku kaydı
 setTimeout(()=>{
@@ -16086,7 +16086,7 @@ const _origDoSearchFilter = null; // doSearch içinde kullanılacak
 
 // 17. Önceki/sonraki navigasyon
 let _currentDetailId = null;
-const _origOpenDetail = openDetail;
+// REMOVED: const _origOpenDetail = openDetail;
 
 function navigateDetail(dir) {
   const visibleBooks = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'satildi' && b.status !== 'ev-koleksiyon');
@@ -16429,19 +16429,7 @@ setTimeout(() => {
 }, 1200);
 
 // initAdminPanel'e alan doluluk + snapshot kontrol ekle
-const _origInitAdminPanelFinal = initAdminPanel;
-function initAdminPanel() {
-  _origInitAdminPanelFinal();
-  setTimeout(() => {
-    showFieldCoverageBar();
-    // Haftalık otomatik snapshot
-    const snaps = JSON.parse(localStorage.getItem(SNAPSHOT_KEY)||'[]');
-    const lastSnap = snaps[0];
-    if (!lastSnap || Date.now()-new Date(lastSnap.date).getTime() > 7*24*60*60*1000) {
-      takeSnapshot();
-    }
-  }, 1500);
-}
+// REMOVED _origInitAdminPanelFinal
 
 // ===== GRUP 10 SONU =====
 
@@ -16753,7 +16741,7 @@ function checkFormDraft() {
   });
 }
 
-// openModal'a taslak kontrolü ekle
+// openModal'a taslak kontrolü + source/markers yükle
 setTimeout(() => {
   const origOpen = openModal;
   window.openModal = function(bookId) {
@@ -16763,7 +16751,6 @@ setTimeout(() => {
       setTimeout(() => {
         checkFormDraft();
         startFormAutosave();
-        // Taslak göstergesi ekle
         const saveBtn = document.querySelector('.btn-save[onclick="saveBook()"]');
         if (saveBtn && !document.getElementById('formDraftIndicator')) {
           const ind = document.createElement('span');
@@ -16772,6 +16759,15 @@ setTimeout(() => {
           saveBtn.after(ind);
         }
       }, 300);
+    } else {
+      // Mevcut kitap — source ve markers yükle
+      setTimeout(() => {
+        const book = books.find(b=>b.id===bookId);
+        if (!book) return;
+        const src = document.getElementById('fSource');
+        if (src && book.source) src.value = book.source;
+        if (typeof loadMarkersToForm === 'function') loadMarkersToForm(book.markers);
+      }, 100);
     }
   };
 }, 1200);
@@ -16868,7 +16864,7 @@ async function manageFavorites() {
 }
 
 // Admin açılınca favorileri yükle + filtre durumunu geri yükle
-const _origInitAdminPanel3 = initAdminPanel;
+// REMOVED: const _origInitAdminPanel3 = initAdminPanel;
 
 // Etiket yönetici butonlarını rapor paneline ekle
 setTimeout(() => {
@@ -17202,7 +17198,7 @@ function loadSecurityDashboard() {
 }
 
 // initAdminPanel'e hafıza popup ekle
-const _origInitAdminPanel2 = initAdminPanel;
+// REMOVED: const _origInitAdminPanel2 = initAdminPanel;
 
 // ===== GRUP 8 SONU =====
 
@@ -17472,24 +17468,8 @@ function getExtraFormFields() {
   };
 }
 
-// Form açılınca mevcut değerleri yükle
+// Form açılınca mevcut değerleri yükle — ilk openModal wrapper'ına entegre edildi
 const _origLoadFormFields = typeof loadFormFields === 'function' ? loadFormFields : null;
-setTimeout(() => {
-  // openModal'ı wrap et — source ve markers yükle
-  const origOpen = openModal;
-  window.openModal = function(bookId) {
-    origOpen(bookId);
-    if (bookId) {
-      setTimeout(() => {
-        const book = books.find(b=>b.id===bookId);
-        if (!book) return;
-        const src = document.getElementById('fSource');
-        if (src && book.source) src.value = book.source;
-        loadMarkersToForm(book.markers);
-      }, 100);
-    }
-  };
-}, 1000);
 
 // ===== GRUP 7 SONU =====
 
@@ -18086,7 +18066,7 @@ function showDashboardAlarms() {
 }
 
 // initAdminPanel'e dashboard alarmlarını ekle
-const _origInitAdminPanel = initAdminPanel;
+// REMOVED: const _origInitAdminPanel = initAdminPanel;
 
 // ===== GRUP 5 SONU =====
 
@@ -19371,6 +19351,25 @@ function initAdminPanel() {
     startAdminClock();
     logAdminAccess('panel-açıldı');
   }, 300);
+  setTimeout(() => {
+    renderQuickFavorites();
+    restoreFilterState();
+    showDashboardAlarms();
+    updateTeminBudgetBar();
+  }, 600);
+  setTimeout(() => {
+    showFieldCoverageBar();
+    const snaps = JSON.parse(localStorage.getItem(SNAPSHOT_KEY)||'[]');
+    if (!snaps[0] || Date.now()-new Date(snaps[0].date).getTime() > 7*24*60*60*1000) {
+      takeSnapshot();
+    }
+  }, 1500);
+  setTimeout(checkCafeMemoryPopup, 5000);
+  const lastInsight = localStorage.getItem('nora_last_insight');
+  if (!lastInsight || parseInt(lastInsight) < Date.now() - 7*24*60*60*1000) {
+    localStorage.setItem('nora_last_insight', Date.now());
+    setTimeout(showAutoInsights, 8000);
+  }
 }
 
 // Admin terminali auth'una giriş denemesi entegrasyonu
@@ -20098,7 +20097,7 @@ function loadOfflineBooks() {
 }
 
 // fetchBooks'tan sonra cache güncelle
-const _origFetchBooksCache = fetchBooks;
+// REMOVED: const _origFetchBooksCache = fetchBooks;
 // Cache wrapper — fetchBooks'u override etme, sadece başarılı fetch sonrası cache güncelle
 const _fetchBooksOriginal = fetchBooks;
 async function fetchBooksWithCache() {
@@ -20174,7 +20173,7 @@ function showNotifHistory() {
 }
 
 // sendLocalNotification'ı geçmişe kaydet
-const _origSendNotif = sendLocalNotification;
+// REMOVED: const _origSendNotif = sendLocalNotification;
 
 // Bildirim tercih paneli
 function showNotifSettings() {
