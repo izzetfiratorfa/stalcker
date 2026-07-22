@@ -18182,12 +18182,136 @@ function initInlineEditing() {
 }
 
 // renderAdminTable'dan sonra inline editing'i başlat
-const _origRenderAdminTable = renderAdminTable;
+// (real renderAdminTable defined below, fully reconstructed)
 function renderAdminTable() {
-  _origRenderAdminTable();
+  buildAdminGenreFilter();
+  buildAdminShelfFilter();
+  buildAdminPublisherFilter();
+  const q = normalize(document.getElementById('adminSearch').value || '');
+  const sortField = document.getElementById('adminSortField')?.value || 'title';
+  const sortDir = document.getElementById('adminSortDir')?.value || 'asc';
+  const filterGenre = document.getElementById('adminFilterGenre')?.value || '';
+  const filterStatus = document.getElementById('adminFilterStatus')?.value || '';
+  const filterShelf = document.getElementById('adminFilterShelf')?.value || '';
+  const filterCondition = document.getElementById('adminFilterCondition')?.value || '';
+  const filterDQ = document.getElementById('adminFilterDQ')?.value || '';
+  const filterYearFrom = parseInt(document.getElementById('adminFilterYearFrom')?.value) || 0;
+  const filterYearTo = parseInt(document.getElementById('adminFilterYearTo')?.value) || 9999;
+  const filterNora = document.getElementById('adminFilterNora')?.value || '';
+  const filterPublisher = document.getElementById('adminFilterPublisher')?.value || '';
+
+  let filtered = books.filter(b => {
+    if (q && !normalize(b.title).includes(q) && !normalize(b.author||'').includes(q) && !normalize(b.shelf||'').includes(q) && !normalize(b.publisher||'').includes(q)) return false;
+    if (filterGenre && !(b.genre||'').split(',').map(g=>g.trim()).includes(filterGenre)) return false;
+    if (filterStatus && b.status !== filterStatus) return false;
+    if (filterShelf && (b.shelf||'').trim() !== filterShelf) return false;
+    if (filterCondition === '_yok' && b.condition) return false;
+    if (filterCondition && filterCondition !== '_yok' && b.condition !== filterCondition) return false;
+    if (filterYearFrom && (!b.year || b.year < filterYearFrom)) return false;
+    if (filterYearTo < 9999 && (!b.year || b.year > filterYearTo)) return false;
+    if (filterDQ) {
+      const dqPct = getDataQuality(b).pct;
+      if (filterDQ === 'high' && dqPct < 80) return false;
+      if (filterDQ === 'mid' && (dqPct < 50 || dqPct >= 80)) return false;
+      if (filterDQ === 'low' && dqPct >= 50) return false;
+    }
+    const filterTags = document.getElementById('adminFilterTags')?.value || '';
+    if (filterTags === 'notag' && (b.tags || '').trim()) return false;
+    if (filterTags === 'hastag' && !(b.tags || '').trim()) return false;
+    if (filterNora === '1' && !b.nora_pick) return false;
+    if (filterPublisher && (b.publisher||'').trim() !== filterPublisher) return false;
+    return true;
+  });
+
+  // Sırala
+  filtered.sort((a, b) => {
+    let av = (a[sortField] || '').toString().toLowerCase();
+    let bv = (b[sortField] || '').toString().toLowerCase();
+    if (sortField === 'shelf') {
+      av = av.replace(/(\d+)/g, n => n.padStart(6,'0'));
+      bv = bv.replace(/(\d+)/g, n => n.padStart(6,'0'));
+    }
+    return sortDir === 'asc' ? av.localeCompare(bv,'tr') : bv.localeCompare(av,'tr');
+  });
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE));
+  if (adminCurrentPage > totalPages) adminCurrentPage = totalPages;
+  const start = (adminCurrentPage - 1) * ADMIN_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + ADMIN_PAGE_SIZE);
+
+  // Info
+  const info = document.getElementById('adminTableInfo');
+  if (info) info.textContent = `${total} kitap · Sayfa ${adminCurrentPage}/${totalPages}`;
+
+  // Tablo
+  document.getElementById('adminTableBody').innerHTML = pageItems.length ? pageItems.map(b => {
+    const isSelected = selectedIds.has(b.id);
+    const statusOpts = [
+      ['yerlesik','Yerleşik'],['borrowed','Ödünçte'],['askida','Askıda'],
+      ['satista','Satışta'],['satildi','Satıldı'],['ev-koleksiyon','🏠 Ev Koleksiyonu']
+    ];
+    const statusSelect = `<select onchange="inlineStatusChange(${b.id},this.value,this)"
+      style="border:1px solid ${b.status==='satildi'?'#2a7a2a':b.status==='satista'?'#2a5a8a':b.status==='askida'?'#9c7a3c':b.status==='borrowed'?'#c84040':'var(--border-dark)'};background:var(--paper);color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:2px 4px;cursor:pointer;outline:none;">
+      ${statusOpts.map(([v,l])=>`<option value="${v}"${b.status===v?' selected':''}>${l}</option>`).join('')}
+    </select>`;
+    const dq = getDataQuality(b);
+    const dqColor = dq.pct >= 80 ? 'var(--zone-phosphor)' : dq.pct >= 50 ? '#c8a030' : '#c84040';
+    const dqDot = `<span title="Veri: %${dq.pct}${dq.missing.length?' · Eksik: '+dq.missing.join(', '):''}" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dqColor};margin-left:6px;cursor:help;vertical-align:middle;"></span>`;
+    return `<div class="table-row ${isSelected ? 'selected' : ''}" data-id="${b.id}" data-status="${b.status||''}" ondblclick="handleAdminRowDblClick(${b.id})" style="cursor:default;">
+      <div><input type="checkbox" class="row-checkbox" data-id="${b.id}" ${isSelected ? 'checked' : ''} onchange="toggleRow(${b.id}, this)"></div>
+      <div class="book-name">${b.title}${dqDot}${b.admin_note?`<span title="${b.admin_note}" style="color:var(--zone-sepia);font-size:0.7rem;margin-left:4px;cursor:help;">📝</span>`:''}</div>
+      <div class="author-name">${authorLinks(b.author)}</div>
+      <div class="inline-edit-cell">
+        <span class="badge-shelf" style="font-size:0.7rem;cursor:pointer;" ondblclick="event.stopPropagation();inlineEditShelf(${b.id},this,'${(b.shelf||'').replace(/'/g,"\\'")}')">Raf ${b.shelf||'?'}</span>
+      </div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#9c7a3c;font-weight:700;cursor:pointer;" ondblclick="event.stopPropagation();inlineEditPrice(${b.id},this,${b.price||0})">
+        ${b.price ? '₺' + b.price.toLocaleString('tr-TR') : '—'}
+      </div>
+      <div>${statusSelect}</div>
+      <div style="color:var(--gold);font-size:0.9rem;display:flex;align-items:center;gap:4px;">${b.nora_pick ? '★' : ''}${b.updated_at?`<span title="${new Date(b.updated_at).toLocaleDateString('tr-TR')}" style="font-size:0.55rem;color:var(--ink-faint);font-family:'Courier Prime',monospace;">${timeSince(b.updated_at)}</span>`:''}</div>
+      <div class="table-actions">
+        <button class="btn-edit" onclick="openModal(${b.id})">Düz</button>
+        <button class="btn-edit" onclick="duplicateBook(${b.id})" title="Kopyala">⧉</button>
+        <button class="btn-edit" onclick="shareBookWA(${b.id})" title="WA'da paylaş" style="color:#25D366;">📱</button>
+        <button class="btn-star ${b.nora_pick ? 'active' : ''}" onclick="toggleNora(${b.id})">★</button>
+        <button class="btn-delete" onclick="deleteBook(${b.id})">Sil</button>
+      </div>
+    </div>`;
+  }).join('') : `<div style="text-align:center;padding:32px;color:var(--ink-faint);font-family:monospace">Kitap bulunamadı.</div>`;
+
+  // Sayfalama butonları
+  const pg = document.getElementById('adminPagination');
+  if (pg) {
+    if (totalPages <= 1) {
+      pg.innerHTML = '';
+    } else {
+      let html = '';
+      const btnStyle = (active) => `style="padding:4px 10px;border:1px solid ${active?'var(--ink)':'var(--border)'};background:${active?'var(--ink)':'transparent'};color:${active?'var(--white)':'var(--ink)'};font-family:'Courier Prime',monospace;font-size:0.7rem;cursor:pointer;"`;
+      html += `<button ${btnStyle(false)} onclick="adminGoPage(${adminCurrentPage-1})" ${adminCurrentPage===1?'disabled':''}>‹</button>`;
+      let pages = [];
+      if (totalPages <= 7) {
+        pages = Array.from({length:totalPages},(_,i)=>i+1);
+      } else {
+        pages = [1];
+        if (adminCurrentPage > 3) pages.push('…');
+        for (let i=Math.max(2,adminCurrentPage-1); i<=Math.min(totalPages-1,adminCurrentPage+1); i++) pages.push(i);
+        if (adminCurrentPage < totalPages-2) pages.push('…');
+        pages.push(totalPages);
+      }
+      pages.forEach(p => {
+        if (p === '…') html += `<span style="padding:4px 6px;color:var(--ink-faint);">…</span>`;
+        else html += `<button ${btnStyle(p===adminCurrentPage)} onclick="adminGoPage(${p})">${p}</button>`;
+      });
+      html += `<button ${btnStyle(false)} onclick="adminGoPage(${adminCurrentPage+1})" ${adminCurrentPage===totalPages?'disabled':''}>›</button>`;
+      pg.innerHTML = html;
+    }
+  }
+
+  // Bölünmüş görünüm + inline düzenleme desteği
   setTimeout(() => {
-    initInlineEditing();
-    if (_splitMode && _splitActiveId) {
+    if (typeof initInlineEditing === 'function') initInlineEditing();
+    if (typeof _splitMode !== 'undefined' && _splitMode && _splitActiveId) {
       const row = document.querySelector(`.table-row[data-id="${_splitActiveId}"]`);
       if (row) row.classList.add('split-active');
     }
