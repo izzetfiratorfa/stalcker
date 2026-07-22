@@ -8541,23 +8541,6 @@ function switchTab(tab) {
   if (tab === 'secretnotes') initSecretNote();
 }
 
-function renderMissedSearches() {
-  const el = document.getElementById('missedSearchList');
-  if (!el) return;
-  // searchLog'dan sadece hiç kitap bulunamayan sorguları bul
-  // missedLog ayrı tutulur — doSearch'te doldurulan missedSearchLog
-  const entries = Object.entries(missedSearchLog || {}).sort((a,b) => b[1]-a[1]);
-  if (!entries.length) {
-    el.innerHTML = '<div style="font-family:Courier Prime,monospace;color:#444;font-size:0.8rem;padding:20px 0;">Henüz bulunamayan arama yok.</div>';
-    return;
-  }
-  el.innerHTML = entries.map(([q,count]) =>
-    `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1a1a1a;font-family:'Courier Prime',monospace;">
-      <span style="color:#c84040;font-size:0.85rem;">> ${q}</span>
-      <span style="color:#444;font-size:0.75rem;">${count}x arandı</span>
-    </div>`
-  ).join('');
-}
 
 function renderGizliRaf() {
   const el = document.getElementById('gizliRafList');
@@ -9510,27 +9493,6 @@ let ikramBooks = [];
 let ikramTimer = null;
 
 // Müşteri sayfası için — sadece listeyi hafızaya alır
-async function loadIkramList() {
-  try {
-    const res = await api('settings?key=eq.ikram_books&select=*');
-    if (!res.ok) return;
-    const rows = await res.json();
-    if (!rows.length || !rows[0].value) {
-      // Kayıt yoksa otomatik seç
-      if (books.length) await autoSelectIkramBooks();
-      return;
-    }
-    const saved = JSON.parse(rows[0].value);
-    const list = saved.books || saved;
-    const savedMonth = saved.month;
-    const currentMonth = new Date().getFullYear() + '-' + (new Date().getMonth() + 1);
-    if (savedMonth && savedMonth !== currentMonth) {
-      if (books.length) await autoSelectIkramBooks();
-    } else {
-      ikramBooks = list;
-    }
-  } catch(e) { console.error('loadIkramList:', e); }
-}
 
 async function loadIkramPanel() {
   try {
@@ -9945,27 +9907,6 @@ async function loadDiaryView() {
   } catch(e) { el.innerHTML = '<div class="diary-empty">> Bağlantı hatası.</div>'; }
 }
 
-async function saveDiaryEntry() {
-  const text = document.getElementById('diaryText').value.trim();
-  if (!text) return;
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric', weekday:'long'});
-  const key = 'diary_' + now.getTime();
-  // 192. Fotoğraf + 195. Kitap + 196. Özel gün
-  const photo = document.getElementById('diaryPhoto')?.value.trim() || null;
-  const bookId = parseInt(document.getElementById('diaryBookId')?.value) || null;
-  const isSpecial = document.getElementById('diarySpecial')?.checked || false;
-  const val = JSON.stringify({ text, date: dateStr, photo, bookId, isSpecial });
-  await api('settings', { method: 'POST', headers: {'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({ key, value: val }) });
-  document.getElementById('diaryText').value = '';
-  if (document.getElementById('diaryPhoto')) document.getElementById('diaryPhoto').value = '';
-  if (document.getElementById('diaryBookId')) document.getElementById('diaryBookId').value = '';
-  if (document.getElementById('diarySpecial')) document.getElementById('diarySpecial').checked = false;
-  const m = document.getElementById('diaryMsg');
-  m.textContent = '> Kaydedildi.' + (isSpecial ? ' ⭐' : '');
-  setTimeout(() => m.textContent = '', 2500);
-  await loadDiaryAdmin();
-}
 
 async function loadDiaryAdmin() {
   const el = document.getElementById('diaryAdminList');
@@ -12983,34 +12924,7 @@ async function bulkDuplicate() {
   clearSelection(); await fetchBooks(); renderAdminTable(); renderStats();
 }
 
-async function duplicateBook(id) {
-  const b = books.find(x => x.id === id);
-  if (!b) return;
-  if (!confirm('"' + b.title + '" çoğaltılsın mı?\nTüm bilgiler aynen kopyalanacak.')) return;
-  const copy = { ...b };
-  delete copy.id;
-  delete copy.created_at;
-  copy.sold_at = null; // Kopya satılmamış olarak başlar
-  if (copy.status === 'satildi') copy.status = 'yerlesik';
-  const res = await api('books', { method:'POST', prefer:'return=minimal', body: JSON.stringify(copy) });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    alert('Çoğaltma hatası: ' + (err.message || res.status));
-    return;
-  }
-  showToast('⧉ "' + b.title + '" çoğaltıldı', '#2a7a2a');
-  await fetchBooks(); renderAdminTable(); renderStats();
-}
 
-async function deleteBook(id) {
-  const b = books.find(x => x.id === id);
-  if (!confirm('"' + b.title + '" silinsin mi?\n(Arşivde saklanacak, geri getirilebilir)')) return;
-  // 100. Arşive kaydet
-  await api('books_archive', { method:'POST', prefer:'return=minimal', body: JSON.stringify({ original_id: id, data: b, reason: 'manual_delete' }) });
-  await api('books?id=eq.' + id, { method:'DELETE', prefer:'return=minimal' });
-  showToast('📦 "' + b.title + '" arşive taşındı');
-  await fetchBooks(); renderAdminTable(); renderStats(); buildFilters();
-}
 
 
 
@@ -13928,14 +13842,6 @@ function validateBookForm() {
   return valid;
 }
 
-function showFieldError(fieldId, msg) {
-  const el = document.getElementById(fieldId); if (!el) return;
-  el.style.borderColor = '#c84040'; el.style.boxShadow = '0 0 0 2px rgba(200,64,64,0.15)';
-  let err = el.parentElement.querySelector('.field-error-msg');
-  if (!err) { err=document.createElement('div'); err.className='field-error-msg'; err.style.cssText='font-family:"Courier Prime",monospace;font-size:0.62rem;color:#c84040;margin-top:3px;'; el.parentElement.appendChild(err); }
-  err.innerHTML = `✗ ${msg}`;
-  el.addEventListener('input', ()=>clearFieldError(fieldId), {once:true});
-}
 function showFieldWarning(fieldId, msg) {
   const el = document.getElementById(fieldId); if (!el) return;
   el.style.borderColor = '#c87020';
@@ -14564,12 +14470,6 @@ function showPrivacyPolicy(){
 // ===== PART 7: VERİ & YEDEK & GÜVENLİK =====
 
 
-function takeSnapshot() {
-  const snaps=JSON.parse(localStorage.getItem('nora_snapshots')||'[]');
-  snaps.push({date:new Date().toLocaleDateString('tr-TR'),count:books.filter(b=>b.status!=='satildi'&&b.status!=='ev-koleksiyon').length,ts:Date.now()});
-  localStorage.setItem('nora_snapshots',JSON.stringify(snaps.slice(-30)));
-  localStorage.setItem('nora_last_backup',new Date().toISOString());
-}
 
 function showGrowthForecast() {
   const snaps=JSON.parse(localStorage.getItem('nora_snapshots')||'[]');
@@ -14729,11 +14629,6 @@ function vibrate(pattern = [50]) {
 }
 
 // toggleFavorite'e vibrasyon ekle — patch
-const _origToggleFavorite = toggleFavorite;
-function toggleFavorite(bookId) {
-  _origToggleFavorite(bookId);
-  vibrate(favorites[bookId] ? [30] : [50, 30, 50]);
-}
 
 // 169. Mobil hız — lazy image threshold artır
 function observeLazyImagesOptimized() {
@@ -15616,19 +15511,6 @@ function normalizeForSearch(s) { return normalize(s); }
 
 // 45. Yazar soyadıyla arama — zaten normalize + fuzzy çalışıyor
 // 49. Sayfa sıralaması — doSearch'e eklenecek
-function applyCustomerSort(arr) {
-  const sort = document.getElementById('customerSort')?.value || '';
-  if (!sort) return arr;
-  const sorted = [...arr];
-  if (sort === 'title') return sorted.sort((a,b)=>(a.title||'').localeCompare(b.title||'','tr'));
-  if (sort === 'author') return sorted.sort((a,b)=>(a.author||'').localeCompare(b.author||'','tr'));
-  if (sort === 'year_desc') return sorted.sort((a,b)=>(b.year||0)-(a.year||0));
-  if (sort === 'year_asc') return sorted.sort((a,b)=>(a.year||0)-(b.year||0));
-  if (sort === 'pages_asc') return sorted.sort((a,b)=>(a.pages||999)-(b.pages||999));
-  if (sort === 'pages_desc') return sorted.sort((a,b)=>(b.pages||0)-(a.pages||0));
-  if (sort === 'shelf') return sorted.sort((a,b)=>(a.shelf||'').localeCompare(b.shelf||'','tr'));
-  return sorted;
-}
 
 // Init
 setTimeout(() => { loadProfile(); checkBirthdayToday(); showSeasonalCuration(); renderWeeklyPick(); }, 2000);
@@ -15656,10 +15538,6 @@ function truncateDescription(text, maxLen=200) {
 function checkTitleCasing(title) {
   if (!title) return false;
   return title===title.toUpperCase()||title===title.toLowerCase();
-}
-function normalizeAuthorName(author) {
-  if (!author) return author;
-  return author.split(',').map(a=>a.trim().split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ')).join(', ');
 }
 function normalizeISBN(isbn) { return (isbn||'').replace(/[-\s]/g,''); }
 
@@ -17693,11 +17571,6 @@ function clearErrorLog() {
 const _origBulkDeleteSafe = typeof bulkDelete === 'function' ? bulkDelete : null;
 
 // Sistem sağlık panosu — SSL kontrolünü dahil et
-const _origCheckSistemSagligi = checkSistemSagligi;
-async function checkSistemSagligi() {
-  await _origCheckSistemSagligi();
-  await checkSSLCertificate();
-}
 
 // Audit log butonunu admin header'a ekle
 setTimeout(() => {
@@ -17744,12 +17617,6 @@ const PRIORITY_CONFIG = {
 
 // loadTeminListesi'ni wrap et — öncelik ekle
 const _origLoadTemin = typeof loadTeminListesi === 'function' ? loadTeminListesi : null;
-async function loadTeminListesi() {
-  if (_origLoadTemin) await _origLoadTemin();
-  // Panele öncelik badge + talep notu ekle
-  setTimeout(() => enhanceTeminList(), 200);
-  updateTeminBudgetBar();
-}
 
 function enhanceTeminList() {
   const rows = document.querySelectorAll('#teminListPanel [data-temin-id], #teminListPanel .temin-row');
@@ -18015,24 +17882,6 @@ setInterval(checkDailyReminders, 60 * 1000);
 setTimeout(checkDailyReminders, 3000);
 
 // Kapanış formuna yarınki hatırlatıcılar ekle — saveKapanis wrap
-const _origSaveKapanis = saveKapanis;
-async function saveKapanis() {
-  await _origSaveKapanis();
-  // Yarınki hatırlatıcı sor
-  setTimeout(async () => {
-    const reminder = await noraPrompt('Yarın için hatırlatıcı var mı?', {
-      title: '⏰ Yarınki Hatırlatıcı',
-      placeholder: 'Boş bırakabilirsin...'
-    });
-    if (reminder?.trim()) {
-      const reminders = getDailyReminders();
-      const tomorrow = new Date(Date.now() + 86400000).toDateString();
-      reminders.push({ id: Date.now(), text: reminder.trim(), time:'09:00', date: tomorrow, done: false });
-      localStorage.setItem(DAILY_REMINDER_KEY, JSON.stringify(reminders));
-      showToast('✓ Yarın için hatırlatıcı eklendi', '#2a7a2a');
-    }
-  }, 1000);
-}
 
 // --- Dashboard'a Eksik Kapak Alarmı ---
 function showDashboardAlarms() {
@@ -19058,20 +18907,6 @@ function showArchivedBooks() {
   document.body.appendChild(modal);
 }
 
-async function restoreFromArchive(bookId) {
-  const archived = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
-  const idx = archived.findIndex(b => b.id === bookId);
-  if (idx < 0) return;
-  const book = archived[idx];
-
-  await api(`books?id=eq.${bookId}`, { method:'PATCH', body:JSON.stringify({ status: book.status||'yerlesik', genre: book.genre||null }) });
-  archived.splice(idx, 1);
-  localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archived));
-
-  await fetchBooks(); renderAdminTable();
-  showToast(`✓ "${book.title}" arşivden çıkarıldı`, '#2a7a2a');
-  document.querySelector('[style*="ARŞİV"]')?.closest('[style*="position:fixed"]')?.remove();
-}
 
 // ===== GRUP 2 SONU =====
 
@@ -19557,22 +19392,6 @@ function enableCollectionSort() {
 }
 
 // renderCollections override — ek butonlar
-const _origRenderCollections = renderCollections;
-function renderCollections() {
-  _origRenderCollections();
-  // Klonlama ve birleştirme butonları ekle
-  setTimeout(() => {
-    _collections.forEach(c => {
-      const header = document.querySelector(`[data-col-id="${c.id}"] .col-actions`);
-      if (!header) return;
-      const clone = document.createElement('button');
-      clone.textContent = '⧉ Klon'; clone.onclick = ()=>cloneCollection(c.id);
-      clone.style.cssText = 'background:none;border:1px solid var(--zone-water);color:var(--zone-water);font-family:"Courier Prime",monospace;font-size:0.6rem;padding:4px 8px;cursor:pointer;';
-      header.appendChild(clone);
-    });
-    enableCollectionSort();
-  }, 500);
-}
 
 // ===== ALINTULAR =====
 
@@ -20709,12 +20528,6 @@ window.addEventListener('popstate', e=>{if(e.state?.view) showView(e.state.view)
 setTimeout(()=>{const v=new URLSearchParams(location.search).get('v');if(v&&v!=='customer')showView(v);},1000);
 
 // Breadcrumb güncelleme showView'a bağlı — updateMobileNav içinde çağır
-const _origUpdateMobileNav2=updateMobileNav;
-function updateMobileNav(view){
-  _origUpdateMobileNav2(view);
-  updateBreadcrumb(view);
-  showPageTransition();
-}
 
 // Son ziyaret butonu header'a ekle
 setTimeout(()=>{
@@ -20969,20 +20782,6 @@ function getTrendingTags(n=5) {
 function isTrending(tag) { return getTrendingTags(8).includes(tag); }
 
 // renderPopularTags'ı geliştir — trending badge + renk grupları + N kitap
-function renderPopularTags() {
-  const el = document.getElementById('popularTagsRow'); if (!el) return;
-  const tagMap = {};
-  books.filter(b=>b.tags&&b.genre!=='gizli-raf'&&b.status!=='satildi'&&b.status!=='ev-koleksiyon')
-    .forEach(b=>b.tags.split(',').forEach(t=>{const tr=t.trim();if(tr)tagMap[tr]=(tagMap[tr]||0)+1;}));
-  const sorted = Object.entries(tagMap).sort((a,b)=>b[1]-a[1]).slice(0,40);
-  const trending = getTrendingTags(5);
-  el.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:6px;">ETİKETLER</div>' +
-    sorted.map(([tag, count]) => {
-      const groupClass = getTagClass(tag);
-      const trendingClass = trending.includes(tag) ? ' tag-trending' : '';
-      return `<span class="badge-tag ${groupClass}${trendingClass}" onclick="logTagClick('${tag.replace(/'/,"\\'")}');activeTag='${tag.replace(/'/,"\\'")}';doSearch();" title="${count} kitap">#${tag} <span style="opacity:0.5;font-size:0.6em;">${count}</span></span>`;
-    }).join(' ');
-}
 
 // 2. Etiket öneri motoru — mevcut etiketlere göre benzer etiketler öner
 function getTagSuggestions(currentTags) {
@@ -21001,37 +20800,6 @@ function getTagSuggestions(currentTags) {
 }
 
 // 9. Admin formunda etiket otomatik tamamlama — showTagSuggestions geliştir
-function showTagSuggestions() {
-  const inp = document.getElementById('fTags'); if (!inp) return;
-  const val = inp.value;
-  const lastTag = val.split(',').pop().trim();
-  const existing = val.split(',').slice(0,-1).map(t=>t.trim()).filter(Boolean);
-  const sug = document.getElementById('tagSuggestions'); if (!sug) return;
-
-  if (!lastTag && existing.length) {
-    // Mevcut etiketlere göre öneri
-    const co = getTagSuggestions(existing.join(','));
-    if (!co.length) { sug.style.display='none'; return; }
-    sug.style.display = 'block';
-    sug.innerHTML = '<span style="color:var(--ink-faint);font-size:0.6rem;">Önerilen: </span>' +
-      co.map(t=>`<span onclick="addTagFromSuggestion('${t.replace(/'/,"\\'")}');" style="cursor:pointer;border:1px solid var(--zone-sepia);color:var(--zone-sepia);padding:2px 6px;margin:2px;display:inline-block;font-size:0.65rem;">#${t}</span>`).join('');
-    return;
-  }
-
-  if (lastTag.length < 2) { sug.style.display='none'; return; }
-
-  const q = normalize(lastTag);
-  const allTags = new Set();
-  books.forEach(b=>(b.tags||'').split(',').forEach(t=>{const tr=t.trim();if(tr)allTags.add(tr);}));
-  const matches = [...allTags].filter(t=>normalize(t).includes(q)&&!existing.includes(t)).slice(0,8);
-
-  if (!matches.length) { sug.style.display='none'; return; }
-  sug.style.display = 'block';
-  sug.innerHTML = matches.map(t=>{
-    const cnt = getTagCount(t);
-    return `<span onclick="addTagFromSuggestion('${t.replace(/'/,"\\'")}');" style="cursor:pointer;border:1px solid var(--border-dark);color:var(--ink-faint);padding:2px 6px;margin:2px;display:inline-block;font-size:0.65rem;">#${t} <span style="opacity:0.5;">${cnt}</span></span>`;
-  }).join('');
-}
 
 function addTagFromSuggestion(tag) {
   const inp = document.getElementById('fTags'); if (!inp) return;
@@ -21389,16 +21157,6 @@ function updateActiveFilterChips() {
     (chips.length>1?`<span onclick="clearAllFilters()" style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#c84040;cursor:pointer;padding:4px 6px;border:1px solid #c84040;">Tümünü Temizle</span>`:'');
 }
 
-function clearAllFilters() {
-  document.getElementById('searchInput').value='';
-  activeFilter='Tümü'; activeTag=null; _timeFilter=null;
-  _excludedGenres.clear(); activeGenres.clear(); _customYearFilter=null; _originFilter=null;
-  const pm=document.getElementById('pageMin'); if(pm)pm.value='';
-  const px=document.getElementById('pageMax'); if(px)px.value='';
-  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
-  document.querySelector('.filter-chip')?.classList.add('active');
-  doSearch();
-}
 
 function pushFilterToURL() {
   const q=document.getElementById('searchInput')?.value.trim()||'';
