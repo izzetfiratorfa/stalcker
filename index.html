@@ -93,7 +93,7 @@ body::before {
 }
 
 /* HEADER */
-header { background:var(--black);padding:0 24px;display:flex;align-items:stretch;justify-content:space-between;border-bottom:4px solid var(--ink);position:relative; }
+header { background:var(--black);padding:0 24px;display:flex;align-items:stretch;justify-content:space-between;border-bottom:4px solid var(--ink);position:sticky;top:0;z-index:500; }
 header::after { content:'';position:absolute;bottom:-8px;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,var(--black) 0px,var(--black) 6px,transparent 6px,transparent 10px); }
 .logo { font-family:'Special Elite',cursive;color:#f2efe8;font-size:1.1rem;letter-spacing:3px;padding:16px 0;text-transform:uppercase; }
 .header-btns { display:flex;gap:0;align-items:center; }
@@ -2149,16 +2149,17 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <!-- Yazar doğum/ölüm günü banner -->
     <div id="birthdayBanner" style="display:none;margin-bottom:16px;padding:12px 18px;border-left:4px solid #4a7a9c;background:#f0f5f8;font-family:'Courier Prime',monospace;font-size:0.8rem;line-height:1.8;"></div>
     <div class="search-row" id="searchWrap">
-      <input type="text" id="searchInput" placeholder="hangi kitabın peşindesin?" oninput="onSearchInput()" onkeydown="onSearchKey(event)" autocomplete="off">
+      <input type="text" id="searchInput" placeholder="kitap, yazar veya tür ara..." oninput="onSearchInput()" onkeydown="onSearchKey(event)" autocomplete="off">
       <button class="btn-search" onclick="doSearch()">Ara</button>
       <div class="autocomplete-list" id="autocompleteList"></div>
     </div>
     <!-- Son aramalar -->
     <div id="recentSearchesRow" style="display:none;margin-top:6px;min-height:22px;"></div>
-    <div style="display:flex;gap:6px;margin-top:6px;">
-      <button onclick="doSerendipity()" style="flex:1;background:#1a1a1a;border:none;border-left:4px solid #333;color:#aaa;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#222'" onmouseout="this.style.background='#1a1a1a'">✦ SERENDIPITY</button>
-      <button onclick="odaBaslat()" style="flex:1;background:#0a1a0a;border:none;border-left:4px solid var(--zone-phosphor);color:#6a9a6a;padding:10px 18px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-align:left;transition:background 0.15s;" onmouseover="this.style.background='#122412'" onmouseout="this.style.background='#0a1a0a'">◉ ODA'YA YOLCULUK</button>
-      <button onclick="show3DLibrary()" style="background:#1a120a;border:none;border-left:4px solid var(--zone-rust);color:#9a7a5a;padding:10px 14px;font-family:'Special Elite',cursive;font-size:0.82rem;letter-spacing:2px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#241a10'" onmouseout="this.style.background='#1a120a'">📚 3D</button>
+    <!-- Sade keşif linkleri -->
+    <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+      <span onclick="doSerendipity()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">✦ Serendipity</span>
+      <span onclick="odaBaslat()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">◉ Oda'ya Yolculuk</span>
+      <span onclick="show3DLibrary()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">📚 3D Kütüphane</span>
     </div>
   </div>
 
@@ -2182,61 +2183,67 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <div id="bookResults"></div>
   </div>
 
-  <!-- Gizlenebilir araçlar — arama aktif değilken görünür -->
-  <div id="discoveryTools" style="transition:opacity 0.2s;">
-    <div class="isbn-row">
-      <input type="text" class="isbn-input" id="isbnInput" placeholder="ISBN ile ara..." oninput="isbnSearch()" inputmode="numeric">
-      <button class="btn-isbn" onclick="openBarcodeScanner()">📷 Barkod Tara</button>
-    </div>
+  <!-- Eski discoveryTools div — artık gizli, JS referansları için korunuyor -->
+  <div id="discoveryTools" style="display:none;">
     <div class="serendipity-msg" id="serendipityMsg"></div>
   </div>
 
-  <!-- 21-22. Kaç saatin var + 49. Sayfa sıralaması -->
-  <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 20px 0;">
-    <span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);letter-spacing:1px;align-self:center;">SÜRE:</span>
-    <button onclick="setTimeFilter(null)" id="tf_all" class="filter-chip active" style="font-size:0.6rem;">Tümü</button>
-    <button onclick="setTimeFilter(2)" id="tf_2" class="filter-chip" style="font-size:0.6rem;">⏱ 2 Saat</button>
-    <button onclick="setTimeFilter(6)" id="tf_6" class="filter-chip" style="font-size:0.6rem;">☕ Bir Akşam</button>
-    <button onclick="setTimeFilter(15)" id="tf_15" class="filter-chip" style="font-size:0.6rem;">📅 Hafta Sonu</button>
-    <button onclick="setTimeFilter(40)" id="tf_40" class="filter-chip" style="font-size:0.6rem;">🌞 Bir Yaz</button>
-    <!-- 10. Mobil sıralama + desktop dropdown -->
-    <select id="customerSort" onchange="saveAndSort()" style="margin-left:auto;font-family:'Courier Prime',monospace;font-size:0.62rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:3px 6px;cursor:pointer;">
-      <option value="">Varsayılan</option>
-      <option value="nora">★ Nora Önce</option>
-      <option value="tag_match">🏷 Etiket Eşleşme</option>
-      <option value="price_asc">₺ Ucuz Önce</option>
-      <option value="price_desc">₺ Pahalı Önce</option>
-      <option value="shelf">Rafa Göre</option>
-      <option value="title">Ada Göre</option>
-      <option value="author">Yazara Göre</option>
-      <option value="year_desc">Yeni → Eski</option>
-      <option value="year_asc">Eski → Yeni</option>
-      <option value="pages_asc">Az Sayfalı Önce</option>
-      <option value="pages_desc">Çok Sayfalı Önce</option>
-    </select>
-  </div>
-
-  <!-- 1. Aktif filtreler chip bar -->
+  <!-- Aktif filtreler chip bar (dinamik) -->
   <div id="activeFilterChips" style="display:none;padding:6px 20px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></div>
-
-  <!-- 9. Negatif filtre toggle -->
   <div id="negativeFilterBar" style="display:none;padding:4px 20px;"></div>
 
-  <div class="filter-row" id="filterRow">
-    <button class="filter-chip active" onclick="setFilter('Tümü', this)">Tümü</button>
-    <button class="filter-chip" id="filterNew" onclick="setFilterNew(this)" style="border-color:#1a5a1a;color:#2a7a2a;">⚡ Bu Hafta</button>
-    <button class="filter-chip" id="filterNora" onclick="toggleFilterNora(this)" style="border-color:var(--gold);color:var(--gold);">★ Nora Seçimi</button>
-    <button class="filter-chip" id="filterArtefakt" onclick="toggleFilterArtefakt(this)" style="border-color:var(--zone-phosphor);color:var(--zone-phosphor);">◉ Artefakt</button>
-    <button class="filter-chip" id="filterSatista" onclick="toggleFilterSatista(this)" style="border-color:#2a5a8a;color:#2a5a8a;">₺ Satışta</button>
-  </div>
-
-  <!-- Gelişmiş Filtre -->
+  <!-- Gelişmiş Arama — tek toggle, her şey burada -->
   <div class="adv-filter-row">
-    <button class="adv-filter-btn" id="advFilterBtn" onclick="toggleAdvFilter()">⚙ Filtrele</button>
+    <button class="adv-filter-btn" id="advFilterBtn" onclick="toggleAdvFilter()">⚙ Gelişmiş Arama</button>
     <span id="advFilterSummary" style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#9c7a3c;letter-spacing:1px;"></span>
     <button id="advFilterClear" onclick="clearAdvFilters()" style="display:none;background:none;border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;color:#c84040;cursor:pointer;padding:0;letter-spacing:1px;">✕ Temizle</button>
   </div>
   <div class="adv-filter-panel" id="advFilterPanel">
+
+    <!-- Hızlı filtre chip'leri -->
+    <div class="filter-row" id="filterRow" style="padding:0 0 14px;margin:0;">
+      <button class="filter-chip active" onclick="setFilter('Tümü', this)">Tümü</button>
+      <button class="filter-chip" id="filterNew" onclick="setFilterNew(this)" style="border-color:#1a5a1a;color:#2a7a2a;">⚡ Bu Hafta</button>
+      <button class="filter-chip" id="filterNora" onclick="toggleFilterNora(this)" style="border-color:var(--gold);color:var(--gold);">★ Nora Seçimi</button>
+      <button class="filter-chip" id="filterArtefakt" onclick="toggleFilterArtefakt(this)" style="border-color:var(--zone-phosphor);color:var(--zone-phosphor);">◉ Artefakt</button>
+      <button class="filter-chip" id="filterSatista" onclick="toggleFilterSatista(this)" style="border-color:#2a5a8a;color:#2a5a8a;">₺ Satışta</button>
+    </div>
+
+    <!-- ISBN arama -->
+    <div style="margin-bottom:14px;">
+      <div class="adv-filter-label">ISBN ile Ara</div>
+      <div class="isbn-row" style="margin:0;">
+        <input type="text" class="isbn-input" id="isbnInput" placeholder="ISBN ile ara..." oninput="isbnSearch()" inputmode="numeric">
+        <button class="btn-isbn" onclick="openBarcodeScanner()">📷 Barkod Tara</button>
+      </div>
+    </div>
+
+    <!-- Süre + sıralama -->
+    <div style="margin-bottom:14px;">
+      <div class="adv-filter-label">Ne Kadar Sürer?</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button onclick="setTimeFilter(null)" id="tf_all" class="filter-chip active" style="font-size:0.6rem;">Tümü</button>
+        <button onclick="setTimeFilter(2)" id="tf_2" class="filter-chip" style="font-size:0.6rem;">⏱ 2 Saat</button>
+        <button onclick="setTimeFilter(6)" id="tf_6" class="filter-chip" style="font-size:0.6rem;">☕ Bir Akşam</button>
+        <button onclick="setTimeFilter(15)" id="tf_15" class="filter-chip" style="font-size:0.6rem;">📅 Hafta Sonu</button>
+        <button onclick="setTimeFilter(40)" id="tf_40" class="filter-chip" style="font-size:0.6rem;">🌞 Bir Yaz</button>
+        <select id="customerSort" onchange="saveAndSort()" style="margin-left:auto;font-family:'Courier Prime',monospace;font-size:0.62rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:3px 6px;cursor:pointer;">
+          <option value="">Varsayılan Sıra</option>
+          <option value="nora">★ Nora Önce</option>
+          <option value="tag_match">🏷 Etiket Eşleşme</option>
+          <option value="price_asc">₺ Ucuz Önce</option>
+          <option value="price_desc">₺ Pahalı Önce</option>
+          <option value="shelf">Rafa Göre</option>
+          <option value="title">Ada Göre</option>
+          <option value="author">Yazara Göre</option>
+          <option value="year_desc">Yeni → Eski</option>
+          <option value="year_asc">Eski → Yeni</option>
+          <option value="pages_asc">Az Sayfalı Önce</option>
+          <option value="pages_desc">Çok Sayfalı Önce</option>
+        </select>
+      </div>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
       <div>
         <div class="adv-filter-label">Sayfa Aralığı</div>
@@ -4828,143 +4835,60 @@ function showEmptySearchSuggestions() {
   list.style.display = 'block';
 }
 
-// Gelişmiş autocomplete
+// Sade autocomplete — tek liste, kitap öncelikli, Google tarzı
 function buildAutocomplete(raw) {
   const q = normalize(raw);
   const list = document.getElementById('autocompleteList');
-  const sections = [];
+  if (!list) return;
 
-  // 1. Kitap eşleşmeleri
+  // 1. Kitap eşleşmeleri — öncelik
   const bookMatches = books.filter(b =>
     b.genre !== 'gizli-raf' && b.status !== 'satildi' && b.status !== 'ev-koleksiyon' &&
-    (fuzzyMatch(b.title, q) || normalize(b.title||'').startsWith(q))
-  ).slice(0, 5);
+    (fuzzyMatch(b.title, q) || normalize(b.title||'').startsWith(q) || fuzzyMatch(b.author, q))
+  ).slice(0, 8);
 
-  // 2. Yazar eşleşmeleri — unique yazarlar
-  const authorMap = {};
-  books.filter(b => b.genre !== 'gizli-raf' && fuzzyMatch(b.author, q))
-    .forEach(b => {
-      (b.author||'').split(',').forEach(a => {
-        const an = a.trim();
-        if (normalize(an).includes(q)) authorMap[an] = (authorMap[an]||0)+1;
-      });
-    });
-  const authorMatches = Object.entries(authorMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
-
-  // 3. Tür eşleşmeleri
-  const genreMap = {};
-  books.filter(b => b.genre && normalize(b.genre).includes(q))
-    .forEach(b => b.genre.split(',').forEach(g=>{const t=g.trim();if(normalize(t).includes(q))genreMap[t]=(genreMap[t]||0)+1;}));
-  const genreMatches = Object.entries(genreMap).sort((a,b)=>b[1]-a[1]).slice(0,2);
-
-  // 4. Etiket eşleşmeleri
-  const tagMap = {};
-  books.filter(b => b.tags && normalize(b.tags).includes(q))
-    .forEach(b => (b.tags||'').split(',').forEach(t=>{const tr=t.trim();if(normalize(tr).includes(q))tagMap[tr]=(tagMap[tr]||0)+1;}));
-  const tagMatches = Object.entries(tagMap).sort((a,b)=>b[1]-a[1]).slice(0,2);
-
-  let html = '';
-  const allMatches = [];
-
-  // Yazarlar bölümü
-  if (authorMatches.length) {
-    html += `<div class="autocomplete-divider">YAZARLAR</div>`;
-    authorMatches.forEach(([author, count]) => {
-      const idx = allMatches.length;
-      allMatches.push({ type:'author', value:author, count });
-      html += `<div class="autocomplete-item ac-author" onmousedown="selectACItem(${idx})" data-idx="${idx}">
-        <div class="ac-thumb-placeholder" style="background:#1a1a3a;color:#4a6aaa;">✍</div>
-        <strong>${author}</strong>
-        <span>${count} kitap</span>
-        <span class="ac-type type-author">Yazar</span>
-      </div>`;
-    });
-  }
-
-  // Türler bölümü
-  if (genreMatches.length) {
-    html += `<div class="autocomplete-divider">TÜRLER</div>`;
-    genreMatches.forEach(([genre, count]) => {
-      const idx = allMatches.length;
-      allMatches.push({ type:'genre', value:genre, count });
-      html += `<div class="autocomplete-item" onmousedown="selectACItem(${idx})" data-idx="${idx}">
+  if (!bookMatches.length) {
+    // Kitap yoksa tür/etiket dene, tek satır öneri
+    const genreMap = {};
+    books.filter(b => b.genre && normalize(b.genre).includes(q))
+      .forEach(b => b.genre.split(',').forEach(g=>{const t=g.trim();if(normalize(t).includes(q))genreMap[t]=(genreMap[t]||0)+1;}));
+    const topGenre = Object.entries(genreMap).sort((a,b)=>b[1]-a[1])[0];
+    if (topGenre) {
+      list.innerHTML = `<div class="autocomplete-item" onmousedown="document.getElementById('searchInput').value='';activeFilter='${topGenre[0].replace(/'/g,"\\'")}';doSearch();document.getElementById('autocompleteList').style.display='none';">
         <div class="ac-thumb-placeholder" style="background:#2a1a0a;color:#aa7a3a;">📚</div>
-        <strong>${genre}</strong>
-        <span>${count} kitap</span>
-        <span class="ac-type type-genre">Tür</span>
+        <strong>${topGenre[0]}</strong>
+        <span>${topGenre[1]} kitap</span>
       </div>`;
-    });
+      list.style.display = 'block';
+    } else {
+      list.style.display = 'none';
+    }
+    return;
   }
 
-  // Etiketler bölümü
-  if (tagMatches.length) {
-    html += `<div class="autocomplete-divider">ETİKETLER</div>`;
-    tagMatches.forEach(([tag, count]) => {
-      const idx = allMatches.length;
-      allMatches.push({ type:'tag', value:tag, count });
-      html += `<div class="autocomplete-item" onmousedown="selectACItem(${idx})" data-idx="${idx}">
-        <div class="ac-thumb-placeholder" style="background:#2a0a2a;color:#9a4a9a;">#</div>
-        <strong>#${tag}</strong>
-        <span>${count} kitap</span>
-        <span class="ac-type type-tag">Etiket</span>
-      </div>`;
-    });
-  }
-
-  // Kitaplar bölümü
-  if (bookMatches.length) {
-    html += `<div class="autocomplete-divider">KİTAPLAR — ${bookMatches.length} eşleşme</div>`;
-    bookMatches.forEach(b => {
-      const idx = allMatches.length;
-      allMatches.push({ type:'book', book:b });
-      const gc = getGenreColor ? getGenreColor(b.genre) : '#2a2a2a';
-      const letter = (b.title||'?').charAt(0);
-      const thumbHtml = b.cover_url
-        ? `<img class="ac-thumb" src="${b.cover_url}" alt="" onerror="this.style.display=&#39;none&#39;">`
-        : `<div class="ac-thumb-placeholder" style="background:${gc};">${letter}</div>`;
-      // 6. N sonuç göster — kitabın raf bilgisi
-      const shelfInfo = b.shelf ? `Raf ${b.shelf}` : '';
-      const statusInfo = b.status === 'satista' && b.price ? `₺${b.price}` : '';
-      html += `<div class="autocomplete-item" onmousedown="selectACItem(${idx})" data-idx="${idx}">
-        ${thumbHtml}
-        <strong>${b.title}</strong>
-        <span>${b.author||''} ${shelfInfo ? '· '+shelfInfo : ''} ${statusInfo ? '· '+statusInfo : ''}</span>
-        <span class="ac-type type-book">Kitap</span>
-      </div>`;
-    });
-  }
-
-  if (!html) { list.style.display = 'none'; return; }
-
-  list.innerHTML = html;
-  list._allMatches = allMatches;
+  list.innerHTML = bookMatches.map(b => {
+    const gc = typeof getGenreColor === 'function' ? getGenreColor(b.genre) : '#2a2a2a';
+    const letter = (b.title||'?').charAt(0);
+    const thumbHtml = b.cover_url
+      ? `<img class="ac-thumb" src="${b.cover_url}" alt="" onerror="this.style.display='none'">`
+      : `<div class="ac-thumb-placeholder" style="background:${gc};">${letter}</div>`;
+    const shelfInfo = b.shelf ? `Raf ${b.shelf}` : '';
+    return `<div class="autocomplete-item" onmousedown="openDetail(${b.id});document.getElementById('autocompleteList').style.display='none';">
+      ${thumbHtml}
+      <strong>${b.title}</strong>
+      <span>${b.author||''}${shelfInfo ? ' · '+shelfInfo : ''}</span>
+    </div>`;
+  }).join('');
   list.style.display = 'block';
   acSelected = -1;
 }
 
-// 5. Seçim — kitap ise direkt detay, diğerleri arama
+// Klavye navigasyonu için — sade listede her satır bir kitap
 function selectACItem(idx) {
   const list = document.getElementById('autocompleteList');
-  const item = list._allMatches?.[idx];
-  if (!item) return;
-  list.style.display = 'none';
-
-  if (item.type === 'book') {
-    // Direkt detay sayfasını aç
-    openDetail(item.book.id);
-  } else if (item.type === 'author') {
-    document.getElementById('searchInput').value = item.value;
-    doSearch();
-  } else if (item.type === 'genre') {
-    document.getElementById('searchInput').value = '';
-    // Tür filtresini aktifte
-    activeFilter = item.value;
-    doSearch();
-  } else if (item.type === 'tag') {
-    document.getElementById('searchInput').value = '';
-    activeTag = item.value;
-    doSearch();
-  }
+  const items = list.querySelectorAll('.autocomplete-item');
+  const item = items[idx];
+  if (item) item.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 }
 
 function selectAC(idx) { selectACItem(idx); } // eski compat
