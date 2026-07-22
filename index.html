@@ -4814,7 +4814,7 @@ function onSearchInput() {
   clearTimeout(_searchDebounceTimer);
   _searchDebounceTimer = setTimeout(() => {
     const val2 = document.getElementById('searchInput').value.trim();
-    doSearch();
+    // Yazarken sadece öneri listesi güncellensin — sonuç listesi aşağıda dolmasın
     if (val2.length >= 2) buildAutocomplete(val2);
     else document.getElementById('autocompleteList').style.display = 'none';
   }, 200);
@@ -4909,6 +4909,9 @@ function onSearchKey(e) {
   } else if (e.key === 'Enter') {
     const val = document.getElementById('searchInput').value.trim().toLowerCase();
     if (val.startsWith('/')) { e.preventDefault(); triggerEasterEgg(val); return; }
+    // Enter'a basınca gerçek arama tetiklensin
+    document.getElementById('autocompleteList').style.display = 'none';
+    doSearch();
   } else if (e.key === 'Escape') {
     list.style.display = 'none';
   }
@@ -16477,10 +16480,10 @@ function restoreFilterState() {
   }
 }
 
-// adminTableReset'e filtre kaydetme bağla
-const _origAdminTableReset = adminTableReset;
+// (adminTableReset — filtre kaydetme mantığı doğrudan içine alındı, wrapper kaldırıldı)
 function adminTableReset() {
-  _origAdminTableReset();
+  adminCurrentPage = 1;
+  renderAdminTable();
   saveFilterState();
 }
 
@@ -18760,13 +18763,105 @@ function markBookSeen(bookId) {
 }
 
 // Kitap detay açıldığında "görüldü" işaretle
-const _origOpenDetailSeen = openDetail;
+// (openDetail artık tam ve bağımsız — üstteki orphan atama kaldırıldı)
 async function openDetail(id) {
-  const r = await _origOpenDetailSeen(id);
+  const b = books.find(x => x.id === id);
+  if (!b) { showToast('Kitap bulunamadı'); return; }
+  _currentDetailId = id;
+
+  const tags = (b.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+  const statusMap = {
+    yerlesik: '<span class="badge-status status-yerlesik">✓ Yerleşik</span>',
+    borrowed: '<span class="badge-status status-borrowed">⏳ Ödünçte</span>',
+    askida:   '<span class="badge-status" style="background:var(--gold);color:#fff;">❤ Askıda</span>',
+    satista:  '<span class="badge-status" style="background:var(--zone-water);color:#fff;">₺ Satışta' + (b.price ? ' · '+b.price+'₺' : '') + '</span>',
+    'ev-koleksiyon': '<span class="badge-status status-ev-koleksiyon">🏠 Ev Koleksiyonu</span>',
+  };
+  const statusBadge = statusMap[b.status] || '';
+  const noraBadge = b.nora_pick ? '<div class="nora-badge" style="display:inline-flex;margin-bottom:12px;">★ Nora\'nın Önerisi</div>' : '';
+  const artefaktBadge = b.is_artefakt ? `<div class="nora-badge" style="background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:#8aba8a;margin-bottom:12px;">◉ ARTEFAKT</div>` : '';
+  const genreColor = typeof getGenreColor === 'function' ? getGenreColor(b.genre) : null;
+
+  const readState = (typeof readingList !== 'undefined' && readingList[b.id]) || null;
+  const wantBtn = `<button class="btn-readlist ${readState==='want'?'active-want':''}" onclick="toggleReadList(${b.id},'want')">${readState==='want'?'✓ Okuyacağım':'+ Okuyacağım'}</button>`;
+  const doneBtn = `<button class="btn-readlist ${readState==='done'?'active-read':''}" onclick="toggleReadList(${b.id},'done')">${readState==='done'?'✓ Okudum':'Okudum'}</button>`;
+  const isFav = typeof favorites !== 'undefined' && favorites[b.id];
+  const favBtn = `<button class="btn-readlist" onclick="toggleFavorite(${b.id})" style="${isFav?'color:var(--gold);border-color:var(--gold);':''}">${isFav?'♥ Favori':'♡ Favori'}</button>`;
+
+  // Yorumları Supabase'den çek
+  let reviews = [];
+  try {
+    const res = await api('reviews?book_id=eq.' + id + '&order=id.desc');
+    if (res.ok) reviews = await res.json();
+  } catch(e) {}
+
+  const reviewsHtml = reviews.length
+    ? reviews.map(r => `<div class="review-item">
+        ${r.rating ? '<span style="color:var(--gold);font-size:0.85rem;">' + '★'.repeat(r.rating) + '<span style="color:#ccc;">' + '★'.repeat(5-r.rating) + '</span></span><br>' : ''}
+        <div class="review-author">— ${r.reviewer_name || 'Anonim'}</div>${r.review_text}</div>`).join('')
+    : '<p style="color:var(--ink-faint);font-size:0.82rem;font-style:italic;">Henüz yorum yok. İlk yorumu sen yaz!</p>';
+
+  // Raf komşuları — aynı raf prefix'ine sahip diğer kitaplar
+  const shelfPrefix = b.shelf ? b.shelf.replace(/[0-9]+$/, '') : null;
+  const neighbors = books.filter(x => x.id !== b.id && x.shelf && shelfPrefix && x.shelf.startsWith(shelfPrefix) && x.genre !== 'gizli-raf' && x.status !== 'satildi' && x.status !== 'ev-koleksiyon').slice(0, 6);
+  const neighborsHtml = neighbors.length ? `
+    <div class="neighbors-section">
+      <div class="neighbors-title" style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;text-transform:uppercase;">Bu kitabın komşuları</div>
+      <div class="neighbors-row" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;">
+        ${neighbors.map(n => `<div class="neighbor-card" onclick="openDetail(${n.id})" style="flex-shrink:0;width:120px;cursor:pointer;background:var(--paper-dark);padding:8px 10px;">
+          <div style="font-family:'Playfair Display',serif;font-size:0.78rem;font-weight:700;line-height:1.3;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.title}</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);">Raf ${n.shelf}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  // Bağlı kitaplar (Grup 7 — editoryal bağlantılar)
+  const connectionsHtml = typeof getConnectionsHTML === 'function' ? getConnectionsHTML(b.id) : '';
+
+  document.getElementById('detailContent').innerHTML = `
+    ${artefaktBadge}${noraBadge}
+    <div class="detail-title">${b.title || ''}</div>
+    <div class="detail-author">${typeof authorLinks === 'function' ? authorLinks(b.author) : (b.author||'')}${b.publisher ? ' · ' + b.publisher : ''}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+      ${statusBadge}
+      ${b.isbn ? `<span class="badge-tag">ISBN: ${b.isbn}</span>` : ''}
+      ${b.year ? `<span class="badge-tag">${b.year}</span>` : ''}
+      ${b.pages ? `<span class="badge-tag">${b.pages} sf.</span>` : ''}
+      ${b.condition ? `<span class="badge-tag">${({cok_iyi:'Çok İyi',iyi:'İyi',orta:'Orta',kotu:'Kötü'})[b.condition]||b.condition}</span>` : ''}
+    </div>
+    <div class="detail-shelf-label">rafını bul</div>
+    <div class="detail-shelf-big">RAF ${b.shelf || '?'}</div>
+    ${b.nora_note ? `<div style="margin:16px 0;padding:14px 16px;background:var(--paper-dark);border-left:3px solid var(--zone-sepia);font-family:'Playfair Display',serif;font-style:italic;font-size:0.9rem;line-height:1.7;">${b.nora_note}</div>` : ''}
+    ${tags.length ? `<div class="detail-tags">${tags.map(t=>`<span class="badge-tag" onclick="searchByTag('${t.replace(/'/g,"\\'")}');closeDetail();" style="cursor:pointer;">#${t}</span>`).join('')}</div>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;">${wantBtn}${doneBtn}${favBtn}</div>
+    ${connectionsHtml}
+    ${neighborsHtml}
+    <div class="reviews-section">
+      <div class="reviews-title">Okuyucu Yorumları</div>
+      <div id="reviewsList">${reviewsHtml}</div>
+      <div class="review-form">
+        <div id="starRow" style="margin-bottom:8px;">
+          ${[1,2,3,4,5].map(v => `<span class="star-btn" onclick="setRating(${v})" style="cursor:pointer;font-size:1.2rem;color:#ccc;">★</span>`).join('')}
+          <span id="ratingVal" style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);margin-left:6px;">0/5</span>
+        </div>
+        <input type="text" id="reviewName" placeholder="Adın (isteğe bağlı)">
+        <textarea id="reviewText" placeholder="Bu kitap hakkında ne düşünüyorsun?"></textarea>
+        <button class="btn-review" onclick="submitReview(${id})">Yorumu Gönder</button>
+      </div>
+    </div>`;
+
+  // Yıldız butonlarına lit class stil desteği
+  document.querySelectorAll('#starRow .star-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', function(){ this.style.color='var(--gold)'; });
+  });
+  selectedRating = 0;
+
+  document.getElementById('detailOverlay').classList.add('open');
+
+  // Son görülme kaydı
   const lastSeen = JSON.parse(localStorage.getItem(LAST_SEEN_KEY) || '{}');
   lastSeen[id] = Date.now();
   localStorage.setItem(LAST_SEEN_KEY, JSON.stringify(lastSeen));
-  return r;
 }
 
 // --- Toplu Raf Taşıma Onay ---
