@@ -16481,6 +16481,15 @@ function restoreFilterState() {
 }
 
 // (adminTableReset — filtre kaydetme mantığı doğrudan içine alındı, wrapper kaldırıldı)
+// Tüm admin filtrelerini tek tıkla temizle
+function clearAllAdminFilters() {
+  const ids = ['adminFilterGenre','adminFilterStatus','adminFilterShelf','adminFilterPublisher','adminFilterCondition','adminFilterDQ','adminFilterNora','adminFilterTags','adminFilterYearFrom','adminFilterYearTo'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const search = document.getElementById('adminSearch'); if (search) search.value = '';
+  adminTableReset();
+  showToast('✓ Tüm filtreler temizlendi', '#2a7a2a');
+}
+
 function adminTableReset() {
   adminCurrentPage = 1;
   renderAdminTable();
@@ -18167,9 +18176,19 @@ function renderAdminTable() {
   const start = (adminCurrentPage - 1) * ADMIN_PAGE_SIZE;
   const pageItems = filtered.slice(start, start + ADMIN_PAGE_SIZE);
 
-  // Info
+  // Info — aktif filtreler görünür olsun (0 sonuç çıkınca neden anlaşılsın)
   const info = document.getElementById('adminTableInfo');
-  if (info) info.textContent = `${total} kitap · Sayfa ${adminCurrentPage}/${totalPages}`;
+  if (info) {
+    const activeFilters = [];
+    if (filterGenre) activeFilters.push(`Tür: ${filterGenre}`);
+    if (filterStatus) activeFilters.push(`Durum: ${filterStatus}`);
+    if (filterShelf) activeFilters.push(`Raf: ${filterShelf}`);
+    if (filterPublisher) activeFilters.push(`Yayınevi: ${filterPublisher}`);
+    if (filterCondition) activeFilters.push(`Durum(fiziksel): ${filterCondition}`);
+    if (filterNora === '1') activeFilters.push('Nora Seçimi');
+    const filterHint = activeFilters.length ? ` <span style="color:#c87020;cursor:pointer;" onclick="clearAllAdminFilters()" title="Tıkla, filtreleri temizle">⚠ Filtre aktif: ${activeFilters.join(', ')} — Temizle ✕</span>` : '';
+    info.innerHTML = `${total} kitap · Sayfa ${adminCurrentPage}/${totalPages}${filterHint}`;
+  }
 
   // Tablo
   document.getElementById('adminTableBody').innerHTML = pageItems.length ? pageItems.map(b => {
@@ -19331,7 +19350,6 @@ function initAdminPanel() {
   }, 300);
   setTimeout(() => {
     renderQuickFavorites();
-    restoreFilterState();
     showDashboardAlarms();
     updateTeminBudgetBar();
   }, 600);
