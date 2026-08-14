@@ -151,6 +151,7 @@ body.dark .autocomplete-item:hover, body.dark .autocomplete-item.ac-active { bac
 .filter-chip { background:transparent;border:1.5px solid var(--border-dark);color:var(--ink-light);padding:4px 14px;font-size:0.72rem;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;font-family:'Courier Prime',monospace; }
 .filter-chip:hover { border-color:var(--ink);color:var(--ink); }
 .filter-chip.active { background:var(--black);border-color:var(--black);color:var(--white);font-weight:700; }
+.filter-chip-sm { padding:3px 10px;font-size:0.62rem; } /* Gelişmiş Arama alt filtreleri için standart küçük boyut */
 
 /* Gelişmiş filtre satırı */
 .adv-filter-row { display:flex;gap:10px;padding:8px 20px 0;max-width:600px;margin:0 auto;flex-wrap:wrap;align-items:center; }
@@ -462,7 +463,7 @@ body.dark .daily-book-card { background:linear-gradient(135deg,#1a1710 0%,#12100
 .neighbor-card .n-shelf { font-size:0.65rem;letter-spacing:1px;color:var(--ink-faint);margin-top:5px; }
 
 /* BOOK DETAIL MODAL */
-.detail-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:flex-end;justify-content:center;padding:0; }
+.detail-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:flex-end;justify-content:center;padding:0; }
 .detail-overlay.open { display:flex; }
 .detail-sheet { background:var(--paper);border-top:3px solid var(--ink);width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:28px 24px 40px;animation:sheetUp 0.3s ease; }
 @keyframes sheetUp { from { transform:translateY(40px);opacity:0; } to { transform:translateY(0);opacity:1; } }
@@ -577,7 +578,7 @@ body.dark .detail-description { border-color:#333; }
 .bar-val { width:50px;text-align:right;color:var(--ink-faint);font-size:0.78rem;flex-shrink:0; }
 
 /* MODAL */
-.modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:100;align-items:center;justify-content:center;padding:20px; }
+.modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center;padding:20px; }
 .modal-overlay.open { display:flex; }
 .modal { background:var(--paper);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:28px;width:100%;max-width:520px;animation:modalIn 0.2s ease;max-height:90vh;overflow-y:auto; }
 .modal h2 { font-family:'Special Elite',cursive;font-size:1.2rem;margin-bottom:20px;color:var(--ink);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border-dark);padding-bottom:12px; }
@@ -701,7 +702,7 @@ body.dark .serendipity-msg { background:#111;border-color:#333;color:#b0aa9f; }
 
 
 /* AUTH */
-.auth-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:20px; }
+.auth-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;padding:20px; }
 .auth-overlay.open { display:flex; }
 .auth-box { background:var(--paper);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:32px 28px;width:100%;max-width:400px;animation:modalIn 0.2s ease; }
 .auth-box h2 { font-family:'Special Elite',cursive;font-size:1.1rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-dark); }
@@ -967,6 +968,9 @@ body.split-mode .table-row.split-active { background:var(--paper-dark);border-le
 /* 9. Modal padding rahat */
 #noraModalBox { padding:28px 32px !important; }
 @media (max-width:480px) { #noraModalBox { padding:20px 16px !important; } }
+.admin-header-btn { background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;transition:border-color 0.15s,color 0.15s; }
+.admin-header-btn:hover { border-color:var(--zone-sepia);color:var(--zone-sepia); }
+
 .admin-more-item { display:block;width:100%;text-align:left;background:none;border:none;color:var(--ink);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:8px 14px;cursor:pointer;letter-spacing:0.5px; }
 .admin-more-item:hover { background:var(--paper-dark); }
 body.dark .admin-more-item:hover { background:#222; }
@@ -983,10 +987,11 @@ body.dark .admin-more-item:hover { background:#222; }
 /* Sistem sağlık panosu */
 #sistemSaglikBar { display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;margin-bottom:10px;border-bottom:1px dashed var(--border); }
 .saglik-item { display:flex;align-items:center;gap:5px;font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint); }
-.saglik-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+.saglik-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center; }
 .saglik-ok { background:#2a7a2a; }
-.saglik-warn { background:#c87020; }
-.saglik-err { background:#c84040;animation:blink 1s step-end infinite; }
+.saglik-ok::after { content:''; }
+.saglik-warn { background:#c87020;border-radius:2px; } /* şekil farkı: kare */
+.saglik-err { background:#c84040;animation:blink 1s step-end infinite;border-radius:0;transform:rotate(45deg); } /* şekil farkı: elmas */
 .saglik-unk { background:#555; }
 @keyframes blink { 50%{opacity:0} }
 
@@ -1385,7 +1390,7 @@ body.dark .ikram-badge:hover { background:#6a5020;color:#fff; }
   animation: confettiFall 1.2s ease-out forwards;
   pointer-events: none;
 }
-.ikram-modal { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:600;align-items:center;justify-content:center;padding:20px; }
+.ikram-modal { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:600;align-items:center;justify-content:center;padding:20px; }
 .ikram-modal.open { display:flex;animation:ikramFadeIn 0.3s ease; }
 @keyframes ikramFadeIn { from{opacity:0} to{opacity:1} }
 .ikram-box { background:var(--paper);border:none;padding:0;max-width:400px;width:100%;text-align:center;position:relative;overflow:visible;animation:ikramPop 0.45s cubic-bezier(0.34,1.56,0.64,1); }
@@ -1730,7 +1735,7 @@ body.ee-samizdat header {
 }
 
 /* Yazar Sayfası */
-.author-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:flex-end;justify-content:center; }
+.author-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;align-items:flex-end;justify-content:center; }
 .author-overlay.open { display:flex; }
 .author-sheet { background:var(--paper);width:100%;max-width:700px;max-height:88vh;overflow-y:auto;padding:28px 24px 40px;border-radius:16px 16px 0 0;position:relative; }
 body.dark .author-sheet { background:#111; }
@@ -2217,11 +2222,11 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <div style="margin-bottom:14px;">
       <div class="adv-filter-label">Ne Kadar Sürer?</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        <button onclick="setTimeFilter(null)" id="tf_all" class="filter-chip active" style="font-size:0.6rem;">Tümü</button>
-        <button onclick="setTimeFilter(2)" id="tf_2" class="filter-chip" style="font-size:0.6rem;">⏱ 2 Saat</button>
-        <button onclick="setTimeFilter(6)" id="tf_6" class="filter-chip" style="font-size:0.6rem;">☕ Bir Akşam</button>
-        <button onclick="setTimeFilter(15)" id="tf_15" class="filter-chip" style="font-size:0.6rem;">📅 Hafta Sonu</button>
-        <button onclick="setTimeFilter(40)" id="tf_40" class="filter-chip" style="font-size:0.6rem;">🌞 Bir Yaz</button>
+        <button onclick="setTimeFilter(null)" id="tf_all" class="filter-chip active filter-chip-sm">Tümü</button>
+        <button onclick="setTimeFilter(2)" id="tf_2" class="filter-chip filter-chip-sm">⏱ 2 Saat</button>
+        <button onclick="setTimeFilter(6)" id="tf_6" class="filter-chip filter-chip-sm">☕ Bir Akşam</button>
+        <button onclick="setTimeFilter(15)" id="tf_15" class="filter-chip filter-chip-sm">📅 Hafta Sonu</button>
+        <button onclick="setTimeFilter(40)" id="tf_40" class="filter-chip filter-chip-sm">🌞 Bir Yaz</button>
         <select id="customerSort" onchange="saveAndSort()" style="margin-left:auto;font-family:'Courier Prime',monospace;font-size:0.62rem;border:1px solid var(--border);background:var(--paper);color:var(--ink);padding:3px 6px;cursor:pointer;">
           <option value="">Varsayılan Sıra</option>
           <option value="nora">★ Nora Önce</option>
@@ -2252,26 +2257,24 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <button onclick="toggleMoreAdvFilters()" id="moreAdvBtn" style="background:none;border:none;color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:1px;cursor:pointer;padding:4px 0;margin-bottom:4px;">▸ Daha Fazla Filtre (sayfa, puan, yayınevi, fiyat, köken, tür)</button>
 
     <div id="moreAdvFiltersPanel" style="display:none;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;margin-top:10px;">
-        <div>
-          <div class="adv-filter-label">Sayfa Aralığı</div>
-          <div class="page-range-wrap">
-            <input class="page-range-input" id="pageMin" type="number" placeholder="min" min="0" oninput="doSearch()">
-            <span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);">—</span>
-            <input class="page-range-input" id="pageMax" type="number" placeholder="max" oninput="doSearch()">
-            <span style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">sayfa</span>
-          </div>
+      <div style="margin-top:10px;">
+        <div class="adv-filter-label">Sayfa Aralığı</div>
+        <div class="page-range-wrap">
+          <input class="page-range-input" id="pageMin" type="number" placeholder="min" min="0" oninput="doSearch()">
+          <span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);">—</span>
+          <input class="page-range-input" id="pageMax" type="number" placeholder="max" oninput="doSearch()">
+          <span style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">sayfa</span>
         </div>
-        <div>
-          <div class="adv-filter-label">Min. Puan</div>
-          <div class="rating-filter-row" id="ratingFilterRow">
-            <span class="rating-filter-star active" data-val="0" onclick="setRatingFilter(0)">Tümü</span>
-            <span class="rating-filter-star" data-val="1" onclick="setRatingFilter(1)">★1</span>
-            <span class="rating-filter-star" data-val="2" onclick="setRatingFilter(2)">★2</span>
-            <span class="rating-filter-star" data-val="3" onclick="setRatingFilter(3)">★3</span>
-            <span class="rating-filter-star" data-val="4" onclick="setRatingFilter(4)">★4</span>
-            <span class="rating-filter-star" data-val="5" onclick="setRatingFilter(5)">★5</span>
-          </div>
+      </div>
+      <div style="margin-top:14px;">
+        <div class="adv-filter-label">Min. Puan</div>
+        <div class="rating-filter-row" id="ratingFilterRow">
+          <span class="rating-filter-star active" data-val="0" onclick="setRatingFilter(0)">Tümü</span>
+          <span class="rating-filter-star" data-val="1" onclick="setRatingFilter(1)">★1</span>
+          <span class="rating-filter-star" data-val="2" onclick="setRatingFilter(2)">★2</span>
+          <span class="rating-filter-star" data-val="3" onclick="setRatingFilter(3)">★3</span>
+          <span class="rating-filter-star" data-val="4" onclick="setRatingFilter(4)">★4</span>
+          <span class="rating-filter-star" data-val="5" onclick="setRatingFilter(5)">★5</span>
         </div>
       </div>
       <div style="margin-top:14px;">
@@ -2282,20 +2285,17 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
       <div style="margin-top:14px;">
         <div class="adv-filter-label">Fiyat Aralığı</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button onclick="setPriceFilter(null,null)" id="priceAll" class="filter-chip active" style="font-size:0.62rem;">Hepsi</button>
-          <button onclick="setPriceFilter(0,50)" id="price50" class="filter-chip" style="font-size:0.62rem;">₺0–50</button>
-          <button onclick="setPriceFilter(50,100)" id="price100" class="filter-chip" style="font-size:0.62rem;">₺50–100</button>
-          <button onclick="setPriceFilter(100,200)" id="price200" class="filter-chip" style="font-size:0.62rem;">₺100–200</button>
-          <button onclick="setPriceFilter(200,null)" id="price200p" class="filter-chip" style="font-size:0.62rem;">₺200+</button>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="range" id="priceRangeSlider" min="0" max="500" step="10" value="500" oninput="onPriceSliderChange(this.value)" style="flex:1;accent-color:var(--zone-sepia);">
+          <span id="priceRangeLabel" style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);min-width:100px;text-align:right;">Tümü</span>
         </div>
       </div>
       <div style="margin-top:14px;">
         <div class="adv-filter-label">Köken</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-          <button onclick="setOriginFilter(null)" id="originAll" class="filter-chip active" style="font-size:0.62rem;">Tümü</button>
-          <button onclick="setOriginFilter('Yerli')" id="originYerli" class="filter-chip" style="font-size:0.62rem;">🇹🇷 Yerli</button>
-          <button onclick="setOriginFilter('Yabancı')" id="originYabanci" class="filter-chip" style="font-size:0.62rem;">🌍 Yabancı</button>
+          <button onclick="setOriginFilter(null)" id="originAll" class="filter-chip active filter-chip-sm">Tümü</button>
+          <button onclick="setOriginFilter('Yerli')" id="originYerli" class="filter-chip filter-chip-sm">🇹🇷 Yerli</button>
+          <button onclick="setOriginFilter('Yabancı')" id="originYabanci" class="filter-chip filter-chip-sm">🌍 Yabancı</button>
         </div>
         <div class="adv-filter-label">Çoklu Tür Seçimi <span style="color:#555;text-transform:none;letter-spacing:0;">(birden fazla seçilebilir)</span></div>
         <div class="multi-genre-wrap" id="multiGenreWrap"></div>
@@ -2575,10 +2575,10 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div style="display:flex;gap:8px;position:relative;">
         <button class="btn-add" onclick="openModal()">+ Yeni Kitap Ekle</button>
         <button class="btn-add" onclick="openBulkModal()" style="background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);">⊞ Toplu Ekle</button>
-        <button onclick="showKapanis()" title="Kapanış raporu" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">🌙 Kapanış</button>
-        <button onclick="toggleAdminMoreMenu()" title="Diğer işlemler" id="adminMoreBtn" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.85rem;padding:7px 12px;cursor:pointer;">⋮</button>
+        <button onclick="showKapanis()" title="Kapanış raporu" class="admin-header-btn">🌙 Kapanış</button>
+        <button onclick="toggleAdminMoreMenu()" title="Diğer işlemler" id="adminMoreBtn" class="admin-header-btn">⋮</button>
         <button onclick="lockAdmin()" title="Çıkış" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">⏻ Çıkış</button>
-        <button onclick="showShortcuts()" title="Klavye kısayolları (? tuşu)" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:7px 10px;cursor:pointer;">?</button>
+        <button onclick="showShortcuts()" title="Klavye kısayolları (? tuşu)" class="admin-header-btn">?</button>
 
         <!-- Daha Fazla dropdown — az kullanılan işlemler burada -->
         <div id="adminMoreMenu" style="display:none;position:absolute;top:100%;right:70px;margin-top:6px;background:var(--paper);border:2px solid var(--ink);box-shadow:4px 4px 0 rgba(0,0,0,0.15);z-index:500;min-width:200px;padding:8px 0;">
@@ -2595,6 +2595,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <button onclick="quickRestoreBackup();toggleAdminMoreMenu()" class="admin-more-item">↑ Yedekten Geri Yükle</button>
           <button onclick="compareBackups();toggleAdminMoreMenu()" class="admin-more-item">📊 Yedek Geçmişi</button>
           <button onclick="document.getElementById('importJSONFile').click();toggleAdminMoreMenu()" class="admin-more-item">⬆ JSON İçe Aktar</button>
+          <div style="padding:8px 14px 4px;font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);border-top:1px dashed var(--border);margin-top:4px;">VERİ TEMİZLİK</div>
+          <button onclick="cleanKopyaTitles();toggleAdminMoreMenu()" class="admin-more-item">🧹 "(Kopya)" Eklerini Temizle</button>
         </div>
         <input type="file" id="importJSONFile" accept=".json" style="display:none;" onchange="if(this.files[0])importCatalogJSON(this.files[0])">
       </div>
@@ -3125,104 +3127,124 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#1a6a6a;letter-spacing:2px;margin-bottom:20px;">> GÜNLÜK RAPOR — bugünün özeti + arama analitiği</div>
       <div id="reportContent" style="display:grid;gap:16px;"></div>
 
-      <!-- VERİ KALİTESİ ANALİZİ -->
-      <div class="report-accordion-item" style="margin-top:16px;border-top:2px solid var(--ink);">
-        <div class="report-accordion-header" onclick="toggleReportSection('dq')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px;cursor:pointer;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);">✦ VERİ KALİTESİ ANALİZİ <span id="acc-arrow-dq" style="color:var(--ink-faint);">▸</span></div>
+      <!-- ═══ SÜPER GRUP: BAKIM ═══ (veri kalitesi + etiket + yazar + doldurma + temizleme) -->
+      <div class="report-super-group" style="margin-top:16px;border-top:3px double var(--ink);">
+        <div class="report-super-header" onclick="toggleReportSuperGroup('bakim')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px;cursor:pointer;">
+          <div style="font-family:'Courier Prime',monospace;font-size:0.78rem;letter-spacing:4px;color:var(--zone-sepia);font-weight:700;">🔧 BAKIM <span style="font-size:0.6rem;color:var(--ink-faint);font-weight:400;letter-spacing:1px;">— veri kalitesi, etiket, yazar, doldurma, temizleme</span> <span id="super-arrow-bakim" style="color:var(--ink-faint);float:right;">▾</span></div>
         </div>
-        <div id="acc-body-dq" style="display:none;padding-bottom:16px;">
-          <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:12px;">
-            <button onclick="runDataQualityReport()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">▶ Analiz Et</button>
-            <button onclick="exportDataQualityPDF()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">📄 PDF</button>
+        <div id="super-body-bakim" style="display:block;padding-left:4px;border-left:2px solid var(--paper-dark);">
+
+          <!-- VERİ KALİTESİ ANALİZİ -->
+          <div class="report-accordion-item" style="border-top:1px solid var(--border);">
+            <div class="report-accordion-header" onclick="toggleReportSection('dq')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px 10px;cursor:pointer;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink);">✦ VERİ KALİTESİ ANALİZİ <span id="acc-arrow-dq" style="color:var(--ink-faint);">▸</span></div>
+            </div>
+            <div id="acc-body-dq" style="display:none;padding:0 0 14px 10px;">
+              <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:12px;">
+                <button onclick="runDataQualityReport()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">▶ Analiz Et</button>
+                <button onclick="exportDataQualityPDF()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">📄 PDF</button>
+              </div>
+              <div id="dataQualityReport" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Analiz için butona tıkla.</div>
+            </div>
           </div>
-          <div id="dataQualityReport" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Analiz için butona tıkla.</div>
+
+          <!-- ETİKET YÖNETİMİ -->
+          <div class="report-accordion-item" style="border-top:1px solid var(--border);">
+            <div class="report-accordion-header" onclick="toggleReportSection('tag')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px 10px;cursor:pointer;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink);">✦ ETİKET YÖNETİMİ <span id="acc-arrow-tag" style="color:var(--ink-faint);">▸</span></div>
+            </div>
+            <div id="acc-body-tag" style="display:none;padding:0 0 14px 10px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+                <button onclick="showTagManager()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">📊 Etiket Yöneticisi</button>
+                <button onclick="detectSimilarTags()" style="background:none;border:1px solid #c87020;color:#c87020;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">⚠ Benzer Etiketler</button>
+                <button onclick="showTagMergeModal()" style="background:none;border:1px solid var(--zone-water);color:var(--zone-water);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">⇌ Birleştir</button>
+                <button onclick="showTagMigrateModal()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">→ Migrate Et</button>
+                <button onclick="cleanOrphanTags()" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">🗑 Kullanılmayan</button>
+              </div>
+              <div id="tagManagerPanel"></div>
+            </div>
+          </div>
+
+          <!-- YAZAR NORMALLEŞTIRME -->
+          <div class="report-accordion-item" style="border-top:1px solid var(--border);">
+            <div class="report-accordion-header" onclick="toggleReportSection('author')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px 10px;cursor:pointer;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink);">✦ YAZAR AD NORMALLEŞTIRME <span id="acc-arrow-author" style="color:var(--ink-faint);">▸</span></div>
+            </div>
+            <div id="acc-body-author" style="display:none;padding:0 0 14px 10px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+                <button onclick="detectAuthorVariants()" style="background:none;border:1px solid #c87020;color:#c87020;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">▶ Varyantları Bul</button>
+                <button onclick="normalizeAllAuthors()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">✓ Toplu Normalize</button>
+              </div>
+              <div id="authorNormalizePanel" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Analiz için butona tıkla.</div>
+            </div>
+          </div>
+
+          <!-- VERİ DOLDURMA KAMPANYASI -->
+          <div class="report-accordion-item" style="border-top:1px solid var(--border);">
+            <div class="report-accordion-header" onclick="toggleReportSection('fill')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px 10px;cursor:pointer;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink);">✦ VERİ DOLDURMA KAMPANYASI <span id="acc-arrow-fill" style="color:var(--ink-faint);">▸</span></div>
+            </div>
+            <div id="acc-body-fill" style="display:none;padding:0 0 14px 10px;">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                <button onclick="startDataFillCampaign()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:6px 12px;cursor:pointer;letter-spacing:1px;">▶ Başlat</button>
+              </div>
+              <div id="dataFillStats" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Eksik alanlara göre öncelik sırasıyla kitap listesi.</div>
+            </div>
+          </div>
+
+          <!-- VERİ TEMİZLEME -->
+          <div class="report-accordion-item" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+            <div class="report-accordion-header" onclick="toggleReportSection('clean')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px 10px;cursor:pointer;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink);">✦ VERİ TEMİZLEME <span id="acc-arrow-clean" style="color:var(--ink-faint);">▸</span></div>
+            </div>
+            <div id="acc-body-clean" style="display:none;padding:0 0 14px 10px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                <button onclick="showDataReport('duplicate')" class="bulk-btn">Duplicate Şüphelileri</button>
+                <button onclick="showDataReport('nocover')" class="bulk-btn">Kapaksızlar</button>
+                <button onclick="showDataReport('noauthor')" class="bulk-btn">Yazarsızlar</button>
+                <button onclick="showDataReport('noshelf')" class="bulk-btn">Rafsızlar</button>
+                <button onclick="showDataReport('noyear')" class="bulk-btn">Yılsızlar</button>
+              </div>
+              <div id="dataReportResult" style="max-height:400px;overflow-y:auto;"></div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- İÇERİK BOŞLUĞU ANALİZİ -->
-      <div class="report-accordion-item" style="border-top:2px solid var(--ink);">
-        <div class="report-accordion-header" onclick="toggleReportSection('gap')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px;cursor:pointer;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);">✦ İÇERİK BOŞLUĞU ANALİZİ <span id="acc-arrow-gap" style="color:var(--ink-faint);">▸</span></div>
+      <!-- ═══ SÜPER GRUP: İÇGÖRÜ & ANALİZ ═══ (içerik boşluğu + aranan bulunamayan) -->
+      <div class="report-super-group" style="border-top:3px double var(--ink);border-bottom:3px double var(--ink);">
+        <div class="report-super-header" onclick="toggleReportSuperGroup('icgoru')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px;cursor:pointer;">
+          <div style="font-family:'Courier Prime',monospace;font-size:0.78rem;letter-spacing:4px;color:var(--zone-water);font-weight:700;">📊 İÇGÖRÜ & ANALİZ <span style="font-size:0.6rem;color:var(--ink-faint);font-weight:400;letter-spacing:1px;">— içerik boşluğu, arama analitiği</span> <span id="super-arrow-icgoru" style="color:var(--ink-faint);float:right;">▾</span></div>
         </div>
-        <div id="acc-body-gap" style="display:none;padding-bottom:16px;">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-            <button onclick="runContentGapAnalysis()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">▶ Analiz Et</button>
-          </div>
-          <div id="contentGapPanel" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Katalogdaki tür boşluklarını görmek için analiz et.</div>
-        </div>
-      </div>
+        <div id="super-body-icgoru" style="display:block;padding-left:4px;border-left:2px solid var(--paper-dark);">
 
-      <!-- ETİKET YÖNETİMİ -->
-      <div class="report-accordion-item" style="border-top:2px solid var(--ink);">
-        <div class="report-accordion-header" onclick="toggleReportSection('tag')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px;cursor:pointer;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);">✦ ETİKET YÖNETİMİ <span id="acc-arrow-tag" style="color:var(--ink-faint);">▸</span></div>
-        </div>
-        <div id="acc-body-tag" style="display:none;padding-bottom:16px;">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-            <button onclick="showTagManager()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">📊 Etiket Yöneticisi</button>
-            <button onclick="detectSimilarTags()" style="background:none;border:1px solid #c87020;color:#c87020;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">⚠ Benzer Etiketler</button>
-            <button onclick="showTagMergeModal()" style="background:none;border:1px solid var(--zone-water);color:var(--zone-water);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">⇌ Birleştir</button>
-            <button onclick="showTagMigrateModal()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">→ Migrate Et</button>
-            <button onclick="cleanOrphanTags()" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">🗑 Kullanılmayan</button>
+          <!-- İÇERİK BOŞLUĞU ANALİZİ -->
+          <div class="report-accordion-item" style="border-top:1px solid var(--border);">
+            <div class="report-accordion-header" onclick="toggleReportSection('gap')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px 10px;cursor:pointer;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink);">✦ İÇERİK BOŞLUĞU ANALİZİ <span id="acc-arrow-gap" style="color:var(--ink-faint);">▸</span></div>
+            </div>
+            <div id="acc-body-gap" style="display:none;padding:0 0 14px 10px;">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                <button onclick="runContentGapAnalysis()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">▶ Analiz Et</button>
+              </div>
+              <div id="contentGapPanel" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Katalogdaki tür boşluklarını görmek için analiz et.</div>
+            </div>
           </div>
-          <div id="tagManagerPanel"></div>
-        </div>
-      </div>
 
-      <!-- YAZAR NORMALLEŞTIRME -->
-      <div class="report-accordion-item" style="border-top:2px solid var(--ink);">
-        <div class="report-accordion-header" onclick="toggleReportSection('author')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px;cursor:pointer;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);">✦ YAZAR AD NORMALLEŞTIRME <span id="acc-arrow-author" style="color:var(--ink-faint);">▸</span></div>
-        </div>
-        <div id="acc-body-author" style="display:none;padding-bottom:16px;">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-            <button onclick="detectAuthorVariants()" style="background:none;border:1px solid #c87020;color:#c87020;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">▶ Varyantları Bul</button>
-            <button onclick="normalizeAllAuthors()" style="background:none;border:1px solid var(--zone-phosphor);color:var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">✓ Toplu Normalize</button>
+          <!-- ARANAN AMA BULUNAMAYAN -->
+          <div class="report-accordion-item" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+            <div class="report-accordion-header" onclick="toggleReportSection('missed')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px 10px;cursor:pointer;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink);">✦ ARANAN AMA BULUNAMAYAN <span id="acc-arrow-missed" style="color:var(--ink-faint);">▸</span></div>
+            </div>
+            <div id="acc-body-missed" style="display:none;padding:0 0 14px 10px;">
+              <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:10px;">Arama yapılmış ama hiç sonuç çıkmamış sorgular:</div>
+              <div id="missedSearchesPanel" style="max-height:300px;overflow-y:auto;"></div>
+              <button onclick="renderMissedSearches()" style="margin-top:8px;background:none;border:1px solid var(--zone-rust);color:var(--zone-rust);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">🔍 Analiz Et</button>
+              <button onclick="clearMissedSearches()" style="margin-top:8px;margin-left:6px;background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">Temizle</button>
+            </div>
           </div>
-          <div id="authorNormalizePanel" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Analiz için butona tıkla.</div>
-        </div>
-      </div>
 
-      <!-- VERİ DOLDURMA KAMPANYASI -->
-      <div class="report-accordion-item" style="border-top:2px solid var(--ink);">
-        <div class="report-accordion-header" onclick="toggleReportSection('fill')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px;cursor:pointer;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);">✦ VERİ DOLDURMA KAMPANYASI <span id="acc-arrow-fill" style="color:var(--ink-faint);">▸</span></div>
-        </div>
-        <div id="acc-body-fill" style="display:none;padding-bottom:16px;">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-            <button onclick="startDataFillCampaign()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:6px 12px;cursor:pointer;letter-spacing:1px;">▶ Başlat</button>
-          </div>
-          <div id="dataFillStats" style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);">Eksik alanlara göre öncelik sırasıyla kitap listesi.</div>
-        </div>
-      </div>
-
-      <!-- ARANAN AMA BULUNAMAYAN -->
-      <div class="report-accordion-item" style="border-top:2px solid var(--ink);">
-        <div class="report-accordion-header" onclick="toggleReportSection('missed')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px;cursor:pointer;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);">✦ ARANAN AMA BULUNAMAYAN <span id="acc-arrow-missed" style="color:var(--ink-faint);">▸</span></div>
-        </div>
-        <div id="acc-body-missed" style="display:none;padding-bottom:16px;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink-faint);margin-bottom:10px;">Arama yapılmış ama hiç sonuç çıkmamış sorgular:</div>
-          <div id="missedSearchesPanel" style="max-height:300px;overflow-y:auto;"></div>
-          <button onclick="renderMissedSearches()" style="margin-top:8px;background:none;border:1px solid var(--zone-rust);color:var(--zone-rust);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">🔍 Analiz Et</button>
-          <button onclick="clearMissedSearches()" style="margin-top:8px;margin-left:6px;background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">Temizle</button>
-        </div>
-      </div>
-
-      <!-- VERİ TEMİZLEME -->
-      <div class="report-accordion-item" style="border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);">
-        <div class="report-accordion-header" onclick="toggleReportSection('clean')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px;cursor:pointer;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink);">✦ VERİ TEMİZLEME <span id="acc-arrow-clean" style="color:var(--ink-faint);">▸</span></div>
-        </div>
-        <div id="acc-body-clean" style="display:none;padding-bottom:16px;">
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-            <button onclick="showDataReport('duplicate')" class="bulk-btn">Duplicate Şüphelileri</button>
-            <button onclick="showDataReport('nocover')" class="bulk-btn">Kapaksızlar</button>
-            <button onclick="showDataReport('noauthor')" class="bulk-btn">Yazarsızlar</button>
-            <button onclick="showDataReport('noshelf')" class="bulk-btn">Rafsızlar</button>
-            <button onclick="showDataReport('noyear')" class="bulk-btn">Yılsızlar</button>
-          </div>
-          <div id="dataReportResult" style="max-height:400px;overflow-y:auto;"></div>
         </div>
       </div>
     </div>
@@ -3701,7 +3723,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
   </div>
 </div>
 <!-- PROFİL MODALİ -->
-<div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;align-items:center;justify-content:center;padding:20px;">
+<div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9000;align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--paper);border:2px solid var(--ink);max-width:420px;width:100%;padding:24px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">👤 PROFİL & TERCİHLER</div>
@@ -3814,6 +3836,9 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
   <div class="modal" style="position:relative;">
     <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-faint);line-height:1;padding:4px 8px;" title="Kapat">✕</button>
     <h2 id="modalTitle">Yeni Kitap Ekle</h2>
+
+    <!-- ═══ TEMEL BİLGİLER ═══ (her zaman açık) -->
+    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--zone-sepia);margin:8px 0 10px;">📖 TEMEL BİLGİLER</div>
     <div class="form-grid">
       <div class="field full">
         <label>Kitap Adı *</label>
@@ -3832,11 +3857,73 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         </div>
       </div>
 
-      <div class="field"><label>Hazırlayan <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(opsiyonel)</span></label><input type="text" id="fPreparer" placeholder="Derleyen, çeviren, editör…"></div>
       <div class="field"><label>Yayınevi</label><input type="text" id="fPublisher" placeholder="Yayınevi"></div>
       <div class="field"><label>Raf Numarası *</label><input type="text" id="fShelf" placeholder="örn: A-3, B-12"></div>
       <div class="field"><label>Yayın Yılı</label><input type="number" id="fYear" placeholder="örn: 1984" min="1000" max="2099"></div>
       <div class="field"><label>Satış Fiyatı (₺)</label><input type="number" id="fPrice" placeholder="örn: 150" min="0"></div>
+      <div class="field"><label>ISBN <button type="button" onclick="openBarcodeScannerAdmin()" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:1px 6px;cursor:pointer;letter-spacing:1px;margin-left:6px;">📷 Tara</button></label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="fIsbn" placeholder="978-..." style="flex:1;">
+          <button type="button" onclick="fetchByIsbnManual()" style="background:var(--black);color:var(--white);border:none;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:0 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap;">Bilgileri Çek</button>
+          <button type="button" onclick="googleBooksLookup()" title="Google Books'tan ara" style="background:var(--zone-deep);color:var(--zone-phosphor);border:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:0 10px;cursor:pointer;letter-spacing:1px;white-space:nowrap;">G Books</button>
+        </div>
+      </div>
+      <div class="field"><label>Sayfa Sayısı <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(okuma süresi için)</span></label><input type="number" id="fPages" placeholder="örn: 320" min="1"></div>
+      <div class="field"><label>Tür / Kategori</label>
+        <div style="display:flex;gap:4px;margin-bottom:4px;">
+          <select onchange="if(this.value)applyTemplate(this.value);this.value=''" style="padding:5px;font-family:'Courier Prime',monospace;font-size:0.68rem;border:1px solid var(--zone-sepia);background:var(--paper);color:var(--zone-sepia);cursor:pointer;">
+            <option value="">⚡ Hızlı Şablon</option>
+            <option value="roman_yerli">Roman (Yerli)</option>
+            <option value="roman_yabanci">Roman (Yabancı)</option>
+            <option value="siir_yerli">Şiir (Yerli)</option>
+            <option value="tarih">Tarih</option>
+            <option value="felsefe">Felsefe</option>
+            <option value="cocuk">Çocuk</option>
+            <option value="bilim_kurgu">Bilim Kurgu</option>
+            <option value="kisisel_gelisim">Kişisel Gelişim</option>
+            <option value="siyaset">Siyaset</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <select id="fGenrePicker" onchange="addGenreFromPicker()" style="flex:1;padding:7px;font-family:'Courier Prime',monospace;font-size:0.78rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
+            <option value="">+ Tür Ekle</option>
+            <optgroup label="EDEBİYAT">
+              <option>Roman</option><option>Öykü</option><option>Şiir</option><option>Deneme</option><option>Anı</option><option>Biyografi</option><option>Otobiyografi</option><option>Mektup</option><option>Günlük</option><option>Gezi</option><option>Mizah</option>
+            </optgroup>
+            <optgroup label="TÜR EDEBİYATI">
+              <option>Polisiye</option><option>Gerilim</option><option>Bilim Kurgu</option><option>Fantastik</option><option>Korku</option><option>Macera</option><option>Aşk</option><option>Tarihi Roman</option>
+            </optgroup>
+            <optgroup label="BİLGİ & DÜŞÜNCE">
+              <option>Tarih</option><option>Felsefe</option><option>Psikoloji</option><option>Sosyoloji</option><option>Siyaset</option><option>Ekonomi</option><option>Hukuk</option><option>Din</option><option>Bilim</option><option>Doğa</option><option>Matematik</option>
+            </optgroup>
+            <optgroup label="SANAT & KÜLTÜR">
+              <option>Sanat</option><option>Müzik</option><option>Sinema</option><option>Tiyatro</option><option>Fotoğraf</option><option>Mimari</option><option>Tasarım</option><option>Kültür</option>
+            </optgroup>
+            <optgroup label="YAŞAM">
+              <option>Kişisel Gelişim</option><option>Eğitim</option><option>Sağlık</option><option>Yemek</option><option>Spor</option><option>Çocuk</option><option>Gençlik</option>
+            </optgroup>
+            <optgroup label="KÖKEN">
+              <option>Yerli</option><option>Yabancı</option>
+            </optgroup>
+            <optgroup label="——">
+              <option value="_custom">+ Özel Tür Ekle...</option>
+            </optgroup>
+          </select>
+          <input type="text" id="fGenre" placeholder="Roman, Tarih, Yerli…" style="flex:2;">
+        </div>
+      </div>
+      <div class="field full"><label>Durum</label>
+        <select id="fStatus"><option value="yerlesik">Yerleşik</option><option value="borrowed">Ödünçte</option><option value="askida">Askıda Kitap ❤</option><option value="satista">Satışta</option><option value="satildi">Satıldı</option><option value="ev-koleksiyon">🏠 Ev Koleksiyonu</option></select>
+      </div>
+    </div>
+
+    <!-- ═══ DETAYLAR ═══ (varsayılan kapalı — az kullanılan alanlar) -->
+    <div class="report-accordion-header" onclick="toggleFormDetails()" id="formDetailsToggle" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px;cursor:pointer;border-top:1px dashed var(--border);margin-top:14px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink-faint);">📋 DETAYLAR <span style="font-weight:normal;">— hazırlayan, kaynak, kondisyon, kapak, etiket, artefakt...</span> <span id="formDetailsArrow">▸</span></div>
+    </div>
+    <div id="formDetailsBody" style="display:none;">
+    <div class="form-grid">
+      <div class="field"><label>Hazırlayan <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(opsiyonel)</span></label><input type="text" id="fPreparer" placeholder="Derleyen, çeviren, editör…"></div>
       <!-- Kaynak takibi -->
       <div class="field">
         <label>Kaynak <span style="font-size:0.65rem;color:var(--ink-faint);">(nereden geldi)</span></label>
@@ -3897,57 +3984,6 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <option value="Mürekkep">🖋 Mürekkep</option>
         </select>
       </div>
-      <div class="field"><label>ISBN <button type="button" onclick="openBarcodeScannerAdmin()" style="background:none;border:1px solid var(--ink-faint);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:1px 6px;cursor:pointer;letter-spacing:1px;margin-left:6px;">📷 Tara</button></label>
-        <div style="display:flex;gap:6px;">
-          <input type="text" id="fIsbn" placeholder="978-..." style="flex:1;">
-          <button type="button" onclick="fetchByIsbnManual()" style="background:var(--black);color:var(--white);border:none;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:0 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap;">Bilgileri Çek</button>
-          <button type="button" onclick="googleBooksLookup()" title="Google Books'tan ara" style="background:var(--zone-deep);color:var(--zone-phosphor);border:1px solid var(--zone-phosphor);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:0 10px;cursor:pointer;letter-spacing:1px;white-space:nowrap;">G Books</button>
-        </div>
-      </div>
-      <div class="field"><label>Sayfa Sayısı <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(okuma süresi için)</span></label><input type="number" id="fPages" placeholder="örn: 320" min="1"></div>
-      <div class="field"><label>Tür / Kategori</label>
-        <div style="display:flex;gap:4px;margin-bottom:4px;">
-          <select onchange="if(this.value)applyTemplate(this.value);this.value=''" style="padding:5px;font-family:'Courier Prime',monospace;font-size:0.68rem;border:1px solid var(--zone-sepia);background:var(--paper);color:var(--zone-sepia);cursor:pointer;">
-            <option value="">⚡ Hızlı Şablon</option>
-            <option value="roman_yerli">Roman (Yerli)</option>
-            <option value="roman_yabanci">Roman (Yabancı)</option>
-            <option value="siir_yerli">Şiir (Yerli)</option>
-            <option value="tarih">Tarih</option>
-            <option value="felsefe">Felsefe</option>
-            <option value="cocuk">Çocuk</option>
-            <option value="bilim_kurgu">Bilim Kurgu</option>
-            <option value="kisisel_gelisim">Kişisel Gelişim</option>
-            <option value="siyaset">Siyaset</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:4px;">
-          <select id="fGenrePicker" onchange="addGenreFromPicker()" style="flex:1;padding:7px;font-family:'Courier Prime',monospace;font-size:0.78rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);">
-            <option value="">+ Tür Ekle</option>
-            <optgroup label="EDEBİYAT">
-              <option>Roman</option><option>Öykü</option><option>Şiir</option><option>Deneme</option><option>Anı</option><option>Biyografi</option><option>Otobiyografi</option><option>Mektup</option><option>Günlük</option><option>Gezi</option><option>Mizah</option>
-            </optgroup>
-            <optgroup label="TÜR EDEBİYATI">
-              <option>Polisiye</option><option>Gerilim</option><option>Bilim Kurgu</option><option>Fantastik</option><option>Korku</option><option>Macera</option><option>Aşk</option><option>Tarihi Roman</option>
-            </optgroup>
-            <optgroup label="BİLGİ & DÜŞÜNCE">
-              <option>Tarih</option><option>Felsefe</option><option>Psikoloji</option><option>Sosyoloji</option><option>Siyaset</option><option>Ekonomi</option><option>Hukuk</option><option>Din</option><option>Bilim</option><option>Doğa</option><option>Matematik</option>
-            </optgroup>
-            <optgroup label="SANAT & KÜLTÜR">
-              <option>Sanat</option><option>Müzik</option><option>Sinema</option><option>Tiyatro</option><option>Fotoğraf</option><option>Mimari</option><option>Tasarım</option><option>Kültür</option>
-            </optgroup>
-            <optgroup label="YAŞAM">
-              <option>Kişisel Gelişim</option><option>Eğitim</option><option>Sağlık</option><option>Yemek</option><option>Spor</option><option>Çocuk</option><option>Gençlik</option>
-            </optgroup>
-            <optgroup label="KÖKEN">
-              <option>Yerli</option><option>Yabancı</option>
-            </optgroup>
-            <optgroup label="——">
-              <option value="_custom">+ Özel Tür Ekle...</option>
-            </optgroup>
-          </select>
-          <input type="text" id="fGenre" placeholder="Roman, Tarih, Yerli…" style="flex:2;">
-        </div>
-      </div>
       <div class="field full"><label>Açıklama / Özet <span style="font-size:0.7rem;color:var(--ink-faint);font-weight:normal;">(opsiyonel — Google Books'tan otomatik gelir)</span></label>
         <textarea id="fDescription" placeholder="Kitap hakkında kısa bir özet..." style="width:100%;min-height:70px;resize:vertical;padding:8px;font-family:'Courier Prime',monospace;font-size:0.8rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);box-sizing:border-box;"></textarea>
       </div>
@@ -3979,9 +4015,6 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <input type="text" id="fTags" placeholder="klasik, çeviri, aşk..." oninput="showTagSuggestions()" autocomplete="off">
         <div id="tagSuggestions" style="display:none;margin-top:4px;font-family:'Courier Prime',monospace;font-size:0.68rem;"></div>
       </div>
-      <div class="field full"><label>Durum</label>
-        <select id="fStatus"><option value="yerlesik">Yerleşik</option><option value="borrowed">Ödünçte</option><option value="askida">Askıda Kitap ❤</option><option value="satista">Satışta</option><option value="satildi">Satıldı</option><option value="ev-koleksiyon">🏠 Ev Koleksiyonu</option></select>
-      </div>
       <div class="field full"><label>Nora\u2019n\u0131n \u00d6nerisi</label>
         <select id="fNora"><option value="0">Hayır</option><option value="1">Evet ★</option></select>
       </div>
@@ -4005,6 +4038,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div class="field full"><label>Az Benzer</label>
         <input type="text" id="fSim3" placeholder="örn: Don Kişot">
       </div>
+    </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">İptal</button>
@@ -7752,12 +7786,17 @@ function clearAdvFilters() {
   activeGenres.clear();
   minRating = 0;
   activeTag = null;
+  _priceMin = null; _priceMax = null;
   const pageMin = document.getElementById('pageMin');
   const pageMax = document.getElementById('pageMax');
   if (pageMin) pageMin.value = '';
   if (pageMax) pageMax.value = '';
   const pubSel = document.getElementById('filterPublisher');
   if (pubSel) pubSel.value = '';
+  const priceSlider = document.getElementById('priceRangeSlider');
+  const priceLabel = document.getElementById('priceRangeLabel');
+  if (priceSlider) priceSlider.value = 500;
+  if (priceLabel) priceLabel.textContent = 'Tümü';
   document.getElementById('advFilterClear').style.display = 'none';
   document.getElementById('advFilterSummary').textContent = '';
   buildFilters();
@@ -7772,6 +7811,7 @@ function updateAdvFilterSummary() {
   if (pMin || pMax) parts.push(`${pMin||'?'}–${pMax||'?'} sayfa`);
   if (minRating > 0) parts.push(`★${minRating}+`);
   if (activeTag) parts.push(`#${activeTag}`);
+  if (_priceMax !== null) parts.push(`₺${_priceMax}'e kadar`);
   const summary = document.getElementById('advFilterSummary');
   const clearBtn = document.getElementById('advFilterClear');
   if (summary) summary.textContent = parts.length ? '› ' + parts.join(' · ') : '';
@@ -7987,10 +8027,8 @@ function renderBookCard(b) {
   const statusBadge = statusMap[b.status] || '';
   const newBadge = isNewBook(b) ? '<span class="badge-new">⚡ Yeni</span>' : '';
 
-  // Nora seçimi / artefakt — tek küçük satır, büyük banner yok (sadelik)
-  const curationLine = (b.nora_pick || b.is_artefakt)
-    ? `<div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:1px;color:${b.is_artefakt?'#5a9a5a':'var(--gold)'};margin-bottom:3px;">${b.is_artefakt?'◉ ARTEFAKT':''}${b.is_artefakt&&b.nora_pick?' · ':''}${b.nora_pick?'★ Nora\'nın Önerisi':''}</div>`
-    : '';
+  // Nora seçimi / artefakt artık ayrı metin satırıyla değil, sadece kart kenarlığı/parlamasıyla ifade ediliyor
+  // (.book-card.nora-pick = altın kenarlık, .artefakt-card = yeşil parlama — bkz. aşağıdaki class ataması)
 
   // Tür bazlı ikon — kapak yoksa türe özgü
   const genreIconMap = {
@@ -8010,10 +8048,8 @@ function renderBookCard(b) {
   const genreColor = getGenreColor(b.genre);
   const borderStyle = genreColor ? `border-left:5px solid ${genreColor};` : '';
 
-  // Fiyat kartın sağ üstünde — satışta olan için
-  const priceTag = b.price && b.status === 'satista'
-    ? `<div style="position:absolute;top:8px;right:8px;background:var(--gold);color:#fff;font-family:'Courier Prime',monospace;font-size:0.68rem;font-weight:700;padding:2px 8px;z-index:2;">₺${b.price}</div>`
-    : '';
+  // NOT: Fiyat artık sadece durum rozetinde ("₺ Satışta · 50₺") gösteriliyor —
+  // eskiden ayrıca sağ üst köşede farklı renkte tekrarlanıyordu, bu tutarsızlık kaldırıldı.
 
   // Kapak placeholder — tür ikonu + harf
   const letterPlaceholder = !b.cover_url ? (() => {
@@ -8030,10 +8066,8 @@ function renderBookCard(b) {
   // NOT: Etiketler, sayfa/süre, fiziksel durum, baskı bilgisi, yayınevi, puan —
   // artık kartta değil, detay sayfasında (openDetail). Sadelik için: başlık + yazar + raf + tek durum.
   return `<div class="book-card ${b.nora_pick ? 'nora-pick nora-pick-glow' : ''} ${b.is_artefakt ? 'artefakt-card' : ''} ${getNewSparkle(b)}" style="${borderStyle}position:relative;" onclick="openDetail(${b.id})">
-    ${priceTag}
     <div class="book-spine" style="${spineStyle}">${b.cover_url ? `<img data-src="${b.cover_url}" src="" alt="" class="lazy-img" decoding="async" onerror="this.parentElement.innerHTML='${icon}';this.parentElement.style.cssText='${spineStyle}'" style="opacity:0;transition:opacity 0.3s;">` : (letterPlaceholder || icon)}</div>
     <div class="book-info">
-      ${curationLine}
       <div class="book-title">${b.title || ''}${newBadge}</div>
       <div class="book-author">${authorLinks(b.author)}</div>
       <div class="book-meta">
@@ -12755,6 +12789,12 @@ function openModal(id = null) {
     const fPrice = document.getElementById('fPrice'); if (fPrice) fPrice.value = b.price || '';
     const fCond = document.getElementById('fCondition'); if (fCond) fCond.value = b.condition || '';
     const fEd = document.getElementById('fEditionInfo'); if (fEd) fEd.value = b.edition_info || '';
+    const fSmell = document.getElementById('fSmellTag'); if (fSmell) fSmell.value = b.smell_tag || '';
+    const fDamage = document.getElementById('fDamageNote'); if (fDamage) fDamage.value = b.damage_note || '';
+    const fRestore = document.getElementById('fRestoration'); if (fRestore) fRestore.value = b.restoration || '';
+    const fSrc = document.getElementById('fSource'); if (fSrc) fSrc.value = b.source || '';
+    const fMark = document.getElementById('fMarkers'); if (fMark) fMark.value = b.markers || '';
+    if (typeof loadMarkersToForm === 'function') loadMarkersToForm(b.markers);
     document.getElementById('fGenre').value = b.genre || '';
     document.getElementById('fTags').value = b.tags || '';
     document.getElementById('fDescription').value = b.description || '';
@@ -12772,16 +12812,35 @@ function openModal(id = null) {
     document.getElementById('fSim1').value = b.sim1 || '';
     document.getElementById('fSim2').value = b.sim2 || '';
     document.getElementById('fSim3').value = b.sim3 || '';
+
+    // Detaylar akordiyonunu, doluysa otomatik aç
+    const hasDetails = b.preparer || b.source || b.markers || b.condition || b.edition_info ||
+      b.smell_tag || b.damage_note || b.restoration || b.description || b.cover_url ||
+      b.tags || b.nora_pick || b.is_artefakt || b.sim1 || b.sim2 || b.sim3;
+    const detailsBody = document.getElementById('formDetailsBody');
+    const detailsArrow = document.getElementById('formDetailsArrow');
+    if (detailsBody) {
+      detailsBody.style.display = hasDetails ? 'block' : 'none';
+      if (detailsArrow) detailsArrow.textContent = hasDetails ? '▾' : '▸';
+    }
   } else {
-    ['fPreparer','fPublisher','fShelf','fIsbn','fPages','fGenre','fTags','fDescription','fCoverUrl','fSim1','fSim2','fSim3','fEditionInfo'].forEach(id => {
+    ['fPreparer','fPublisher','fShelf','fIsbn','fPages','fGenre','fTags','fDescription','fCoverUrl','fSim1','fSim2','fSim3','fEditionInfo','fSmellTag','fDamageNote'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
+    const fRestoreN = document.getElementById('fRestoration'); if (fRestoreN) fRestoreN.value = '';
+    const fSrcN = document.getElementById('fSource'); if (fSrcN) fSrcN.value = '';
+    const fMarkN = document.getElementById('fMarkers'); if (fMarkN) fMarkN.value = '';
     document.getElementById('fCoverPreview').style.display = 'none';
     document.getElementById('fStatus').value = 'yerlesik';
     document.getElementById('fNora').value = '0';
     const fArtN = document.getElementById('fArtefakt');
     if (fArtN) { fArtN.value = '0'; const ne = document.getElementById('fArtefaktNote'); if (ne) { ne.value=''; ne.style.display='none'; } }
+
+    // Yeni kitap — Detaylar kapalı başlasın
+    const detailsBodyNew = document.getElementById('formDetailsBody');
+    const detailsArrowNew = document.getElementById('formDetailsArrow');
+    if (detailsBodyNew) { detailsBodyNew.style.display = 'none'; if (detailsArrowNew) detailsArrowNew.textContent = '▸'; }
   }
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -12811,6 +12870,16 @@ function addAuthorField() {
   document.getElementById('authorFields').appendChild(makeAuthorInput('', true));
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
+
+// Kitap formu — Detaylar akordiyonu aç/kapa
+function toggleFormDetails() {
+  const body = document.getElementById('formDetailsBody');
+  const arrow = document.getElementById('formDetailsArrow');
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.textContent = isOpen ? '▸' : '▾';
+}
 // Modal dışına tıklayınca kapanmaz — sadece ✕ butonu veya İptal kapatır
 
 function showSimilarBooks() {
@@ -12905,6 +12974,11 @@ async function saveBook() {
     artefakt_note: document.getElementById('fArtefakt')?.value === '1' ? (document.getElementById('fArtefaktNote')?.value.trim() || null) : null,
     condition: document.getElementById('fCondition')?.value || null,
     edition_info: document.getElementById('fEditionInfo')?.value.trim() || null,
+    smell_tag: document.getElementById('fSmellTag')?.value || null,
+    damage_note: document.getElementById('fDamageNote')?.value.trim() || null,
+    restoration: document.getElementById('fRestoration')?.value || null,
+    source: document.getElementById('fSource')?.value || null,
+    markers: document.getElementById('fMarkers')?.value || null,
     sim1: document.getElementById('fSim1').value.trim(),
     sim2: document.getElementById('fSim2').value.trim(),
     sim3: document.getElementById('fSim3').value.trim()
@@ -14368,7 +14442,7 @@ function showBadgesPage() {
   const cats = { keşif:'🔍 Keşif', sadakat:'⭐ Sadakat', koleksiyon:'📚 Koleksiyon', topluluk:'📌 Topluluk', nora:'◈ Nora' };
 
   const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
 
   const earned = ALL_BADGES.filter(b => _badgeData[b.key]);
   const total = ALL_BADGES.filter(b => !b.secret).length;
@@ -14465,7 +14539,7 @@ setTimeout(()=>{
 
 function showPrivacyPolicy(){
   const ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML=`<div style="background:var(--paper);border:2px solid var(--ink);max-width:480px;width:100%;padding:24px;max-height:80vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;margin-bottom:14px;"><div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">GİZLİLİK POLİTİKASI</div><button onclick="this.closest('div').parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;">✕</button></div>
     <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink-light);line-height:1.9;">
@@ -14526,7 +14600,7 @@ async function showLastYearToday() {
     .filter(Boolean).find(e=>{const d=new Date(e._ts);return d.getMonth()===today.getMonth()&&d.getDate()===today.getDate()&&d.getFullYear()===lastYear;});
   if(!match){showToast(`Geçen yıl bugün (${lastYear}) için kayıt yok`);return;}
   const ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML=`<div style="background:var(--paper);border:2px solid var(--ink);max-width:400px;width:100%;padding:24px;">
     <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:12px;">📅 GEÇEN YIL BUGÜN — ${lastYear}</div>
     <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-style:italic;line-height:1.8;">${match.text}</div>
@@ -14608,7 +14682,7 @@ function showPWAInstallGuide() {
   else msg = '💻 Masaüstü: Adres çubuğundaki ⊕ veya tarayıcı menüsünden "Yükle"';
 
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:380px;width:100%;padding:24px;">
     <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;margin-bottom:16px;">📲 UYGULAMAYA EKLE</div>
     <div style="font-family:'Courier Prime',monospace;font-size:0.82rem;color:var(--ink-light);line-height:1.8;">${msg}</div>
@@ -15169,7 +15243,7 @@ async function showPanoArchive() {
   const rows = await res.json();
   if (!rows.length) { showToast('Arşiv boş'); return; }
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:500px;width:100%;max-height:80vh;overflow-y:auto;padding:20px;">
     <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">📋 PANO ARŞİVİ</div>
@@ -15898,7 +15972,7 @@ function showTagStats() {
   const sorted = Object.entries(tagCounts).sort((a,b) => b[1]-a[1]);
   const noTag = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'satildi' && !(b.tags||'').trim()).length;
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:500px;width:100%;max-height:80vh;overflow-y:auto;padding:20px;">
     <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;font-weight:700;">ETİKET İSTATİSTİĞİ</div>
@@ -15934,16 +16008,26 @@ function checkUnpricedWarning() {
 
 // 21. Fiyat aralığı filtresi
 let _priceMin = null, _priceMax = null;
+// Fiyat filtresi artık tek kollu slider — "500" (max) = sınırsız/Tümü
+function onPriceSliderChange(val) {
+  val = parseInt(val, 10);
+  const label = document.getElementById('priceRangeLabel');
+  if (val >= 500) {
+    _priceMin = null; _priceMax = null;
+    if (label) label.textContent = 'Tümü';
+  } else {
+    _priceMin = null; _priceMax = val;
+    if (label) label.textContent = '₺' + val + '\'e kadar';
+  }
+  doSearch();
+}
+// Eski buton tabanlı çağrılarla geriye dönük uyumluluk (varsa dış referanslar için)
 function setPriceFilter(min, max) {
   _priceMin = min; _priceMax = max;
-  ['priceAll','price50','price100','price200','price200p'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('active');
-  });
-  const activeId = min === null ? 'priceAll' : max === null ? 'price200p' :
-    max <= 50 ? 'price50' : max <= 100 ? 'price100' : 'price200';
-  const activeEl = document.getElementById(activeId);
-  if (activeEl) activeEl.classList.add('active');
+  const slider = document.getElementById('priceRangeSlider');
+  const label = document.getElementById('priceRangeLabel');
+  if (slider) slider.value = max === null ? 500 : max;
+  if (label) label.textContent = (min===null && max===null) ? 'Tümü' : (max ? '₺'+max+'\'e kadar' : 'Tümü');
   doSearch();
 }
 
@@ -15961,6 +16045,13 @@ function restoreFilters() {
     if (f.activeTag) activeTag = f.activeTag;
     if (f.priceMin !== undefined) _priceMin = f.priceMin;
     if (f.priceMax !== undefined) _priceMax = f.priceMax;
+    // Slider'ı geri yüklenen değerle senkronize et
+    const slider = document.getElementById('priceRangeSlider');
+    const label = document.getElementById('priceRangeLabel');
+    if (slider && _priceMax !== null) {
+      slider.value = _priceMax;
+      if (label) label.textContent = '₺' + _priceMax + '\'e kadar';
+    }
   } catch(e) {}
 }
 
@@ -16046,13 +16137,26 @@ function toggleReportSection(key) {
   const arrow = document.getElementById('acc-arrow-' + key);
   if (!body) return;
   const isOpen = body.style.display !== 'none';
-  // Diğer tüm bölümleri kapat (sade, tek odak)
-  document.querySelectorAll('[id^="acc-body-"]').forEach(el => { el.style.display = 'none'; });
-  document.querySelectorAll('[id^="acc-arrow-"]').forEach(el => { el.textContent = '▸'; });
+  // Aynı süper grup içindeki diğer bölümleri kapat (sade, tek odak) — farklı süper gruplardaki açık kalabilir
+  const superBody = body.closest('[id^="super-body-"]');
+  const scope = superBody ? superBody.querySelectorAll('[id^="acc-body-"]') : document.querySelectorAll('[id^="acc-body-"]');
+  const scopeArrows = superBody ? superBody.querySelectorAll('[id^="acc-arrow-"]') : document.querySelectorAll('[id^="acc-arrow-"]');
+  scope.forEach(el => { el.style.display = 'none'; });
+  scopeArrows.forEach(el => { el.textContent = '▸'; });
   if (!isOpen) {
     body.style.display = 'block';
     if (arrow) arrow.textContent = '▾';
   }
+}
+
+// Süper grup (BAKIM / İÇGÖRÜ) toggle — tüm alt bölümleri birlikte gizler/gösterir
+function toggleReportSuperGroup(key) {
+  const body = document.getElementById('super-body-' + key);
+  const arrow = document.getElementById('super-arrow-' + key);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.textContent = isOpen ? '▸' : '▾';
 }
 
 // ===== GRUP 10: RAPORLAR + ALAN DOLULUK + TEMİZLİK =====
@@ -16258,7 +16362,7 @@ function filterByPublisher(pub) {
 // --- Özel Rapor Oluşturucu ---
 async function showCustomReportBuilder() {
   const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:520px;width:100%;padding:24px;">
     <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">📋 ÖZEL RAPOR</div>
@@ -17486,7 +17590,7 @@ async function showAuditLog() {
   if (!logs.length) { showToast('Audit log boş'); return; }
 
   const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:600px;width:100%;padding:24px;max-height:85vh;display:flex;flex-direction:column;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">🔐 AUDIT LOG (${logs.length})</div>
@@ -18229,13 +18333,13 @@ function renderGlobalResults(q) {
   }
 
   el.innerHTML =
-    (bookResults.length ? `<div style="font-family:'Courier Prime',monospace;font-size:0.58rem;color:#555;padding:6px 14px;letter-spacing:2px;">KİTAPLAR</div>` +
+    (bookResults.length ?
       bookResults.map(b => `<div class="global-result" tabindex="0" onclick="document.getElementById('adminGlobalSearch').remove();openModal(${b.id})">
         <span class="global-result-icon">📖</span>
         <div><div class="global-result-title">${b.title}</div><div class="global-result-sub">${b.author||'—'} ${b.shelf?'· Raf '+b.shelf:''} ${b.status?'· '+b.status:''}</div></div>
         <span class="global-result-type">Kitap #${b.id}</span>
       </div>`).join('') : '') +
-    (cmdResults.length ? `<div style="font-family:'Courier Prime',monospace;font-size:0.58rem;color:#555;padding:6px 14px 4px;letter-spacing:2px;margin-top:4px;">KOMUTLAR</div>` +
+    (cmdResults.length ?
       cmdResults.map(c => `<div class="global-result" tabindex="0" onclick="document.getElementById('adminGlobalSearch').remove();(${c.action.toString()})()">
         <span class="global-result-icon">${c.icon}</span>
         <div><div class="global-result-title">${c.title}</div><div class="global-result-sub">${c.sub}</div></div>
@@ -18865,7 +18969,7 @@ function showFieldFillModal() {
 
   const modal = document.createElement('div');
   modal.id = 'fieldFillModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:480px;width:100%;padding:24px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">${_fillLabel.toUpperCase()} KAMPANYASI</div>
@@ -19163,7 +19267,7 @@ function showCoverCampaignModal() {
 
   const modal = document.createElement('div');
   modal.id = 'coverCampaignModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:500px;width:100%;padding:24px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">🖼 KAPAK KAMPANYASI</div>
@@ -20386,7 +20490,7 @@ function showNotifSettings() {
     { key:'backup', label:'⬇ Yedek hatırlatıcı' },
   ];
   const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:360px;width:100%;padding:24px;">
     <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;margin-bottom:16px;">🔔 BİLDİRİM TERCİHLERİ</div>
     ${items.map(it=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border);">
@@ -20872,7 +20976,7 @@ function logRecentView(bookId) {
 function showRecentViewed() {
   const viewed=_recentViewed.map(id=>books.find(b=>b.id===id)).filter(Boolean);
   if(!viewed.length){showToast('Henüz hiç kitap görüntülemedin');return;}
-  const ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML=`<div style="background:var(--paper);border:2px solid var(--ink);max-width:400px;width:100%;padding:24px;max-height:70vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;margin-bottom:14px;"><div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">SON ZİYARET</div><button onclick="this.closest('div').parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;">✕</button></div>
     ${viewed.map(b=>`<div onclick="this.closest('div').parentElement.parentElement.remove();openDetail(${b.id})" style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--border);cursor:pointer;">
@@ -20929,7 +21033,7 @@ async function bulkPricePercentUpdate() {
 
 function showLast10() {
   const last=[...books].sort((a,b)=>(b.id||0)-(a.id||0)).slice(0,10);
-  const ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML=`<div style="background:var(--paper);border:2px solid var(--ink);max-width:480px;width:100%;padding:24px;max-height:80vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;margin-bottom:14px;"><div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">SON 10 EKLENEN</div><button onclick="this.closest('div').parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;">✕</button></div>
     ${last.map((b,i)=>`<div onclick="this.closest('div').parentElement.parentElement.remove();openModal(${b.id})" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);cursor:pointer;">
@@ -21105,10 +21209,41 @@ async function bulkDelete() {
   selectedIds.clear(); renderAdminTable(); showToast(`✓ ${ids.length} kitap silindi`,'#2a7a2a');
 }
 
+// "(Kopya)" ekiyle biten kitap başlıklarını temizle — kopyalama artık bu eki eklemiyor,
+// ama daha önce oluşturulmuş kayıtlarda kalmış olabilir. Bu tek seferlik bir düzeltme aracı.
+async function cleanKopyaTitles() {
+  const KOPYA_SUFFIX_RE = /\s*\(Kopya\)\s*$/i;
+  const affected = books.filter(b => b.title && KOPYA_SUFFIX_RE.test(b.title));
+
+  if (!affected.length) { showToast('✓ "(Kopya)" eki olan kitap yok'); return; }
+
+  const preview = affected.slice(0, 5).map(b => `"${b.title}" → "${b.title.replace(KOPYA_SUFFIX_RE, '').trim()}"`).join('\n');
+  const ok = await noraConfirm(
+    `${affected.length} kitapta "(Kopya)" eki temizlenecek:\n\n${preview}${affected.length > 5 ? '\n...+' + (affected.length - 5) + ' kitap daha' : ''}`,
+    { title: '🧹 "(Kopya)" Eklerini Temizle', confirmLabel: 'Temizle' }
+  );
+  if (!ok) return;
+
+  showProgress(`${affected.length} kitap düzeltiliyor...`, affected.length * 80);
+  let fixed = 0;
+  await processInChunks(affected, async b => {
+    // Birden fazla kez kopyalanmış olabilir — tüm "(Kopya)" eklerini soy (örn. "X (Kopya) (Kopya)")
+    let cleanTitle = b.title;
+    while (KOPYA_SUFFIX_RE.test(cleanTitle)) cleanTitle = cleanTitle.replace(KOPYA_SUFFIX_RE, '').trim();
+    const res = await api(`books?id=eq.${b.id}`, { method:'PATCH', body:JSON.stringify({ title: cleanTitle }) });
+    if (res.ok) { b.title = cleanTitle; fixed++; }
+  }, 15, 50);
+  hideProgress();
+
+  renderAdminTable();
+  showToast(`✓ ${fixed} kitap başlığı düzeltildi`, '#2a7a2a');
+  auditLog('CLEAN_KOPYA_TITLES', { count: fixed });
+}
+
 async function duplicateBook(id) {
   const b=books.find(x=>x.id===id); if(!b) return;
   const {id:_,created_at,updated_at,sold_at,...rest}=b;
-  rest.title=rest.title+' (Kopya)'; rest.status='yerlesik';
+  rest.status='yerlesik';
   const res=await api('books',{method:'POST',prefer:'return=representation',body:JSON.stringify(rest)});
   if(res.ok){const [nb]=await res.json();books.unshift(nb);renderAdminTable();showToast(`✓ "${b.title}" kopyalandı`,'#2a7a2a');}
 }
@@ -21398,7 +21533,7 @@ function showSerendipityHistory() {
   const h = _serendipityHistory;
   if (!h.length) { showToast('Henüz serendipity geçmişi yok'); return; }
   const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:420px;width:100%;padding:24px;max-height:70vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
       <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;">✦ SEREDİPİTY GEÇMİŞİ</div>
@@ -22579,9 +22714,7 @@ function showUndoToast(msg, bookId, oldStatus) {
 const TOAST_TYPES = {
   success: { bg:'#1a4a1a', border:'#2a7a2a', icon:'✓' },
   error:   { bg:'#4a1a1a', border:'#c84040', icon:'✗' },
-  warning: { bg:'#3a2a0a', border:'#c87020', icon:'⚠' },
-  info:    { bg:'#0a2a4a', border:'#2a6a9a', icon:'ℹ' },
-  default: { bg:'#2a1a08', border:'#9c7a3c', icon:'·' },
+  info:    { bg:'#2a1a08', border:'#9c7a3c', icon:'ℹ' }, // bilgi + uyarı + varsayılan tek tonda birleşti
 };
 let _toastQueue = [];
 let _toastContainer = null;
@@ -22597,16 +22730,15 @@ function getToastContainer() {
 }
 
 function detectToastType(msg, color) {
-  if (color === '#c84040' || color === '#c84040' || msg.startsWith('✗')) return 'error';
+  if (color === '#c84040' || msg.startsWith('✗')) return 'error';
   if (color === '#2a7a2a' || msg.startsWith('✓')) return 'success';
-  if (color === 'var(--zone-rust)' || msg.startsWith('⚠')) return 'warning';
-  if (color === '#2a5a8a' || color === 'var(--zone-water)') return 'info';
-  return 'default';
+  // Uyarı, bilgi ve varsayılan artık tek "info" tonunda — mesaj içeriği ayrımı yeterli (⚠/ℹ ikonu metinde kalır)
+  return 'info';
 }
 
 function showToast(msg, color = '#9c7a3c', opts = {}) {
   const type = opts.type || detectToastType(msg, color);
-  const theme = TOAST_TYPES[type] || TOAST_TYPES.default;
+  const theme = TOAST_TYPES[type] || TOAST_TYPES.info;
   const duration = opts.duration || 3500;
   const action = opts.action || null; // { label, fn }
 
@@ -22925,7 +23057,7 @@ function observeLazyImages() {
   <div id="shelfDrawerContent" style="padding:12px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;"></div>
 </div>
 <!-- MODAL DİYALOG SİSTEMİ -->
-<div id="noraModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:20000;align-items:center;justify-content:center;padding:20px;">
+<div id="noraModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:20000;align-items:center;justify-content:center;padding:20px;">
   <div id="noraModalBox" style="background:var(--paper);border:2px solid var(--ink);max-width:420px;width:100%;padding:28px;animation:toastIn 0.2s ease;">
     <div id="noraModalIcon" style="font-size:1.8rem;margin-bottom:12px;text-align:center;"></div>
     <div id="noraModalTitle" style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:8px;text-align:center;font-weight:700;"></div>
