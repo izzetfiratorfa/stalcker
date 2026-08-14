@@ -2576,28 +2576,11 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="btn-add" onclick="openModal()">+ Yeni Kitap Ekle</button>
         <button class="btn-add" onclick="openBulkModal()" style="background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);">⊞ Toplu Ekle</button>
         <button onclick="showKapanis()" title="Kapanış raporu" class="admin-header-btn">🌙 Kapanış</button>
-        <button onclick="toggleAdminMoreMenu()" title="Diğer işlemler" id="adminMoreBtn" class="admin-header-btn">⋮</button>
+        <button onclick="openAdminGlobalSearch()" title="Tüm komutlar (Ctrl+K)" id="adminMoreBtn" class="admin-header-btn">⋮ Daha Fazla</button>
         <button onclick="lockAdmin()" title="Çıkış" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;padding:7px 12px;cursor:pointer;letter-spacing:1px;">⏻ Çıkış</button>
         <button onclick="showShortcuts()" title="Klavye kısayolları (? tuşu)" class="admin-header-btn">?</button>
-
-        <!-- Daha Fazla dropdown — az kullanılan işlemler burada -->
-        <div id="adminMoreMenu" style="display:none;position:absolute;top:100%;right:70px;margin-top:6px;background:var(--paper);border:2px solid var(--ink);box-shadow:4px 4px 0 rgba(0,0,0,0.15);z-index:500;min-width:200px;padding:8px 0;">
-          <div style="padding:4px 14px;font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);">GÖRÜNÜM</div>
-          <button onclick="toggleAdminDark();toggleAdminMoreMenu()" class="admin-more-item">◐ Karanlık Mod</button>
-          <button onclick="refreshAllData();toggleAdminMoreMenu()" class="admin-more-item">⟳ Verileri Yenile</button>
-          <div style="padding:8px 14px 4px;font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);border-top:1px dashed var(--border);margin-top:4px;">YAZDIR & DIŞA AKTAR</div>
-          <button onclick="printCatalog();toggleAdminMoreMenu()" class="admin-more-item">🖨 Kataloğu Yazdır</button>
-          <button onclick="backupCatalog();toggleAdminMoreMenu()" class="admin-more-item">⬇ JSON Yedek</button>
-          <button onclick="backupCatalog({incremental:true});toggleAdminMoreMenu()" class="admin-more-item">⬇ Artımlı Yedek</button>
-          <button onclick="exportCatalogXML();toggleAdminMoreMenu()" class="admin-more-item">⬇ XML İndir</button>
-          <button onclick="bulkExportCSV();toggleAdminMoreMenu()" class="admin-more-item">↓ CSV İndir</button>
-          <div style="padding:8px 14px 4px;font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);border-top:1px dashed var(--border);margin-top:4px;">GERİ YÜKLE & İÇE AKTAR</div>
-          <button onclick="quickRestoreBackup();toggleAdminMoreMenu()" class="admin-more-item">↑ Yedekten Geri Yükle</button>
-          <button onclick="compareBackups();toggleAdminMoreMenu()" class="admin-more-item">📊 Yedek Geçmişi</button>
-          <button onclick="document.getElementById('importJSONFile').click();toggleAdminMoreMenu()" class="admin-more-item">⬆ JSON İçe Aktar</button>
-          <div style="padding:8px 14px 4px;font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);border-top:1px dashed var(--border);margin-top:4px;">VERİ TEMİZLİK</div>
-          <button onclick="cleanKopyaTitles();toggleAdminMoreMenu()" class="admin-more-item">🧹 "(Kopya)" Eklerini Temizle</button>
-        </div>
+        <!-- Not: az kullanılan işlemler (yazdır, yedek, içe/dışa aktar, bakım) artık ayrı dropdown'da değil,
+             "⋮ Daha Fazla" tıklanınca açılan aynı komut paletinde (Ctrl+K ile aynı) — tek arama, tek yer. -->
         <input type="file" id="importJSONFile" accept=".json" style="display:none;" onchange="if(this.files[0])importCatalogJSON(this.files[0])">
       </div>
     </div>
@@ -2767,26 +2750,32 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <div id="panelAdminnotes" style="display:none;">
       <!-- Sekmeler -->
       <div style="display:flex;border-bottom:2px solid var(--ink);margin-bottom:16px;">
-        <button onclick="switchNoteTab('notlar')" id="noteTabNotlar" style="padding:7px 16px;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;background:var(--ink);color:var(--paper);border:none;cursor:pointer;">NOTLAR</button>
+        <button onclick="switchNoteTab('akis')" id="noteTabAkis" style="padding:7px 16px;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;background:var(--ink);color:var(--paper);border:none;cursor:pointer;">📖 GÜNLÜK AKIŞ</button>
         <button onclick="switchNoteTab('mudavim')" id="noteTabMudavim" style="padding:7px 16px;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;background:none;color:var(--ink-faint);border:none;cursor:pointer;">MÜDAVİM</button>
-        <button onclick="switchNoteTab('hafiza')" id="noteTabHafiza" style="padding:7px 16px;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;background:none;color:var(--ink-faint);border:none;cursor:pointer;">KAFE HAFIZASI</button>
         <button onclick="switchNoteTab('guvenlik')" id="noteTabGuvenlik" style="padding:7px 16px;font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;background:none;color:var(--ink-faint);border:none;cursor:pointer;">🔐 GÜVENLİK</button>
       </div>
 
-      <!-- Not Defteri -->
-      <div id="notePanel-notlar">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);">NOT DEFTERİ — müşteriye görünmez</div>
+      <!-- Günlük Akış — Notlar + Kafe Hafızası birleşik, kronolojik tek akış -->
+      <div id="notePanel-akis">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);">GÜNLÜK AKIŞ — müşteriye görünmez</div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="quickAddAkis('not')" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:6px 12px;cursor:pointer;">📝 Not Ekle</button>
+            <button onclick="quickAddAkis('ani')" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:6px 12px;cursor:pointer;">🕰 Anı Ekle</button>
+          </div>
+        </div>
+        <!-- Geçen yıl bugün banner -->
+        <div id="memoryTodayPanel" style="margin-bottom:14px;"></div>
+        <!-- Uzun not yazımı için serbest metin alanı — kaydedince akışa eklenir -->
+        <textarea id="adminNotepad" placeholder="Kendine notlar, hatırlatıcılar, tedarik planları... (Enter+Kaydet ile akışa eklenir)" style="width:100%;min-height:100px;padding:14px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);resize:vertical;box-sizing:border-box;line-height:1.8;margin-bottom:8px;"></textarea>
+        <div style="text-align:right;margin-bottom:20px;">
           <button onclick="saveAdminNote()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:7px 14px;cursor:pointer;letter-spacing:1px;">Kaydet</button>
         </div>
-        <textarea id="adminNotepad" placeholder="Kendine notlar, hatırlatıcılar, tedarik planları..." style="width:100%;min-height:300px;padding:14px;font-family:'Courier Prime',monospace;font-size:0.82rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);resize:vertical;box-sizing:border-box;line-height:1.8;"></textarea>
-        <div style="margin-top:16px;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">GEÇMİŞ NOTLAR</div>
-          <div id="adminNoteHistory" style="max-height:200px;overflow-y:auto;"></div>
-        </div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:8px;">KRONOLOJİK AKIŞ</div>
+        <div id="akisPanel" style="max-height:500px;overflow-y:auto;"></div>
       </div>
 
-      <!-- Müdavim Not Defteri -->
+      <!-- Müdavim Not Defteri (kişi bazlı profil listesi — farklı veri yapısı, ayrı kaldı) -->
       <div id="notePanel-mudavim" style="display:none;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);">MÜDAVİM NOT DEFTERİ</div>
@@ -2796,17 +2785,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <div id="regularsPanel"></div>
       </div>
 
-      <!-- Kafe Hafızası -->
-      <div id="notePanel-hafiza" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);">KAFE HAFIZASI</div>
-          <button onclick="addMemoryEntry()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:6px 12px;cursor:pointer;">+ Anı Ekle</button>
-        </div>
-        <div id="memoryTodayPanel" style="margin-bottom:16px;"></div>
-        <div id="memoriesPanel"></div>
-      </div>
-
-      <!-- Güvenlik Dashboard -->
+      <!-- Güvenlik Dashboard (canlı sistem durumu — log akışı değil, ayrı kaldı) -->
       <div id="notePanel-guvenlik" style="display:none;">
         <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:3px;color:var(--ink-faint);margin-bottom:14px;">GÜVENLİK PANOSU</div>
         <div id="securityDashboard"></div>
@@ -3262,6 +3241,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
           <button onclick="downloadMenuQRSticker()" style="background:none;border:1px solid #9c7a3c;color:#9c7a3c;font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">↓ Sticker QR</button>
           <!-- 8. Print tasarımı -->
           <button onclick="printMenuDesign()" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">🖨 Yazdır</button>
+          <!-- Müşteri görünümü zaten aynı veriyi canlı gösteriyor — hızlı kontrol linki -->
+          <button onclick="window.open(location.pathname + '#menu', '_blank')" title="Müşterinin gördüğü menüyü yeni sekmede aç" style="background:none;border:1px solid var(--zone-water);color:var(--zone-water);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:5px 10px;cursor:pointer;">👁 Müşteri Görünümü</button>
         </div>
       </div>
 
@@ -8596,7 +8577,7 @@ function switchTab(tab) {
   if (tab === 'satis') initSatisMode();
   if (tab === 'koleksiyon') loadCollections();
   if (tab === 'etkinlik') renderEventsPanel();
-  if (tab === 'adminnotes') loadAdminNotes();
+  if (tab === 'adminnotes') loadGunlukAkis();
   if (tab === 'secretnotes') initSecretNote();
 }
 
@@ -14987,21 +14968,9 @@ function saveAdminNote() {
   notes.unshift({ text, date: new Date().toISOString() });
   localStorage.setItem('nora_admin_notes', JSON.stringify(notes.slice(0, 30)));
   showToast('✓ Not kaydedildi');
-  loadAdminNotes();
+  loadGunlukAkis(); // Notlar + Hafıza birleşik akış
 }
-function loadAdminNotes() {
-  const ta = document.getElementById('adminNotepad');
-  const hist = document.getElementById('adminNoteHistory');
-  const notes = JSON.parse(localStorage.getItem('nora_admin_notes') || '[]');
-  if (ta && !ta.value && notes.length) ta.value = notes[0].text;
-  if (hist) {
-    hist.innerHTML = notes.map((n,i) => `
-      <div style="padding:6px 0;border-bottom:1px dashed var(--border);cursor:pointer;" onclick="document.getElementById('adminNotepad').value='${n.text.replace(/'/g,"\\'").replace(/\n/g,'\\n')}'">
-        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);">${new Date(n.date).toLocaleDateString('tr-TR')} ${new Date(n.date).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</div>
-        <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.text.slice(0,80)}</div>
-      </div>`).join('');
-  }
-}
+// NOT: loadAdminNotes() kaldırıldı — "Günlük Akış" birleştirmesiyle loadGunlukAkis() bu işlevi devraldı.
 
 // 155. Terminal modu hızlı kitap ekleme — Ctrl+T
 let _terminalMode = false;
@@ -15136,21 +15105,7 @@ if (!navigator.onLine) setTimeout(()=>showToast('⚠ Çevrimdışı modu', 'var(
   document.body.appendChild(d);
 })();
 
-// Log butonunu admin header'a ekle
-setTimeout(() => {
-  const menu = document.getElementById('adminMoreMenu');
-  if (!menu) return;
-  const sep = document.createElement('div');
-  sep.style.cssText = 'padding:8px 14px 4px;font-family:"Courier Prime",monospace;font-size:0.58rem;letter-spacing:2px;color:var(--ink-faint);border-top:1px dashed var(--border);margin-top:4px;';
-  sep.textContent = 'GÜNLÜKLER';
-  const logBtn = document.createElement('button');
-  logBtn.textContent = '⏱ Son İşlemler';
-  logBtn.title = 'Son işlemler';
-  logBtn.className = 'admin-more-item';
-  logBtn.onclick = () => { showActionLog(); toggleAdminMoreMenu(); };
-  menu.appendChild(sep);
-  menu.appendChild(logBtn);
-}, 1000);
+// Not: "Son İşlemler" artık ayrı dropdown'a eklenmiyor — GLOBAL_COMMANDS listesinde (Ctrl+K / ⋮ Daha Fazla)
 
 // ===== PART 4: ETKİNLİK & PANO =====
 
@@ -16118,18 +16073,8 @@ function toggleMoreAdvFilters() {
 }
 
 // "Daha Fazla" dropdown menüsü
-function toggleAdminMoreMenu() {
-  const menu = document.getElementById('adminMoreMenu');
-  if (!menu) return;
-  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-}
-// Dışarı tıklanınca kapat
-document.addEventListener('click', e => {
-  const menu = document.getElementById('adminMoreMenu');
-  const btn = document.getElementById('adminMoreBtn');
-  if (!menu || menu.style.display === 'none') return;
-  if (!menu.contains(e.target) && e.target !== btn) menu.style.display = 'none';
-});
+// Not: toggleAdminMoreMenu ve ayrı dropdown kaldırıldı — "⋮ Daha Fazla" artık
+// openAdminGlobalSearch()'ü çağırıyor (Ctrl+K ile aynı, tek birleşik komut paleti).
 
 // Rapor paneli accordion — tek seferde sadece tıklanan bölüm açık kalır
 function toggleReportSection(key) {
@@ -16933,15 +16878,84 @@ setTimeout(() => {
 
 // --- Not Defteri Sekme Geçişi ---
 function switchNoteTab(tab) {
-  ['notlar','mudavim','hafiza','guvenlik'].forEach(t => {
+  ['akis','mudavim','guvenlik'].forEach(t => {
     const panel = document.getElementById('notePanel-'+t);
     const btn = document.getElementById('noteTab'+t.charAt(0).toUpperCase()+t.slice(1));
     if (panel) panel.style.display = t===tab ? 'block' : 'none';
     if (btn) { btn.style.background = t===tab ? 'var(--ink)' : 'none'; btn.style.color = t===tab ? 'var(--paper)' : 'var(--ink-faint)'; }
   });
+  if (tab==='akis') loadGunlukAkis();
   if (tab==='mudavim') loadRegulars();
-  if (tab==='hafiza') loadCafeMemory();
   if (tab==='guvenlik') loadSecurityDashboard();
+}
+
+// Günlük Akış — Notlar + Kafe Hafızası tek kronolojik akışta birleşti
+function quickAddAkis(type) {
+  if (type === 'not') {
+    document.getElementById('adminNotepad')?.focus();
+  } else {
+    addMemoryEntry(); // mevcut prompt akışı — kaydedince loadGunlukAkis tetiklenir
+  }
+}
+
+function loadGunlukAkis() {
+  const akisEl = document.getElementById('akisPanel');
+  if (!akisEl) return;
+
+  // İki ayrı kaynağı birleştir: kişisel notlar + kafe anıları
+  const notes = JSON.parse(localStorage.getItem('nora_admin_notes') || '[]').map(n => ({ ...n, _type: 'not' }));
+  const memories = getMemories().map(m => ({ ...m, _type: 'ani' }));
+  const combined = [...notes, ...memories].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // "Geçen yıl bugün" bandı — sadece anılardan (Hafıza'nın eski davranışı korunuyor)
+  loadMemoryTodayBanner();
+
+  // Not defteri textarea'sının en son notu göstermesi (eski davranış korunuyor)
+  const ta = document.getElementById('adminNotepad');
+  if (ta && !ta.value && notes.length) ta.value = notes[0].text;
+
+  if (!combined.length) {
+    akisEl.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.72rem;color:var(--ink-faint);padding:20px 0;">Henüz bir şey yok. İlk notu veya anıyı ekle.</div>';
+    return;
+  }
+
+  akisEl.innerHTML = combined.slice(0, 40).map(item => {
+    const isNote = item._type === 'not';
+    const icon = isNote ? '📝' : '🕰';
+    const label = isNote ? 'Not' : 'Anı';
+    const color = isNote ? 'var(--ink-faint)' : 'var(--zone-sepia)';
+    const clickAction = isNote
+      ? `onclick="document.getElementById('adminNotepad').value='${(item.text||'').replace(/'/g,"\\'").replace(/\n/g,'\\n')}'"`
+      : `onclick="deleteMemory(${item.id})"`;
+    return `<div style="padding:8px 0;border-bottom:1px dashed var(--border);display:flex;gap:10px;align-items:flex-start;cursor:${isNote?'pointer':'default'};" ${isNote?clickAction:''}>
+      <span style="font-size:0.85rem;flex-shrink:0;" title="${label}">${icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:${color};margin-bottom:2px;">${new Date(item.date).toLocaleDateString('tr-TR')} ${new Date(item.date).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.74rem;color:var(--ink);white-space:pre-wrap;">${(item.text||'').slice(0,200)}</div>
+      </div>
+      ${!isNote ? `<button onclick="event.stopPropagation();deleteMemory(${item.id})" style="background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:0.7rem;flex-shrink:0;">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// "Geçen yıl bugün" bandını ayrı fonksiyona ayırdık (loadCafeMemory'nin eski mantığı)
+function loadMemoryTodayBanner() {
+  const todayEl = document.getElementById('memoryTodayPanel');
+  if (!todayEl) return;
+  const memories = getMemories();
+  const now = new Date();
+  const todayMD = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const pastToday = memories.filter(m => {
+    const d = new Date(m.date);
+    const md = `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return md === todayMD && d.getFullYear() < now.getFullYear();
+  });
+  todayEl.innerHTML = pastToday.length ? `<div style="background:#1a1200;border-left:3px solid var(--zone-sepia);padding:12px 14px;">
+    <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--zone-sepia);letter-spacing:2px;margin-bottom:8px;">⏳ GEÇEN YIL BUGÜN</div>
+    ${pastToday.map(m=>`<div style="font-family:'Courier Prime',monospace;font-size:0.75rem;margin-bottom:4px;color:var(--ink-light);">
+      <span style="color:var(--ink-faint);font-size:0.6rem;">${new Date(m.date).getFullYear()} · </span>${m.text}
+    </div>`).join('')}
+  </div>` : '';
 }
 
 // --- Müdavim Not Defteri ---
@@ -17044,55 +17058,17 @@ async function addMemoryEntry() {
   const memories = getMemories();
   memories.unshift({ id:Date.now(), text, date:new Date().toISOString(), special:false });
   localStorage.setItem(MEMORIES_KEY, JSON.stringify(memories));
-  loadCafeMemory();
+  loadGunlukAkis(); // Notlar + Hafıza birleşik akış — Bölüm 2 sadeleştirmesi
   showToast('✓ Anı eklendi', '#2a7a2a');
 }
 
-function loadCafeMemory() {
-  const todayEl = document.getElementById('memoryTodayPanel');
-  const allEl = document.getElementById('memoriesPanel');
-  if (!todayEl || !allEl) return;
-
-  const memories = getMemories();
-  const now = new Date();
-  const todayMD = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
-  // Geçen yıl bugün
-  const pastToday = memories.filter(m => {
-    const d = new Date(m.date);
-    const md = `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    return md === todayMD && d.getFullYear() < now.getFullYear();
-  });
-
-  if (pastToday.length) {
-    todayEl.innerHTML = `<div style="background:#1a1200;border-left:3px solid var(--zone-sepia);padding:12px 14px;margin-bottom:14px;">
-      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--zone-sepia);letter-spacing:2px;margin-bottom:8px;">⏳ GEÇEN YIL BUGÜN</div>
-      ${pastToday.map(m=>`<div style="font-family:'Courier Prime',monospace;font-size:0.75rem;margin-bottom:4px;color:var(--ink-light);">
-        <span style="color:var(--ink-faint);font-size:0.6rem;">${new Date(m.date).getFullYear()} · </span>${m.text}
-      </div>`).join('')}
-    </div>`;
-  } else {
-    todayEl.innerHTML = '';
-  }
-
-  // Tüm anılar
-  if (!memories.length) {
-    allEl.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.72rem;color:var(--ink-faint);">Henüz anı yok.</div>';
-    return;
-  }
-
-  allEl.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;">TÜM ANILAR (${memories.length})</div>` +
-    memories.slice(0,20).map(m=>`<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);">
-      <span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);white-space:nowrap;min-width:70px;">${new Date(m.date).toLocaleDateString('tr-TR')}</span>
-      <span style="font-family:'Courier Prime',monospace;font-size:0.72rem;flex:1;">${m.text}</span>
-      <button onclick="deleteMemory(${m.id})" style="background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:0.7rem;">✕</button>
-    </div>`).join('');
-}
+// NOT: loadCafeMemory() kaldırıldı — "Günlük Akış" birleştirmesiyle loadGunlukAkis() +
+// loadMemoryTodayBanner() bu işlevi devraldı (yukarıda, switchNoteTab yakınında tanımlı).
 
 function deleteMemory(id) {
   const memories = getMemories().filter(m=>m.id!==id);
   localStorage.setItem(MEMORIES_KEY, JSON.stringify(memories));
-  loadCafeMemory();
+  loadGunlukAkis();
 }
 
 // Günlük anı pop-up — admin açılınca
@@ -17798,26 +17774,7 @@ const _origBulkDeleteSafe = typeof bulkDelete === 'function' ? bulkDelete : null
 
 // Sistem sağlık panosu — SSL kontrolünü dahil et
 
-// Audit log + hata log butonlarını "Daha Fazla" menüsüne ekle
-setTimeout(() => {
-  const menu = document.getElementById('adminMoreMenu');
-  if (!menu) return;
-
-  const auditBtn = document.createElement('button');
-  auditBtn.onclick = () => { showAuditLog(); toggleAdminMoreMenu(); };
-  auditBtn.title = 'Audit Log';
-  auditBtn.className = 'admin-more-item';
-  auditBtn.textContent = '🔐 Audit Log';
-
-  const errBtn = document.createElement('button');
-  errBtn.onclick = () => { showErrorLog(); toggleAdminMoreMenu(); };
-  errBtn.title = 'Hata Kaydı';
-  errBtn.className = 'admin-more-item';
-  errBtn.textContent = '⚠ Hata Kaydı';
-
-  menu.appendChild(auditBtn);
-  menu.appendChild(errBtn);
-}, 900);
+// Not: "Audit Log" ve "Hata Kaydı" artık ayrı dropdown'a eklenmiyor — GLOBAL_COMMANDS listesinde (Ctrl+K / ⋮ Daha Fazla)
 
 // ===== GRUP 6 SONU =====
 
@@ -18311,6 +18268,20 @@ const GLOBAL_COMMANDS = [
   { icon:'✓', title:'Yazar Normalize', sub:'Yazar adlarını düzelt', type:'Komut', action:()=>{ switchTab('report'); setTimeout(detectAuthorVariants,300); } },
   { icon:'📦', title:'Arşiv', sub:'Arşivlenmiş kitaplar', type:'Komut', action:()=>showArchivedBooks() },
   { icon:'🔍', title:'Kayıp Kitap', sub:'Rafta görünmeyenleri tara', type:'Komut', action:()=>{ switchTab('shelfmap'); setTimeout(detectMissingBooks,300); } },
+  // Eskiden "⋮ Daha Fazla" dropdown'ında ayrı duran komutlar — artık aynı palette birleşti
+  { icon:'◐', title:'Karanlık Mod', sub:'Tema değiştir', type:'Görünüm', action:()=>toggleAdminDark() },
+  { icon:'⟳', title:'Verileri Yenile', sub:'Kataloğu yeniden yükle', type:'Görünüm', action:()=>refreshAllData() },
+  { icon:'🖨', title:'Kataloğu Yazdır', sub:'Yazdırılabilir liste', type:'Dışa Aktar', action:()=>printCatalog() },
+  { icon:'⬇', title:'Artımlı Yedek', sub:'Sadece değişenleri indir', type:'Dışa Aktar', action:()=>backupCatalog({incremental:true}) },
+  { icon:'⬇', title:'XML İndir', sub:'Kataloğu XML olarak dışa aktar', type:'Dışa Aktar', action:()=>exportCatalogXML() },
+  { icon:'↓', title:'CSV İndir', sub:'Kataloğu CSV olarak dışa aktar', type:'Dışa Aktar', action:()=>bulkExportCSV() },
+  { icon:'↑', title:'Yedekten Geri Yükle', sub:'Önceki bir yedeği geri getir', type:'İçe Aktar', action:()=>quickRestoreBackup() },
+  { icon:'📊', title:'Yedek Geçmişi', sub:'Alınan yedekleri karşılaştır', type:'İçe Aktar', action:()=>compareBackups() },
+  { icon:'⬆', title:'JSON İçe Aktar', sub:'Dosyadan kitap içe aktar', type:'İçe Aktar', action:()=>document.getElementById('importJSONFile').click() },
+  { icon:'🧹', title:'"(Kopya)" Eklerini Temizle', sub:'Kopyalanan kitap başlıklarını düzelt', type:'Bakım', action:()=>cleanKopyaTitles() },
+  { icon:'⏱', title:'Son İşlemler', sub:'Yakın zamanda yapılan işlemler', type:'Günlük', action:()=>showActionLog() },
+  { icon:'🔐', title:'Audit Log', sub:'Tüm değişiklik geçmişi', type:'Günlük', action:()=>showAuditLog() },
+  { icon:'⚠', title:'Hata Kaydı', sub:'Sistem hataları', type:'Günlük', action:()=>showErrorLog() },
 ];
 
 function renderGlobalResults(q) {
