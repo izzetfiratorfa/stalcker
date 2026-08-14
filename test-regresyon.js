@@ -161,6 +161,13 @@ setTimeout(() => {
       window.closeModal();
     });
 
+    check('Günlük Akış (Notlar+Hafıza birleşik) hata vermeden render ediliyor mu', () => {
+      window.eval(`localStorage.setItem('nora_admin_notes', JSON.stringify([{text:'test not',date:new Date().toISOString()}]));`);
+      window.loadGunlukAkis();
+      const akisEl = window.document.getElementById('akisPanel');
+      if (!akisEl || !akisEl.innerHTML.includes('test not')) throw new Error('Akış render edilmedi');
+    });
+
     check('Admin sıfır sonuç durumu (boş durum ekranı) hata vermiyor mu', () => {
       window.document.getElementById('adminSearch').value = 'bulunamayacak-bir-kelime-xyz';
       window.adminTableReset();
