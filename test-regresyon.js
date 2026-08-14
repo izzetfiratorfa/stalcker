@@ -137,6 +137,30 @@ setTimeout(() => {
       if (!r.html || !r.html.includes('Test Kitap Bir')) throw new Error('Kart HTML üretilemedi');
     });
 
+    check('Kitap formu — tüm kritik alan ID\'leri mevcut mu', () => {
+      const expectedIds = ['fTitle','fPublisher','fShelf','fYear','fPrice','fIsbn','fPages','fGenre',
+        'fStatus','fSource','fMarkers','fCondition','fEditionInfo','fDamageNote','fRestoration',
+        'fSmellTag','fDescription','fCoverUrl','fTags','fNora','fArtefakt','fSim1','fSim2','fSim3',
+        'formDetailsBody','formDetailsArrow'];
+      const missing = expectedIds.filter(id => !window.document.getElementById(id));
+      if (missing.length) throw new Error('Eksik alan(lar): ' + missing.join(', '));
+    });
+
+    check('Kitap formu — Detaylar akordiyonu açılıp kapanıyor mu', () => {
+      window.toggleFormDetails();
+      const isOpenAfterFirst = window.document.getElementById('formDetailsBody').style.display === 'block';
+      window.toggleFormDetails();
+      const isClosedAfterSecond = window.document.getElementById('formDetailsBody').style.display === 'none';
+      if (!isOpenAfterFirst || !isClosedAfterSecond) throw new Error('Akordiyon toggle çalışmıyor');
+    });
+
+    check('openModal() düzenleme modunda hata vermeden dolduruyor mu', () => {
+      window.openModal(1);
+      const titleVal = window.document.getElementById('fTitle').value;
+      if (titleVal !== 'Test Kitap Bir') throw new Error('Form alanları doğru doldurulmadı: ' + titleVal);
+      window.closeModal();
+    });
+
     check('Admin sıfır sonuç durumu (boş durum ekranı) hata vermiyor mu', () => {
       window.document.getElementById('adminSearch').value = 'bulunamayacak-bir-kelime-xyz';
       window.adminTableReset();
