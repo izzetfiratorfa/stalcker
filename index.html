@@ -453,11 +453,14 @@ body.dark .daily-book-card { background:linear-gradient(135deg,#1a1710 0%,#12100
 .barcode-status { font-family:'Courier Prime',monospace;font-size:0.75rem;letter-spacing:1px;color:#39ff14;margin-bottom:12px;min-height:20px; }
 .barcode-close { font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:2px;background:none;border:1px solid #555;color:#888;padding:6px 16px;cursor:pointer;margin-top:8px; }
 
-.neighbors-section { margin-top:24px;border-top:2px dashed var(--border);padding-top:18px; }
+.neighbors-section { margin-top:24px;border-top:2px dashed var(--border);padding-top:18px;position:relative; }
 .neighbors-title { font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px; }
 .neighbors-row { display:flex;gap:10px;overflow-x:auto;padding-bottom:6px; }
 .neighbor-card { background:var(--paper-dark);border:1.5px solid var(--border);border-left:3px solid var(--border-dark);padding:12px 14px;min-width:160px;cursor:pointer;transition:all 0.15s;flex-shrink:0; }
 .neighbor-card:hover { border-color:var(--ink);background:var(--white);transform:translateY(-2px); }
+/* Yatay kaydırma ipucu — sağ kenarda hafif solma, "daha var" hissi verir */
+.neighbors-section::after { content:'';position:absolute;right:0;top:18px;bottom:6px;width:28px;background:linear-gradient(to right, transparent, var(--paper) 85%);pointer-events:none; }
+body.dark .neighbors-section::after { background:linear-gradient(to right, transparent, #111 85%); }
 .neighbor-card .n-title { font-family:'Playfair Display',serif;font-size:0.88rem;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.3; }
 .neighbor-card .n-author { font-size:0.72rem;color:var(--ink-faint);font-style:italic; }
 .neighbor-card .n-shelf { font-size:0.65rem;letter-spacing:1px;color:var(--ink-faint);margin-top:5px; }
@@ -4846,25 +4849,68 @@ function showAdminLogin() {
         onkeydown="if(event.key==='Enter')checkAdminPw();if(event.key==='Escape')closeAdminGate()">
       <div id="adminPwErr" style="font-size:0.65rem;color:#c84040;letter-spacing:2px;min-height:16px;margin-bottom:12px;"></div>
       <div style="display:flex;gap:8px;justify-content:center;">
-        <button onclick="checkAdminPw()" style="background:#39ff14;color:#000;border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:8px 24px;cursor:pointer;">GİRİŞ</button>
+        <button id="adminPwSubmitBtn" onclick="checkAdminPw()" style="background:#39ff14;color:#000;border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:8px 24px;cursor:pointer;">GİRİŞ</button>
         <button onclick="closeAdminGate()" style="background:transparent;border:1px solid #333;color:#555;font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;padding:8px 16px;cursor:pointer;">İPTAL</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('adminPwInput')?.focus(), 100);
+
+  // Kilitli mi kontrol et — kilitliyse input/butonu pasifleştir, geri sayım göster
+  const lockedUntil = parseInt(localStorage.getItem(LOGIN_LOCK_KEY) || '0');
+  if (Date.now() < lockedUntil) {
+    showGateLockCountdown(lockedUntil);
+  } else {
+    setTimeout(() => document.getElementById('adminPwInput')?.focus(), 100);
+  }
+}
+
+// Giriş ekranındaki (overlay içi) kilit geri sayımı — admin paneli açılmadan önce çalışır
+function showGateLockCountdown(lockedUntil) {
+  const inp = document.getElementById('adminPwInput');
+  const btn = document.getElementById('adminPwSubmitBtn');
+  const err = document.getElementById('adminPwErr');
+  if (inp) inp.disabled = true;
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
+  const tick = () => {
+    const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+    if (remaining <= 0) {
+      if (err) err.textContent = '';
+      if (inp) { inp.disabled = false; inp.focus(); }
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = 'pointer'; }
+      clearInterval(interval);
+      return;
+    }
+    if (err) err.textContent = `> ⛔ ÇOK FAZLA DENEME — ${remaining} sn bekleyin`;
+  };
+  tick();
+  const interval = setInterval(tick, 1000);
 }
 
 function checkAdminPw() {
+  // Kilitliyken (nadir durum — çift tık vb.) yeniden denemeyi engelle
+  const lockedUntil = parseInt(localStorage.getItem(LOGIN_LOCK_KEY) || '0');
+  if (Date.now() < lockedUntil) { showGateLockCountdown(lockedUntil); return; }
+
   const pw = document.getElementById('adminPwInput')?.value;
   if (pw === 'admin123') {
+    recordLoginAttempt(true);
     _adminUnlocked = true;
     closeAdminGate();
     showView('admin');
   } else {
+    recordLoginAttempt(false);
     const err = document.getElementById('adminPwErr');
-    if (err) { err.textContent = '> HATALI KOD — tekrar deneyin'; }
-    const inp = document.getElementById('adminPwInput');
-    if (inp) { inp.value = ''; inp.focus(); }
+    const attempts = parseInt(localStorage.getItem(LOGIN_ATTEMPT_KEY) || '0');
+    const newLockedUntil = parseInt(localStorage.getItem(LOGIN_LOCK_KEY) || '0');
+    if (Date.now() < newLockedUntil) {
+      // Tam bu denemede kilitlendi
+      showGateLockCountdown(newLockedUntil);
+    } else {
+      const remaining = MAX_LOGIN_ATTEMPTS - attempts;
+      if (err) err.textContent = `> HATALI KOD — ${remaining} deneme hakkın kaldı`;
+      const inp = document.getElementById('adminPwInput');
+      if (inp) { inp.value = ''; inp.focus(); }
+    }
   }
 }
 
@@ -8180,6 +8226,25 @@ function setRating(val) {
   document.getElementById('ratingVal').textContent = val + '/5';
 }
 
+// Yorum taslağı koruması — yanlışlıkla kapatma/geri gitme yüzünden metin kaybolmasın
+let _reviewDraftTimer = null;
+function saveReviewDraft(bookId) {
+  clearTimeout(_reviewDraftTimer);
+  _reviewDraftTimer = setTimeout(() => {
+    const text = document.getElementById('reviewText')?.value || '';
+    if (text.trim()) localStorage.setItem('nora_review_draft_' + bookId, text);
+    else localStorage.removeItem('nora_review_draft_' + bookId);
+  }, 400);
+}
+function restoreReviewDraft(bookId) {
+  const draft = localStorage.getItem('nora_review_draft_' + bookId);
+  const ta = document.getElementById('reviewText');
+  if (draft && ta) ta.value = draft;
+}
+function clearReviewDraft(bookId) {
+  localStorage.removeItem('nora_review_draft_' + bookId);
+}
+
 async function submitReview(bookId) {
   const rl = checkRateLimit('review', 5);
   if (!rl.ok) { alert(rl.msg); return; }
@@ -8190,6 +8255,7 @@ async function submitReview(bookId) {
     await api('reviews', { method: 'POST', body: JSON.stringify({ book_id: bookId, reviewer_name: name || 'Anonim', review_text: text, rating: selectedRating || null }) });
     document.getElementById('reviewName').value = '';
     document.getElementById('reviewText').value = '';
+    clearReviewDraft(bookId); // başarıyla gönderildi — taslağı sil
     selectedRating = 0;
     // Yorumları yenile
     const res = await api('reviews?book_id=eq.' + bookId + '&order=id.desc');
@@ -8261,10 +8327,34 @@ async function doLogin() {
       }
     } catch(e) { /* sessizce devam et */ }
     currentUser = { id:data.user.id, email:data.user.email, username, token:data.access_token };
+    mergeGuestDataIntoAccount(); // misafirken favorilenen/okuma listesine eklenen kitapları hesaba taşı
     setUserBadge();
     closeAuth();
     msg.textContent=''; msg.className='auth-msg';
   } catch(e) { msg.textContent='Bağlantı hatası.'; msg.className='auth-msg error'; }
+}
+
+// Misafirken (giriş yapmadan) favorilenen/okuma listesine eklenen kitapları,
+// giriş yapınca hesaba taşı — misafir aktivitesi kaybolmasın
+function mergeGuestDataIntoAccount() {
+  if (!currentUser) return;
+  try {
+    const guestFav = JSON.parse(localStorage.getItem('fav_guest') || '{}');
+    const guestRl = JSON.parse(localStorage.getItem('rl_guest') || '{}');
+    if (Object.keys(guestFav).length) {
+      const userFav = JSON.parse(localStorage.getItem('fav_' + currentUser.id) || '{}');
+      const merged = { ...guestFav, ...userFav }; // hesap verisi öncelikli, çakışma olursa
+      localStorage.setItem('fav_' + currentUser.id, JSON.stringify(merged));
+      localStorage.removeItem('fav_guest');
+    }
+    if (Object.keys(guestRl).length) {
+      const userRl = JSON.parse(localStorage.getItem('rl_' + currentUser.id) || '{}');
+      const merged = { ...guestRl, ...userRl };
+      localStorage.setItem('rl_' + currentUser.id, JSON.stringify(merged));
+      localStorage.removeItem('rl_guest');
+    }
+    loadReadingList(); // birleşmiş veriyi hafızaya yükle
+  } catch(e) {}
 }
 
 async function doRegister() {
@@ -11003,6 +11093,31 @@ loadDiaryView = async function() {
   await loadCapsuleEntries();
 };
 
+// Sayfa her açıldığında yeni açılmış (ama daha önce görülmemiş) kapsül var mı kontrol et — proaktif hatırlatma
+async function checkNewlyOpenedCapsules() {
+  try {
+    const res = await api('settings?key=like.capsule_%25&select=*');
+    if (!res.ok) return;
+    const rows = await res.json();
+    const now = new Date();
+    const seenKey = 'nora_capsules_seen';
+    const seen = JSON.parse(localStorage.getItem(seenKey) || '[]');
+
+    const newlyOpened = rows.filter(r => {
+      try {
+        const val = JSON.parse(r.value);
+        return new Date(val.openAt) <= now && !seen.includes(r.key);
+      } catch(e) { return false; }
+    });
+
+    if (newlyOpened.length) {
+      showToast(`⏳ ${newlyOpened.length} zaman kapsülün açıldı! Günlük sayfasında oku.`, 'var(--zone-sepia)', { duration: 8000 });
+      localStorage.setItem(seenKey, JSON.stringify([...seen, ...newlyOpened.map(r => r.key)]));
+    }
+  } catch(e) {}
+}
+setTimeout(checkNewlyOpenedCapsules, 4000);
+
 // ===== KİTAP HAFIZASI — Kelime Bulutu =====
 let memoryBookId = null;
 
@@ -12966,6 +13081,7 @@ async function saveBook() {
   };
   try {
     let res;
+    setSaveButtonLoading(true);
     if (editingId) {
       // 78. Değişiklik geçmişi kaydet
       const oldBook = books.find(b => b.id === editingId);
@@ -12981,12 +13097,32 @@ async function saveBook() {
       const err = await res.json().catch(() => ({}));
       const msg = err.message || err.hint || err.details || JSON.stringify(err);
       alert('Kayıt hatası (' + res.status + '):\n' + msg);
+      setSaveButtonLoading(false);
       return;
     }
     // Yeni kitap eklenince temin listesinde varsa tamamla
     if (!editingId) await checkTeminOnBookAdd(title);
+    setSaveButtonLoading(false);
     closeModal(); await fetchBooks(); renderAdminTable(); renderStats(); buildFilters();
-  } catch(e) { alert('Bağlantı hatası: ' + e.message); }
+  } catch(e) { setSaveButtonLoading(false); alert('Bağlantı hatası: ' + e.message); }
+}
+
+// Kayıt sırasında butonu "Kaydediliyor..." yap ve pasifleştir — çift tıklamayı da önler
+function setSaveButtonLoading(isLoading) {
+  const btn = document.querySelector('#modalOverlay .btn-save');
+  if (!btn) return;
+  if (isLoading) {
+    btn.dataset.originalText = btn.textContent;
+    btn.textContent = 'Kaydediliyor...';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+  } else {
+    btn.textContent = btn.dataset.originalText || 'Kaydet';
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.cursor = 'pointer';
+  }
 }
 
 async function bulkDuplicate() {
@@ -13013,7 +13149,6 @@ async function bulkDuplicate() {
 
 // ===== OKUMA LİSTESİ =====
 function toggleReadList(bookId, state) {
-  if (!currentUser) { openAuth(); return; }
   const wasActive = readingList[bookId] === state;
   if (wasActive) {
     delete readingList[bookId];
@@ -13022,14 +13157,15 @@ function toggleReadList(bookId, state) {
     // 56. Ekleme animasyonu
     showToast(state === 'want' ? '📖 Okuyacaklar listesine eklendi' : '✓ Okunanlar listesine eklendi', state === 'want' ? 'var(--gold)' : 'var(--green)');
   }
-  try { localStorage.setItem('rl_' + currentUser.id, JSON.stringify(readingList)); } catch(e) {}
+  // Misafir kullanıcı da yerel olarak kaydedebilsin — zorla giriş istemiyoruz, orijinal işlem kaybolmasın
+  const rlKey = currentUser ? 'rl_' + currentUser.id : 'rl_guest';
+  try { localStorage.setItem(rlKey, JSON.stringify(readingList)); } catch(e) {}
   doSearch();
 }
 
 // 16. Favorilere ekle — ayrı liste
 let favorites = {};
 function toggleFavorite(bookId) {
-  if (!currentUser) { openAuth(); return; }
   if (favorites[bookId]) {
     delete favorites[bookId];
     showToast('♡ Favorilerden çıkarıldı', 'var(--ink-faint)');
@@ -13037,20 +13173,22 @@ function toggleFavorite(bookId) {
     favorites[bookId] = Date.now();
     showToast('♥ Favorilere eklendi', '#c84040');
   }
-  try { localStorage.setItem('fav_' + currentUser.id, JSON.stringify(favorites)); } catch(e) {}
+  // Misafir kullanıcı da yerel olarak kaydedebilsin — zorla giriş istemiyoruz
+  const favKey = currentUser ? 'fav_' + currentUser.id : 'fav_guest';
+  try { localStorage.setItem(favKey, JSON.stringify(favorites)); } catch(e) {}
 }
 function loadFavorites() {
-  if (!currentUser) return;
-  try { const s = localStorage.getItem('fav_' + currentUser.id); if (s) favorites = JSON.parse(s); } catch(e) {}
+  const favKey = currentUser ? 'fav_' + currentUser.id : 'fav_guest';
+  try { const s = localStorage.getItem(favKey); favorites = s ? JSON.parse(s) : {}; } catch(e) { favorites = {}; }
 }
 function isFavorite(bookId) { return !!favorites[bookId]; }
 
 function loadReadingList() {
-  if (!currentUser) return;
+  const rlKey = currentUser ? 'rl_' + currentUser.id : 'rl_guest';
   try {
-    const saved = localStorage.getItem('rl_' + currentUser.id);
-    if (saved) readingList = JSON.parse(saved);
-  } catch(e) {}
+    const saved = localStorage.getItem(rlKey);
+    readingList = saved ? JSON.parse(saved) : {};
+  } catch(e) { readingList = {}; }
   loadFavorites();
 }
 
@@ -15342,11 +15480,15 @@ function renderShelfView() {
 }
 
 (function addSwipeSupport() {
-  let startX = 0;
-  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive:true });
+  let startX = 0, startY = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive:true });
   document.addEventListener('touchend', e => {
     if (!document.getElementById('detailOverlay')?.classList.contains('open')) return;
     const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    // Dikey kaydırma baskınsa ve aşağı yönlüyse — kapat (bottom sheet standart jesti)
+    if (Math.abs(dy) > Math.abs(dx) && dy > 80) { closeDetail(); return; }
+    // Yatay kaydırma baskınsa — önceki/sonraki kitap
     if (Math.abs(dx) < 60) return;
     if (dx < 0) navigateDetail(1); else navigateDetail(-1);
   }, { passive:true });
@@ -19156,10 +19298,13 @@ async function openDetail(id) {
           <span id="ratingVal" style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--ink-faint);margin-left:6px;">0/5</span>
         </div>
         <input type="text" id="reviewName" placeholder="Adın (isteğe bağlı)">
-        <textarea id="reviewText" placeholder="Bu kitap hakkında ne düşünüyorsun?"></textarea>
+        <textarea id="reviewText" placeholder="Bu kitap hakkında ne düşünüyorsun?" oninput="saveReviewDraft(${id})"></textarea>
         <button class="btn-review" onclick="submitReview(${id})">Yorumu Gönder</button>
       </div>
     </div>`;
+
+  // Yorum taslağı varsa geri yükle — yanlışlıkla kapatılırsa metin kaybolmasın
+  restoreReviewDraft(id);
 
   // Yıldız butonlarına lit class stil desteği
   document.querySelectorAll('#starRow .star-btn').forEach(btn => {
@@ -20561,15 +20706,9 @@ setTimeout(updateMobBadge,2000);
   document.addEventListener('touchend',async()=>{if(!pulling)return;pulling=false;sy=0;if(ind)ind.textContent='⟳ Yenileniyor...';await fetchBooks();doSearch();if(ind){ind.textContent='✓ Yenilendi';setTimeout(()=>ind.style.display='none',1000);}},{passive:true});
 })();
 
-// 3. Infinite scroll sentinel
-function setupInfiniteScrollSentinel(container) {
-  document.getElementById('infiniteScrollSentinel')?.remove();
-  const s=document.createElement('div'); s.id='infiniteScrollSentinel';
-  container.appendChild(s);
-  if(!('IntersectionObserver' in window)) return;
-  const obs=new IntersectionObserver(entries=>{if(entries[0].isIntersecting&&typeof _loadMoreBooks==='function')_loadMoreBooks();},{rootMargin:'200px'});
-  obs.observe(s);
-}
+// NOT: Sonsuz kaydırma zaten renderWithInfiniteScroll() ile tek, tutarlı şekilde çalışıyor
+// (aşağıda, doSearch tarafından çağrılıyor). Bu eski setupInfiniteScrollSentinel/_loadMoreBooks
+// ikilisi hiç bağlanmamış ölü kodmuş — kaldırıldı.
 
 // 4. Yatay raf scroll
 function renderHorizontalShelves() {
@@ -21173,11 +21312,22 @@ async function bulkAddTag() {
 async function bulkDelete() {
   const ids=[...selectedIds]; if(!ids.length){showToast('Önce kitap seç','#c84040');return;}
   const bks=ids.map(id=>books.find(x=>x.id===id)).filter(Boolean);
-  const ok=await noraModal({title:`${ids.length} kitap silinecek`,msg:bks.slice(0,5).map(b=>`• ${b.title}`).join('\n')+(bks.length>5?`\n...+${bks.length-5}`:'')+'\n\nBu işlem geri alınamaz.',icon:'🗑',type:'confirm',confirmLabel:'Evet Sil',cancelLabel:'İptal',danger:true});
+  const ok=await noraModal({title:`${ids.length} kitap silinecek`,msg:bks.slice(0,5).map(b=>`• ${b.title}`).join('\n')+(bks.length>5?`\n...+${bks.length-5}`:'')+'\n\nBu işlem geri alınamaz. Güvenli alternatif: "📦 Arşivle" ile geri getirilebilir şekilde kaldır.',icon:'🗑',type:'confirm',confirmLabel:'Evet Sil',cancelLabel:'İptal',danger:true});
   if(!ok) return;
-  await Promise.all(ids.map(id=>api('books?id=eq.'+id,{method:'DELETE'})));
-  ids.forEach(id=>{const i=books.findIndex(x=>x.id===id);if(i>=0)books.splice(i,1);});
-  selectedIds.clear(); renderAdminTable(); showToast(`✓ ${ids.length} kitap silindi`,'#2a7a2a');
+
+  // 5+ kitapta ilerleme göster — tarayıcı donmuş hissi vermesin, işlem parça parça gitsin
+  const showProgressBar = ids.length >= 5;
+  if (showProgressBar) showProgress(`${ids.length} kitap siliniyor...`, ids.length * 60);
+
+  let deleted = 0;
+  await processInChunks(ids, async id => {
+    const res = await api('books?id=eq.'+id, { method:'DELETE' });
+    if (res.ok) { const i=books.findIndex(x=>x.id===id); if(i>=0)books.splice(i,1); deleted++; }
+  }, 10, 40);
+
+  if (showProgressBar) hideProgress();
+  selectedIds.clear(); renderAdminTable(); showToast(`✓ ${deleted} kitap silindi`,'#2a7a2a');
+  auditLog('BULK_DELETE', { count: deleted });
 }
 
 // "(Kopya)" ekiyle biten kitap başlıklarını temizle — kopyalama artık bu eki eklemiyor,
@@ -21690,7 +21840,7 @@ function renderRecentSearches() {
       style="background:none;border:1px solid var(--border);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.65rem;padding:2px 10px;cursor:pointer;"
       onmouseover="this.style.borderColor='var(--ink)';this.style.color='var(--ink)'"
       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink-faint)'">${q}</button>`).join('') +
-    `<button onclick="clearRecentSearches()" style="background:none;border:none;color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.58rem;cursor:pointer;">✕</button>`;
+    `<button onclick="clearRecentSearches()" title="Son aramaları temizle" style="background:none;border:none;color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.58rem;cursor:pointer;">✕ temizle</button>`;
 }
 function applyRecentSearch(q) {
   const inp = document.getElementById('searchInput');
