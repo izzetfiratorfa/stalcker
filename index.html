@@ -2699,6 +2699,9 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div id="bulkToolbar" style="display:none;background:var(--black);color:var(--white);padding:10px 16px;margin-bottom:8px;align-items:center;gap:8px;font-family:'Courier Prime',monospace;font-size:0.75rem;flex-wrap:wrap;">
         <span id="bulkCount" style="color:#9c7a3c;font-weight:700;">0 kitap seçildi</span>
         <div style="flex:1"></div>
+        <span style="font-size:0.62rem;color:#555;letter-spacing:1px;">ŞABLON:</span>
+        <button class="bulk-btn" onclick="bulkTemplateSell()" style="border-color:var(--zone-water);color:var(--zone-water);" title="Durum + fiyatı tek adımda ayarla">₺ Satışa Çıkar</button>
+        <button class="bulk-btn" onclick="bulkTemplateArrived()" style="border-color:#2a7a2a;color:#2a7a2a;" title="Durum + rafı tek adımda ayarla">📦 Kitap Geldi</button>
         <span style="font-size:0.62rem;color:#555;letter-spacing:1px;">DURUM:</span>
         <button class="bulk-btn" onclick="bulkSetStatus('yerlesik')">✓ Yerleşik</button>
         <button class="bulk-btn" onclick="bulkSetStatus('borrowed')">⏳ Ödünçte</button>
@@ -11891,6 +11894,35 @@ async function inlineStatusChange(id, newStatus, selectEl) {
   }
 }
 
+// Hazır şablonlar — sık kullanılan 2 adımlı işlemleri (durum+fiyat, durum+raf) tek tıka indirir
+async function bulkTemplateSell() {
+  if (!selectedIds.size) { showToast('Önce kitap seç', '#c84040'); return; }
+  const price = await noraPrompt(`${selectedIds.size} kitap "Satışta" durumuna geçecek.\n\nFiyat (₺):`, { title: '₺ Satışa Çıkar', placeholder: '150' });
+  if (price === null) return;
+  const priceNum = parseInt(price);
+  if (isNaN(priceNum) || priceNum < 0) { toastError('Geçerli bir fiyat gir'); return; }
+  const ids = Array.from(selectedIds);
+  showProgress(`${ids.length} kitap satışa çıkarılıyor...`, ids.length * 60);
+  await api('books?id=in.(' + ids.join(',') + ')', { method:'PATCH', body:JSON.stringify({ status:'satista', price: priceNum }) });
+  hideProgress();
+  clearSelection(); await fetchBooks(); renderAdminTable(); renderStats();
+  showToast(`✓ ${ids.length} kitap ₺${priceNum} ile satışa çıkarıldı`, '#2a7a2a');
+  auditLog('BULK_TEMPLATE_SELL', { count: ids.length, price: priceNum });
+}
+
+async function bulkTemplateArrived() {
+  if (!selectedIds.size) { showToast('Önce kitap seç', '#c84040'); return; }
+  const shelf = await promptShelfWithAutocomplete(`${selectedIds.size} kitap geldi ve "Yerleşik" durumuna geçecek.`, 'Raf:');
+  if (!shelf) return;
+  const ids = Array.from(selectedIds);
+  showProgress(`${ids.length} kitap rafa yerleştiriliyor...`, ids.length * 60);
+  await api('books?id=in.(' + ids.join(',') + ')', { method:'PATCH', body:JSON.stringify({ status:'yerlesik', shelf: shelf.toUpperCase() }) });
+  hideProgress();
+  clearSelection(); await fetchBooks(); renderAdminTable(); renderStats();
+  showToast(`✓ ${ids.length} kitap Raf ${shelf.toUpperCase()}'a yerleşti`, '#2a7a2a');
+  auditLog('BULK_TEMPLATE_ARRIVED', { count: ids.length, shelf: shelf.toUpperCase() });
+}
+
 async function bulkSetStatus(status) {
   if (!selectedIds.size) return;
   if (!confirm(selectedIds.size + ' kitabı güncellemek istiyor musunuz?')) return;
@@ -12746,7 +12778,10 @@ function parseBulkCsv() {
   const headers = ['Kitap Adı','Yazar','Tür','Yayınevi','Sayfa','Raf','Sene','Etiketler'];
 
   preview.innerHTML = `
-    <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#2a7a2a;margin-bottom:8px;">✓ ${_csvParsedRows.length} satır algılandı — hücrelere tıklayarak düzenleyebilirsin</div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:#2a7a2a;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <span>✓ ${_csvParsedRows.length} satır algılandı — hücrelere tıklayarak düzenleyebilirsin</span>
+      <button onclick="toggleCsvFailedOnly()" id="csvFailedOnlyBtn" style="background:none;border:1px solid var(--zone-rust);color:var(--zone-rust);font-family:'Courier Prime',monospace;font-size:0.62rem;padding:3px 8px;cursor:pointer;">Sadece Hatalıları Göster</button>
+    </div>
     <div style="overflow-x:auto;max-height:340px;overflow-y:auto;">
     <table style="width:100%;border-collapse:collapse;font-family:'Courier Prime',monospace;font-size:0.72rem;" id="csvEditTable">
       <thead><tr style="border-bottom:2px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:1;">
@@ -12791,6 +12826,23 @@ function clearBulkForm() {
   document.getElementById('bulkCsvPreview').innerHTML = '';
   document.getElementById('bulkMsg').textContent = '';
   addBulkRow(); addBulkRow(); addBulkRow();
+}
+
+// Sadece hatalı (kırmızı) satırları göster/gizle — büyük CSV'lerde hatalı satırları bulmayı kolaylaştırır
+let _csvShowingFailedOnly = false;
+function toggleCsvFailedOnly() {
+  _csvShowingFailedOnly = !_csvShowingFailedOnly;
+  const btn = document.getElementById('csvFailedOnlyBtn');
+  document.querySelectorAll('#csvEditBody tr').forEach(row => {
+    if (!_csvShowingFailedOnly) { row.style.display = ''; return; }
+    // "saved" hiç denenmemişse (0/undefined) veya başarısızsa (0) göster; başarılıysa (1) gizle
+    row.style.display = row.dataset.saved === '1' ? 'none' : '';
+  });
+  if (btn) {
+    btn.textContent = _csvShowingFailedOnly ? '✓ Tümünü Göster' : 'Sadece Hatalıları Göster';
+    btn.style.background = _csvShowingFailedOnly ? 'var(--zone-rust)' : 'none';
+    btn.style.color = _csvShowingFailedOnly ? '#fff' : 'var(--zone-rust)';
+  }
 }
 
 async function saveBulkBooks() {
@@ -12843,16 +12895,22 @@ async function saveBulkBooks() {
         console.error('Bulk insert error:', res.status, err);
         throw new Error(err.message || res.status);
       }
-      if (el) el.style.background = '#f0fff0';
+      if (el) { el.style.background = '#f0fff0'; el.dataset.saved = '1'; }
+      // Başarılı satırın kutucuğunu otomatik işaretten çıkar — "Kaydet"e tekrar basınca
+      // sadece hâlâ işaretli (başarısız) satırlar yeniden denenir, elle işaret kaldırmaya gerek kalmaz
+      if (!isForm && el) {
+        const checkbox = el.querySelector('.csvRowCheck');
+        if (checkbox) checkbox.checked = false;
+      }
       success++;
     } catch(e) {
       console.error('Bulk row error:', e.message);
-      if (el) el.style.background = '#fff0f0';
+      if (el) { el.style.background = '#fff0f0'; el.dataset.saved = '0'; }
       fail++;
     }
   }
 
-  msg.textContent = `✓ ${success} kitap eklendi${fail ? ' · ✗ ' + fail + ' hata' : ''}`;
+  msg.textContent = `✓ ${success} kitap eklendi${fail ? ' · ✗ ' + fail + ' hata — düzeltip "Kaydet"e tekrar bas, sadece hatalılar yeniden denenir' : ''}`;
   msg.style.color = fail ? '#c84040' : '#2a7a2a';
   await fetchBooks(); renderAdminTable(); renderStats();
 }
@@ -15819,6 +15877,8 @@ if (_highContrast) document.body.classList.add('high-contrast');
 const KEYBOARD_SHORTCUTS = [
   ['/', 'Arama kutusuna odaklan'],
   ['Ctrl+K', 'Admin: her şeyi ara (kitap + komut)'],
+  ['N', 'Admin: yeni kitap ekle'],
+  ['F', 'Admin: arama kutusuna odaklan'],
   ['Esc', 'Detayı / modalı kapat'],
   ['← →', 'Detayda önceki / sonraki kitap'],
   ['Çift tık', 'Admin tabloda: hücreyi hızlı düzenle'],
@@ -18477,6 +18537,23 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// Tek tuş admin kısayolları — sadece admin açıkken ve bir input/textarea'da yazmıyorken çalışır
+document.addEventListener('keydown', e => {
+  if (!_adminUnlocked) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return; // Ctrl+K vb. ile çakışmasın
+  // Bir modal açıkken tek tuş kısayolları devre dışı (yanlışlıkla tetiklenmesin)
+  if (document.getElementById('modalOverlay')?.classList.contains('open')) return;
+  if (document.getElementById('adminGlobalSearch')) return;
+
+  if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openModal(); }
+  if (e.key === 'f' || e.key === 'F') {
+    e.preventDefault();
+    document.getElementById('adminSearch')?.focus();
+  }
+});
+
 // --- İnline Düzenleme Genişletme ---
 // Tablo hücrelerine dblclick ile inline düzenleme — tüm alanlar
 function initInlineEditing() {
@@ -18870,6 +18947,9 @@ async function mergeTagsInto(source, target) {
   const affected = books.filter(b => (b.tags||'').split(',').map(t=>t.trim().toLowerCase()).includes(source));
   if (!affected.length) { showToast(`"#${source}" etiketi bulunan kitap yok`); return; }
 
+  // Geri alma için birleştirme öncesi durumu sakla
+  const preState = affected.map(b => ({ id: b.id, oldTags: b.tags }));
+
   showProgress(`${affected.length} kitapta etiket değiştiriliyor...`, affected.length * 80);
   let done = 0;
 
@@ -18882,7 +18962,20 @@ async function mergeTagsInto(source, target) {
 
   hideProgress();
   renderAdminTable();
-  showToast(`✓ ${done} kitapta #${source} → #${target} değiştirildi`, '#2a7a2a');
+  showToast(`✓ ${done} kitapta #${source} → #${target} değiştirildi`, '#2a7a2a', {
+    duration: 8000,
+    action: { label: 'GERİ AL', fn: async () => {
+      showProgress('Geri alınıyor...', preState.length * 80);
+      await Promise.all(preState.map(async p => {
+        await api(`books?id=eq.${p.id}`, { method:'PATCH', body:JSON.stringify({ tags: p.oldTags }) });
+        const b = books.find(x=>x.id===p.id); if (b) b.tags = p.oldTags;
+      }));
+      hideProgress();
+      renderAdminTable();
+      showToast('↩ Etiket birleştirme geri alındı', '#2a7a2a');
+      showTagManager();
+    }}
+  });
   showTagManager();
 }
 
@@ -19326,9 +19419,9 @@ async function bulkShelfTransfer() {
   if (!ids.length) { showToast('Önce kitap seç', '#c84040'); return; }
 
   const fromShelves = [...new Set(ids.map(id => books.find(b=>b.id===id)?.shelf).filter(Boolean))];
-  const toShelf = await noraPrompt(
-    `${ids.length} kitap taşınacak.\nŞu anki raflar: ${fromShelves.join(', ')}\n\nHedef raf:`,
-    { title: '→ Toplu Raf Taşıma', placeholder: 'A3' }
+  const toShelf = await promptShelfWithAutocomplete(
+    `${ids.length} kitap taşınacak.\nŞu anki raflar: ${fromShelves.join(', ')}`,
+    'Hedef raf:'
   );
   if (!toShelf) return;
 
@@ -19349,6 +19442,39 @@ async function bulkShelfTransfer() {
   renderShelfMap();
   showToast(`✓ ${moved} kitap Raf ${toShelf.toUpperCase()}'a taşındı`, '#2a7a2a');
   clearSelection();
+}
+
+// Mevcut raf kodlarını otomatik tamamlama ile öneren özel prompt — yanlış yazım riskini azaltır
+function promptShelfWithAutocomplete(msg, label) {
+  return new Promise(resolve => {
+    const existingShelves = [...new Set(books.map(b => b.shelf).filter(Boolean))].sort();
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:380px;width:100%;padding:24px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;margin-bottom:6px;color:var(--zone-sepia);">→ TOPLU RAF TAŞIMA</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--ink);white-space:pre-line;margin-bottom:14px;">${msg}</div>
+      <label style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);display:block;margin-bottom:4px;">${label}</label>
+      <input type="text" id="shelfAutocompleteInput" list="existingShelvesList" placeholder="A3" autofocus
+        style="width:100%;box-sizing:border-box;font-family:'Courier Prime',monospace;font-size:0.9rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink);padding:8px 10px;text-transform:uppercase;margin-bottom:14px;">
+      <datalist id="existingShelvesList">${existingShelves.map(s => `<option value="${s}">`).join('')}</datalist>
+      <div style="display:flex;gap:8px;">
+        <button id="shelfAcCancelBtn" style="flex:1;background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px;cursor:pointer;">İptal</button>
+        <button id="shelfAcOkBtn" style="flex:1;background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px;cursor:pointer;">Devam Et</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    const input = document.getElementById('shelfAutocompleteInput');
+    input.focus();
+
+    const finish = (val) => { modal.remove(); resolve(val); };
+    document.getElementById('shelfAcOkBtn').onclick = () => finish(input.value.trim() || null);
+    document.getElementById('shelfAcCancelBtn').onclick = () => finish(null);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') finish(input.value.trim() || null);
+      if (e.key === 'Escape') finish(null);
+    });
+    modal.onclick = e => { if (e.target === modal) finish(null); };
+  });
 }
 
 // --- Kapak Güncelleme Kampanyası ---
@@ -23004,6 +23130,14 @@ async function teminFulfill(id) {
         newBook.price = null; // Yeni kopyanın fiyatı belirtilmemiş
       }
     }
+  }
+
+  // Kaynak kitaptan raf bilgisi kopyalanmadıysa (yeni/bağımsız temin talebi) — raf mutlaka sorulsun,
+  // rafsız kayıt oluşmasın (fiziksel kitapçıda bu alan pratikte zorunlu)
+  if (!newBook.shelf) {
+    const shelf = await promptShelfWithAutocomplete(`"${temin.title}" için raf ata:`, 'Raf:');
+    if (!shelf) { showToast('İptal edildi — raf belirtilmeden kayıt oluşturulmadı'); return; }
+    newBook.shelf = shelf.toUpperCase();
   }
 
   // Yeni yerleşik kayıt oluştur
