@@ -168,6 +168,27 @@ setTimeout(() => {
       if (!akisEl || !akisEl.innerHTML.includes('test not')) throw new Error('Akış render edilmedi');
     });
 
+    check('Giriş denemesi sayacı gerçekten çalışıyor mu (5 yanlış → kilit)', () => {
+      window.eval(`localStorage.removeItem('nora_login_attempts'); localStorage.removeItem('nora_login_locked_until');`);
+      for (let i = 0; i < 4; i++) window.recordLoginAttempt(false);
+      const attemptsBefore = window.eval(`localStorage.getItem('nora_login_attempts')`);
+      if (attemptsBefore !== '4') throw new Error('4 denemeden sonra sayaç 4 olmalıydı, ' + attemptsBefore + ' bulundu');
+      window.recordLoginAttempt(false); // 5. yanlış deneme — kilitlenmeli
+      const lockedUntil = parseInt(window.eval(`localStorage.getItem('nora_login_locked_until')`) || '0');
+      if (lockedUntil <= Date.now()) throw new Error('5. yanlış denemede kilit tetiklenmedi');
+      window.eval(`localStorage.removeItem('nora_login_attempts'); localStorage.removeItem('nora_login_locked_until');`);
+    });
+
+    check('Misafir favori/okuma listesi zorla giriş istemeden çalışıyor mu', () => {
+      window.eval(`currentUser = null; favorites = {}; readingList = {};`);
+      window.toggleFavorite(1);
+      const isFav = window.eval(`!!favorites[1]`);
+      if (!isFav) throw new Error('Misafir favorisi eklenemedi (hâlâ giriş zorunlu olabilir)');
+      const guestFavStored = window.eval(`localStorage.getItem('fav_guest')`);
+      if (!guestFavStored || !guestFavStored.includes('1')) throw new Error('Misafir favorisi localStorage kaydedilmedi');
+      window.toggleFavorite(1); // temizle
+    });
+
     check('Admin sıfır sonuç durumu (boş durum ekranı) hata vermiyor mu', () => {
       window.document.getElementById('adminSearch').value = 'bulunamayacak-bir-kelime-xyz';
       window.adminTableReset();
