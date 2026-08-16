@@ -217,6 +217,26 @@ setTimeout(() => {
       if (dangerous.length) throw new Error(`Riskli wrapper(lar): ${dangerous.join(', ')}`);
     });
 
+    check('Onclick ile çağrılan fonksiyonların hepsi tanımlı mı (imza kaybı taraması)', () => {
+      // Bu oturumda 2 kez şu hata oluştu: str_replace ile içerik eklerken
+      // "function X(id) {" imza satırı kazayla silindi, fonksiyon gövdesi
+      // öksüz kaldı — X hâlâ onclick="X()" ile çağrılıyor ama artık TANIMSIZ.
+      // Bu test TÜM onclick="fonksiyon(...)" çağrılarını tarar ve her birinin
+      // gerçek bir "function fonksiyon(" tanımı olduğunu doğrular.
+      const src = fs.readFileSync(htmlPath, 'utf8');
+      const fnDefs = new Set([...src.matchAll(/(?:async )?function (\w+)\s*\(/g)].map(m => m[1]));
+      // window.X = function(...) deseni de geçerli bir tanım sayılır
+      const windowAssigns = new Set([...src.matchAll(/window\.(\w+)\s*=\s*(?:async )?function/g)].map(m => m[1]));
+      // onclick="fonksiyonAdı(...)" desenlerini bul
+      const onclickCalls = new Set([...src.matchAll(/onclick="(\w+)\(/g)].map(m => m[1]));
+      // Bilinen tarayıcı/native fonksiyonlar veya JS anahtar kelimeleri hariç tutulur
+      const knownExternal = new Set(['event','this','print','alert','confirm','if','for','while','switch','function']);
+      const missing = [...onclickCalls].filter(fn =>
+        !fnDefs.has(fn) && !windowAssigns.has(fn) && !knownExternal.has(fn)
+      );
+      if (missing.length) throw new Error(`Tanımsız fonksiyon(lar) (onclick ile çağrılıyor ama tanımı yok): ${missing.join(', ')}`);
+    });
+
     detailTest.finally(() => {
       console.log('\n' + '='.repeat(50));
       console.log('REGRESYON TEST SONUÇLARI');
