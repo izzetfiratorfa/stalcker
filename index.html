@@ -2174,6 +2174,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <span onclick="doSerendipity()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">✦ Serendipity</span>
       <span onclick="odaBaslat()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">◉ Oda'ya Yolculuk</span>
       <span onclick="show3DLibrary()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">📚 3D Kütüphane</span>
+      <span onclick="showEdebiyatHaritasi()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">🗺 Edebiyat Haritası</span>
     </div>
   </div>
 
@@ -18504,7 +18505,182 @@ const GLOBAL_COMMANDS = [
   { icon:'⏱', title:'Son İşlemler', sub:'Yakın zamanda yapılan işlemler', type:'Günlük', action:()=>showActionLog() },
   { icon:'🔐', title:'Audit Log', sub:'Tüm değişiklik geçmişi', type:'Günlük', action:()=>showAuditLog() },
   { icon:'⚠', title:'Hata Kaydı', sub:'Sistem hataları', type:'Günlük', action:()=>showErrorLog() },
+  { icon:'🎉', title:'Yıl Dönümü Retrospektifi', sub:'Bu yılın özeti — en çok aranan, en çok eklenen', type:'Nişlik', action:()=>showYilDonumuArsivi() },
+  { icon:'🔍', title:'Yazım Kontrolü', sub:'Nora notu/açıklama yazarken hızlı kontrol — hiçbir şeyi otomatik değiştirmez', type:'Nişlik', action:()=>showYazimKontrolu() },
 ];
+
+// Yıl Dönümü Retrospektifi — mevcut created_at ve searchLog verisinden yıllık özet
+// Yazım Kontrolcüsü — sadece uyarır, HİÇBİR ŞEYİ otomatik değiştirmez.
+// Nora'nın edebi/ironik dilini bozmamak için kasıtlı olarak sadece açık teknik
+// hataları (çift boşluk, ASCII'ye kaçmış Türkçe karakter, tekrar eden kelime) işaretler —
+// üslup/kelime seçimi konusunda hiçbir öneri yapmaz.
+const YAZIM_SIK_HATALAR = {
+  'degil':'değil', 'icin':'için', 'sey':'şey', 'seyler':'şeyler', 'gorus':'görüş',
+  'oykü':'öykü', 'oyku':'öykü', 'siir':'şiir', 'yasam':'yaşam', 'dusunce':'düşünce',
+  'gercek':'gerçek', 'birseyler':'bir şeyler', 'herşey':'her şey', 'hiçbirşey':'hiçbir şey',
+};
+
+function checkYazim(text) {
+  const issues = [];
+
+  // Çift boşluk
+  if (/ {2,}/.test(text)) issues.push({ type:'Çift boşluk', detail:'Metinde birden fazla ardışık boşluk var.' });
+
+  // Noktalama öncesi boşluk (İngilizce alışkanlığı)
+  if (/\s+[.,!?;:]/.test(text)) issues.push({ type:'Noktalama öncesi boşluk', detail:'Noktalama işaretinden önce boşluk olmamalı (örn: "kelime ." → "kelime.")' });
+
+  // Noktalama sonrası boşluksuz devam
+  if (/[.,!?;:][a-zçğıöşüA-ZÇĞİÖŞÜ]/.test(text)) issues.push({ type:'Noktalama sonrası boşluk eksik', detail:'Virgül/nokta sonrası boşluk unutulmuş olabilir.' });
+
+  // Tekrar eden kelime ("bu bu kitap")
+  const repeatMatch = text.match(/\b(\w+)\s+\1\b/i);
+  if (repeatMatch) issues.push({ type:'Tekrar eden kelime', detail:`"${repeatMatch[1]}" art arda iki kez yazılmış.` });
+
+  // ASCII'ye kaçmış Türkçe karakterler — bilinen kelime listesi
+  const words = text.toLowerCase().split(/\s+/);
+  const foundTypos = new Set();
+  words.forEach(w => {
+    const clean = w.replace(/[.,!?;:"'()]/g, '');
+    if (YAZIM_SIK_HATALAR[clean]) foundTypos.add(`"${clean}" → "${YAZIM_SIK_HATALAR[clean]}" olabilir mi?`);
+  });
+  if (foundTypos.size) issues.push({ type:'Olası Türkçe karakter eksikliği', detail:[...foundTypos].join(' · ') });
+
+  return issues;
+}
+
+function showYazimKontrolu() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:480px;width:100%;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">🔍 YAZIM KONTROLÜ</div>
+      <button onclick="this.closest('div').parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--ink-faint);">✕</button>
+    </div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);margin-bottom:14px;line-height:1.6;">Sadece teknik hataları (çift boşluk, eksik Türkçe karakter, tekrar kelime) işaretler. Üslubuna hiç dokunmaz, hiçbir şeyi otomatik değiştirmez.</div>
+    <textarea id="yazimKontrolText" placeholder="Nora notu, açıklama veya herhangi bir metni buraya yapıştır..." style="width:100%;min-height:140px;padding:10px;font-family:'Playfair Display',serif;font-size:0.85rem;border:1px solid var(--border-dark);background:var(--paper);color:var(--ink);resize:vertical;box-sizing:border-box;line-height:1.7;margin-bottom:12px;"></textarea>
+    <button onclick="runYazimKontrolu()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 18px;cursor:pointer;letter-spacing:1px;margin-bottom:14px;">Kontrol Et</button>
+    <div id="yazimKontrolSonuc"></div>
+  </div>`;
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('yazimKontrolText')?.focus(), 100);
+}
+
+function runYazimKontrolu() {
+  const text = document.getElementById('yazimKontrolText')?.value || '';
+  const sonucEl = document.getElementById('yazimKontrolSonuc');
+  if (!sonucEl) return;
+  if (!text.trim()) { sonucEl.innerHTML = ''; return; }
+
+  const issues = checkYazim(text);
+  if (!issues.length) {
+    sonucEl.innerHTML = '<div style="font-family:\'Courier Prime\',monospace;font-size:0.72rem;color:#2a7a2a;padding:10px 0;">✓ Belirgin bir teknik hata bulunamadı.</div>';
+    return;
+  }
+  sonucEl.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:#c87020;margin-bottom:8px;">${issues.length} OLASI SORUN — hepsi öneri, sana kalmış</div>` +
+    issues.map(i => `<div style="padding:8px 10px;background:var(--paper-dark);margin-bottom:6px;border-left:3px solid #c87020;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;font-weight:700;color:var(--ink);margin-bottom:2px;">${i.type}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:var(--ink-faint);">${i.detail}</div>
+    </div>`).join('');
+}
+
+// Mekânsal-edebi bağlam notları — statik yazar sözlüğü (yeni Supabase kolonu gerektirmez, author alanıyla eşleşir)
+const YAZAR_BAGLAM = {
+  'oğuz atay': 'İstanbul\'da doğdu, İTÜ\'de inşaat mühendisliği okudu — "Tutunamayanlar"ı yazarken şehrin kenar mahallelerinden ilham aldı.',
+  'ferit edgü': 'İstanbul\'da doğdu, hayatının büyük bölümünü Bodrum ile İstanbul arasında geçirdi.',
+  'yusuf atılgan': 'Manisa\'da doğdu, "Aylak Adam"ın kahramanı gibi İstanbul sokaklarında dolaştı.',
+  'vüs\'at o. bener': 'İstanbul\'da doğdu, mühendislik eğitimi aldı — az ama derin yazan bir sesti.',
+  'orhan pamuk': 'Nişantaşı, İstanbul\'da doğdu ve büyüdü — romanlarının çoğu bu semtin havasını taşır.',
+  'sabahattin ali': 'Edirne\'de doğdu, Anadolu\'nun farklı köşelerinde öğretmenlik yaptı.',
+  'ahmet hamdi tanpınar': 'İstanbul\'da doğdu, şehrin zamanla ilişkisini en derin işleyen yazarlardan biriydi.',
+  'bilge karasu': 'İstanbul\'da doğdu, felsefe okudu — dili kadar sessizliğiyle de tanınır.',
+  'nazım hikmet': 'Selanik\'te doğdu, hayatının büyük kısmını sürgünde geçirdi.',
+  'sait faik abasıyanık': 'Adapazarı\'nda doğdu, Burgazada\'da yaşadı — kısa öykünün ustası.',
+  'aziz nesin': 'İstanbul\'da doğdu, mizahı toplumsal eleştiriyle harmanladı.',
+  'peyami safa': 'İstanbul\'da doğdu ve yaşadı, şehrin değişimini yakından izledi.',
+};
+
+function getYazarBaglam(author) {
+  if (!author) return null;
+  const normAuthor = normalize(author.split(',')[0].trim()); // ilk yazarı al
+  for (const [key, note] of Object.entries(YAZAR_BAGLAM)) {
+    if (normalize(key) === normAuthor) return note;
+  }
+  return null;
+}
+
+function showYilDonumuArsivi() {
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const yearStart = new Date(thisYear, 0, 1);
+
+  const active = books.filter(b => b.genre !== 'gizli-raf');
+  const addedThisYear = active.filter(b => b.created_at && new Date(b.created_at) >= yearStart);
+
+  // Bu yıl en çok eklenen tür
+  const genreMap = {};
+  addedThisYear.forEach(b => (b.genre||'').split(',').map(g=>g.trim()).filter(Boolean).forEach(g => genreMap[g] = (genreMap[g]||0)+1));
+  const topGenres = Object.entries(genreMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // En çok eklenen yazar bu yıl
+  const authorMap = {};
+  addedThisYear.forEach(b => (b.author||'').split(',').map(a=>a.trim()).filter(Boolean).forEach(a => authorMap[a] = (authorMap[a]||0)+1));
+  const topAuthors = Object.entries(authorMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // En çok aranan terimler (tüm zamanlar — searchLog yıl bazlı tutmuyor, elde ne varsa)
+  const topSearches = Object.entries(searchLog||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // Nora seçkisi bu yıl
+  const noraPicksThisYear = addedThisYear.filter(b => b.nora_pick).length;
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,8,4,0.92);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+  modal.innerHTML = `<div style="background:#0f0c08;border:1px solid #3a3020;max-width:520px;width:100%;padding:32px;margin:20px 0;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;letter-spacing:4px;color:#6a5a3a;margin-bottom:8px;">STAL(C)KER RETROSPEKTİFİ</div>
+      <div style="font-family:'Playfair Display',serif;font-size:2rem;color:#e8d8b0;">${thisYear}</div>
+      <button onclick="this.closest('div').parentElement.parentElement.remove()" style="position:absolute;top:16px;right:20px;background:none;border:none;color:#5a5040;cursor:pointer;font-size:1.1rem;">✕</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+      <div style="text-align:center;padding:16px;background:#151008;border:1px solid #2a2418;">
+        <div style="font-family:'Playfair Display',serif;font-size:1.8rem;color:#c9b896;">${addedThisYear.length}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#7a6a4a;letter-spacing:1px;margin-top:4px;">KİTAP EKLENDİ</div>
+      </div>
+      <div style="text-align:center;padding:16px;background:#151008;border:1px solid #2a2418;">
+        <div style="font-family:'Playfair Display',serif;font-size:1.8rem;color:#c9b896;">${noraPicksThisYear}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#7a6a4a;letter-spacing:1px;margin-top:4px;">NORA SEÇKİSİ</div>
+      </div>
+    </div>
+
+    ${topGenres.length ? `<div style="margin-bottom:22px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:#6a5a3a;margin-bottom:10px;">EN ÇOK EKLENEN TÜRLER</div>
+      ${topGenres.map(([g,c],i) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #2a2418;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+        <span style="color:#c9b896;">${i+1}. ${g}</span><span style="color:#7a6a4a;">${c}</span>
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${topAuthors.length ? `<div style="margin-bottom:22px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:#6a5a3a;margin-bottom:10px;">EN ÇOK EKLENEN YAZARLAR</div>
+      ${topAuthors.map(([a,c],i) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #2a2418;font-family:'Courier Prime',monospace;font-size:0.75rem;">
+        <span style="color:#c9b896;">${i+1}. ${a}</span><span style="color:#7a6a4a;">${c}</span>
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${topSearches.length ? `<div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:2px;color:#6a5a3a;margin-bottom:10px;">EN ÇOK ARANAN TERİMLER</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${topSearches.map(([term]) => `<span style="font-family:'Courier Prime',monospace;font-size:0.65rem;padding:3px 10px;border:1px solid #3a3020;color:#a89a78;">${term}</span>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <div style="margin-top:28px;padding-top:16px;border-top:1px solid #2a2418;text-align:center;font-family:'Playfair Display',serif;font-style:italic;font-size:0.82rem;color:#8a7a5a;">
+      Bir yıl daha, bir raf daha doldu.
+    </div>
+  </div>`;
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
 
 function renderGlobalResults(q) {
   const el = document.getElementById('adminGlobalResults'); if (!el) return;
@@ -19447,6 +19623,8 @@ async function openDetail(id) {
   // Raf komşuları — aynı raf prefix'ine sahip diğer kitaplar
   const shelfPrefix = b.shelf ? b.shelf.replace(/[0-9]+$/, '') : null;
   const neighbors = books.filter(x => x.id !== b.id && x.shelf && shelfPrefix && x.shelf.startsWith(shelfPrefix) && x.genre !== 'gizli-raf' && x.status !== 'satildi' && x.status !== 'ev-koleksiyon').slice(0, 6);
+  // Yazarla ilişkili mekânsal-edebi bağlam notu (statik sözlük — mevcut author alanıyla eşleşir)
+  const yazarBaglam = getYazarBaglam(b.author);
   const neighborsHtml = neighbors.length ? `
     <div class="neighbors-section">
       <div class="neighbors-title" style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:var(--ink-faint);margin-bottom:10px;text-transform:uppercase;">Bu kitabın komşuları</div>
@@ -19478,6 +19656,7 @@ async function openDetail(id) {
     <div class="detail-shelf-label">rafını bul</div>
     <div class="detail-shelf-big">RAF ${b.shelf || '?'}</div>
     ${b.nora_note ? `<div style="margin:16px 0;padding:14px 16px;background:var(--paper-dark);border-left:3px solid var(--zone-sepia);font-family:'Playfair Display',serif;font-style:italic;font-size:0.9rem;line-height:1.7;">${b.nora_note}</div>` : ''}
+    ${yazarBaglam ? `<div style="margin:0 0 16px;padding:10px 14px;font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);line-height:1.7;border-left:2px solid var(--border-dark);">📍 ${yazarBaglam}</div>` : ''}
     ${tags.length ? `<div class="detail-tags">${tags.map(t=>`<span class="badge-tag" onclick="searchByTag('${t.replace(/'/g,"\\'")}');closeDetail();" style="cursor:pointer;">#${t}</span>`).join('')}</div>` : ''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;">${wantBtn}${doneBtn}${favBtn}</div>
     ${connectionsHtml}
@@ -22269,6 +22448,83 @@ setTimeout(showSyncStatus,1000);
 
 // Artefakt Galerisi — müze mantığında, gezilebilir tam ekran vitrin
 // "Kafenin asla satmayacağı" özel koleksiyon için ayrı bir sunum deneyimi
+// Edebiyat Haritası — mevcut "yer" etiket kategorisini kullanarak coğrafi/kültürel keşif
+// (Beyoğlu kimliğine uygun, ama gerçek semt verisi olmadığı için mevcut yer etiketleri üzerinden çalışır)
+const HARITA_BOLGELER = [
+  { key:'istanbul', label:'İstanbul', icon:'🕌', desc:'Şehrin kendi sesi' },
+  { key:'türkiye', label:'Türkiye', icon:'🇹🇷', desc:'Yerli topraklardan' },
+  { key:'avrupa', label:'Avrupa', icon:'🏛', desc:'Batı\'nın uzun hafızası' },
+  { key:'doğu', label:'Doğu', icon:'☪', desc:'Doğunun bilgeliği' },
+  { key:'orta doğu', label:'Orta Doğu', icon:'🏺', desc:'Kadim topraklar' },
+  { key:'rusya', label:'Rusya', icon:'❄', desc:'Kar ve ruh' },
+  { key:'latin amerika', label:'Latin Amerika', icon:'🌺', desc:'Büyülü gerçekçilik' },
+  { key:'batı', label:'Batı', icon:'🗽', desc:'Modernin sesi' },
+];
+
+function showEdebiyatHaritasi() {
+  // Her bölge için kitap say
+  const bolgeCounts = HARITA_BOLGELER.map(b => ({
+    ...b,
+    books: books.filter(x => x.genre !== 'gizli-raf' && x.status !== 'satildi' && x.status !== 'ev-koleksiyon' &&
+      normalize(x.tags||'').includes(normalize(b.key)))
+  })).filter(b => b.books.length > 0);
+
+  if (!bolgeCounts.length) {
+    showToast('Henüz yer etiketiyle işaretlenmiş kitap yok — etiketlerde "istanbul", "avrupa" gibi kelimeler geçmeli');
+    return;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'edebiyatHaritasiOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0e14;z-index:9500;overflow-y:auto;';
+  overlay.innerHTML = `
+    <div style="position:sticky;top:0;background:#0a0e14;border-bottom:1px solid #1a2430;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;z-index:2;">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#c0d0dc;letter-spacing:1px;">🗺 Edebiyat Haritası</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#5a6a78;letter-spacing:2px;margin-top:4px;">Kataloğu coğrafyaya göre keşfet</div>
+      </div>
+      <button onclick="document.getElementById('edebiyatHaritasiOverlay').remove()" style="background:none;border:1px solid #2a3440;color:#7a8a98;font-family:'Courier Prime',monospace;font-size:0.75rem;padding:8px 16px;cursor:pointer;letter-spacing:1px;">✕ KAPAT</button>
+    </div>
+    <div id="haritaBolgeGrid" style="max-width:800px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
+      ${bolgeCounts.map(b => `
+        <div onclick="showHaritaBolgeDetay('${b.key}')" style="cursor:pointer;background:#131a22;border:1px solid #1e2830;padding:24px 18px;text-align:center;transition:all 0.2s;" onmouseover="this.style.borderColor='#4a6a7a';this.style.background='#1a232c'" onmouseout="this.style.borderColor='#1e2830';this.style.background='#131a22'">
+          <div style="font-size:2rem;margin-bottom:10px;">${b.icon}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;color:#d8e0e8;margin-bottom:4px;">${b.label}</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:#5a6a78;margin-bottom:8px;font-style:italic;">${b.desc}</div>
+          <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#4a7a9a;">${b.books.length} kitap</div>
+        </div>
+      `).join('')}
+    </div>
+    <div id="haritaBolgeDetayPanel" style="max-width:800px;margin:0 auto;padding:0 24px 60px;"></div>`;
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+function showHaritaBolgeDetay(key) {
+  const panel = document.getElementById('haritaBolgeDetayPanel');
+  if (!panel) return;
+  const bolgeBooks = books.filter(x => x.genre !== 'gizli-raf' && x.status !== 'satildi' && x.status !== 'ev-koleksiyon' &&
+    normalize(x.tags||'').includes(normalize(key)));
+  const bolge = HARITA_BOLGELER.find(b => b.key === key);
+
+  panel.innerHTML = `
+    <div style="border-top:1px solid #1e2830;padding-top:24px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;letter-spacing:2px;color:#5a6a78;margin-bottom:16px;">${bolge?.icon || ''} ${bolge?.label?.toUpperCase() || key.toUpperCase()} — ${bolgeBooks.length} KİTAP</div>
+      <div style="display:grid;gap:8px;">
+        ${bolgeBooks.map(b => `
+          <div onclick="document.getElementById('edebiyatHaritasiOverlay').remove();openDetail(${b.id})" style="cursor:pointer;display:flex;gap:12px;padding:12px 14px;background:#0f151b;border:1px solid #1a2430;align-items:center;" onmouseover="this.style.borderColor='#3a5a6a'" onmouseout="this.style.borderColor='#1a2430'">
+            <div style="width:36px;height:50px;flex-shrink:0;background:${b.cover_url?`url('${b.cover_url}') center/cover`:'#1e2830'};display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;color:#4a5a68;">${!b.cover_url?(b.title||'?').charAt(0):''}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Playfair Display',serif;font-size:0.85rem;color:#d0d8e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.title}</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:#5a6a78;">${b.author||''} ${b.shelf?'· Raf '+b.shelf:''}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  panel.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
 function showArtefaktGalerisi() {
   const artefakts = books.filter(b => b.is_artefakt && b.genre !== 'gizli-raf');
   if (!artefakts.length) { showToast('Henüz artefakt yok'); return; }
