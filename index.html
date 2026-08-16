@@ -2158,6 +2158,8 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
   </div>
 
   <div class="search-box-wrap">
+    <!-- Özel günler bandı — edebiyat/tarihi anma günleri -->
+    <div id="ozelGunlerBanner" style="display:none;margin-bottom:12px;padding:12px 18px;border-left:4px solid var(--zone-sepia);background:var(--paper-dark);font-family:'Courier Prime',monospace;font-size:0.78rem;line-height:1.7;cursor:default;"></div>
     <!-- Yazar doğum/ölüm günü banner -->
     <div id="birthdayBanner" style="display:none;margin-bottom:16px;padding:12px 18px;border-left:4px solid #4a7a9c;background:#f0f5f8;font-family:'Courier Prime',monospace;font-size:0.8rem;line-height:1.8;"></div>
     <div class="search-row" id="searchWrap">
@@ -18355,6 +18357,24 @@ function toggleSplitMode() {
   }
 }
 
+// Split-mode panelindeki ★ butonu için — Nora seçkisini toggle'lar, buton metnini anında günceller
+async function toggleNoraPick(id) {
+  const book = books.find(b => b.id === id);
+  if (!book) return;
+  const newVal = !book.nora_pick;
+  const res = await api('books?id=eq.' + id, { method:'PATCH', body: JSON.stringify({ nora_pick: newVal }) });
+  if (res.ok) {
+    book.nora_pick = newVal;
+    // Panel butonunu hemen güncelle — tam render beklemeden görsel geri bildirim
+    const btn = document.querySelector(`#adminSplitDetail button[onclick="toggleNoraPick(${id})"]`);
+    if (btn) btn.textContent = newVal ? '★' : '☆';
+    renderAdminTable();
+    showToast(newVal ? '★ Nora seçkisine eklendi' : '☆ Nora seçkisinden çıkarıldı', '#2a7a2a');
+  } else {
+    toastError('Güncellenemedi');
+  }
+}
+
 function _splitRowClick(e) {
   const row = e.target.closest('.table-row');
   if (!row || !row.dataset.id) return;
@@ -19310,6 +19330,82 @@ function markBookSeen(bookId) {
 
 // Kitap detay açıldığında "görüldü" işaretle
 // (openDetail artık tam ve bağımsız — üstteki orphan atama kaldırıldı)
+// Sahaflık/eskitme terimleri sözlüğü — müşteri "bu terimler ne demek?" tıklayınca açılır
+const SAHAFLIK_SOZLUGU = [
+  ['Çok İyi', 'Neredeyse hiç kullanılmamış, orijinal baskı görünümünde.'],
+  ['İyi', 'Küçük kullanım izleri var — hafif kenar aşınması, minik lekelenme olabilir.'],
+  ['Orta', 'Belirgin yıpranma var ama kitap bütünlüğünü koruyor, okumaya elverişli.'],
+  ['Kötü', 'Ciddi hasar mevcut — eksik sayfa, ciltten ayrılma gibi durumlar olabilir.'],
+  ['İlk Baskı', 'Kitabın yayınevinden ilk çıkan baskısı — koleksiyoncular için değerli olabilir.'],
+  ['İmzalı', 'Yazar veya çevirmen tarafından imzalanmış nüsha.'],
+  ['Nadir', 'Az sayıda basılmış veya artık basılmayan, bulunması güç bir nüsha.'],
+  ['Toplatılmış', 'Bir dönem yasal olarak toplatılmış, sonradan yeniden basılmış bir eser.'],
+  ['Forma', 'Bir kitabın cilt öncesi katlanmış basılı kağıt yaprağı — kitabın fiziksel yapı birimi.'],
+  ['Cilt', 'Kitabın dış kapağının bağlanma şekli (bez cilt, deri cilt, karton kapak vb.).'],
+];
+
+// Özel günler takvimi — edebiyat ve tarihi anma günleri (ay-gün formatında, yıldan bağımsız)
+// Format: [ay, gün, başlık, açıklama]
+const OZEL_GUNLER = [
+  [1, 27, 'Ferit Edgü\'nün Doğum Günü', 'Türk edebiyatının en özgün seslerinden birini anıyoruz.'],
+  [2, 21, 'Uluslararası Anadil Günü', 'Dilin, düşüncenin ve edebiyatın kökenine dair bir hatırlatma.'],
+  [3, 21, 'Dünya Şiir Günü', 'Bugün rafındaki bir şiir kitabını yeniden aç.'],
+  [4, 23, 'Ulusal Egemenlik ve Çocuk Bayramı', 'Çocuk kitapları köşemize göz atmanın günü.'],
+  [4, 23, 'Dünya Kitap ve Telif Hakları Günü', 'Yazarların ve kitapların emeğini hatırladığımız gün.'],
+  [5, 3, 'Basın Özgürlüğü Günü', 'Kelimenin özgürlüğü üzerine düşünmenin günü.'],
+  [6, 12, 'Oğuz Atay\'ın Vefatı', '"Tutunamayanlar"ın yazarını saygıyla anıyoruz.'],
+  [8, 24, 'Yusuf Atılgan\'ın Doğum Günü', 'Türk edebiyatının sessiz ustalarından birini anıyoruz.'],
+  [9, 8, 'Dünya Okuryazarlık Günü', 'Okumanın ve yazmanın kıymetini hatırlatan bir gün.'],
+  [10, 5, 'Dünya Öğretmenler Günü', 'Bize okumayı öğretenleri anıyoruz.'],
+  [10, 24, 'Birleşmiş Milletler Günü', ''],
+  [11, 9, 'Dünya Serbestlik ve Düşünce Günü', 'Berlin Duvarı\'nın yıkılışı — sınırların ve fikirlerin özgürlüğü üzerine.'],
+  [12, 3, 'Vüs\'at O. Bener\'in Doğum Günü', 'Az yazan, derin iz bırakan bir ustayı anıyoruz.'],
+];
+
+function checkOzelGunlerBanner() {
+  const banner = document.getElementById('ozelGunlerBanner');
+  if (!banner) return;
+  const now = new Date();
+  const todayEvents = OZEL_GUNLER.filter(([m, d]) => m === now.getMonth()+1 && d === now.getDate());
+  if (!todayEvents.length) { banner.style.display = 'none'; return; }
+
+  banner.innerHTML = todayEvents.map(([,, title, desc]) =>
+    `<div style="margin-bottom:4px;"><strong style="color:var(--zone-sepia);">✦ ${title}</strong>${desc ? ' — ' + desc : ''}</div>`
+  ).join('');
+  banner.style.display = 'block';
+}
+setTimeout(checkOzelGunlerBanner, 600);
+
+function showSahaflikSozlugu() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:440px;width:100%;padding:24px;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;">📖 Sahaflık Sözlüğü</div>
+      <button onclick="this.closest('div').parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--ink-faint);">✕</button>
+    </div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-bottom:16px;line-height:1.6;">Kitap durumları ve baskı terimlerinin ne anlama geldiğini burada bulabilirsin.</div>
+    ${SAHAFLIK_SOZLUGU.map(([term, def]) => `<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed var(--border);">
+      <div style="font-family:'Playfair Display',serif;font-size:0.85rem;font-weight:700;color:var(--zone-sepia);margin-bottom:3px;">${term}</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:var(--ink);line-height:1.6;">${def}</div>
+    </div>`).join('')}
+  </div>`;
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+// Nora'nın ironik sesiyle tutarlı — fiyatı kahve fincanına göre ifade et
+// Referans sabit tutuldu (canlı menü fiyatı ayrıştırması kırılgan olurdu — "K:80|B:100" gibi formatlar var)
+const REFERANS_FILTRE_KAHVE_FIYATI = 90;
+function kahveFiyatiEspri(price) {
+  if (!price || price <= 0) return '';
+  const adet = price / REFERANS_FILTRE_KAHVE_FIYATI;
+  if (adet < 0.6) return '≈ yarım filtre kahve fiyatına';
+  if (adet < 1.4) return '≈ 1 filtre kahve fiyatına';
+  const rounded = Math.round(adet);
+  return `≈ ${rounded} filtre kahve fiyatına`;
+}
+
 async function openDetail(id) {
   const b = books.find(x => x.id === id);
   if (!b) { showToast('Kitap bulunamadı'); return; }
@@ -19324,6 +19420,7 @@ async function openDetail(id) {
     'ev-koleksiyon': '<span class="badge-status status-ev-koleksiyon">🏠 Ev Koleksiyonu</span>',
   };
   const statusBadge = statusMap[b.status] || '';
+  const kahveEspri = (b.status === 'satista' && b.price) ? `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);font-style:italic;margin-top:2px;margin-bottom:12px;">${kahveFiyatiEspri(b.price)}</div>` : '';
   const noraBadge = b.nora_pick ? '<div class="nora-badge" style="display:inline-flex;margin-bottom:12px;">★ Nora\'nın Önerisi</div>' : '';
   const artefaktBadge = b.is_artefakt ? `<div class="nora-badge" style="background:var(--zone-deep);border:1px solid var(--zone-phosphor);color:#8aba8a;margin-bottom:12px;">◉ ARTEFAKT</div>` : '';
   const genreColor = typeof getGenreColor === 'function' ? getGenreColor(b.genre) : null;
@@ -19374,7 +19471,10 @@ async function openDetail(id) {
       ${b.year ? `<span class="badge-tag">${b.year}</span>` : ''}
       ${b.pages ? `<span class="badge-tag">${b.pages} sf.</span>` : ''}
       ${b.condition ? `<span class="badge-tag">${({cok_iyi:'Çok İyi',iyi:'İyi',orta:'Orta',kotu:'Kötü'})[b.condition]||b.condition}</span>` : ''}
+      ${b.edition_info ? `<span class="badge-tag">${b.edition_info}</span>` : ''}
+      ${(b.condition || b.edition_info) ? `<span onclick="showSahaflikSozlugu()" style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);cursor:pointer;text-decoration:underline;text-underline-offset:2px;" title="Sahaflık terimleri ne anlama geliyor?">bu terimler ne demek?</span>` : ''}
     </div>
+    ${kahveEspri}
     <div class="detail-shelf-label">rafını bul</div>
     <div class="detail-shelf-big">RAF ${b.shelf || '?'}</div>
     ${b.nora_note ? `<div style="margin:16px 0;padding:14px 16px;background:var(--paper-dark);border-left:3px solid var(--zone-sepia);font-family:'Playfair Display',serif;font-style:italic;font-size:0.9rem;line-height:1.7;">${b.nora_note}</div>` : ''}
@@ -20879,6 +20979,62 @@ function compareBackups() {
 
 let _analyticsPeriod='all';
 
+// Katalog Analitik sayfasını PDF/yazdırılabilir rapora dönüştür — grafikleri görsele çevirip gömer
+function exportAnalyticsPDF() {
+  renderAnalytics(_analyticsPeriod);
+  const growthImg = document.getElementById('growthChart')?.toDataURL?.() || '';
+  const pieImg = document.getElementById('pieCanvas')?.toDataURL?.() || '';
+  const pieLegendHtml = document.getElementById('pieLegend')?.innerHTML || '';
+  const publisherHtml = document.getElementById('publisherTreemap')?.innerHTML || '';
+
+  const active = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'satildi' && b.status !== 'ev-koleksiyon');
+  const periodLabel = { week:'Son 7 Gün', month:'Son 30 Gün', all:'Tüm Zamanlar' }[_analyticsPeriod] || 'Tüm Zamanlar';
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Katalog Analitik</title>
+    <style>
+      body{font-family:"Courier New",monospace;padding:15mm;font-size:9pt;color:#111;}
+      h1{font-size:15pt;border-bottom:2px solid #000;margin-bottom:6px;padding-bottom:6px;}
+      .sub{font-size:8pt;color:#888;margin-bottom:20px;}
+      .section{margin-bottom:24px;page-break-inside:avoid;}
+      .section-title{font-size:10pt;font-weight:bold;letter-spacing:1px;border-bottom:1px solid #ccc;margin-bottom:10px;padding-bottom:4px;}
+      img{max-width:100%;}
+      .legend-row{display:flex;align-items:center;gap:6px;font-size:8pt;margin-bottom:3px;}
+      @media print{body{padding:10mm}}
+    </style></head><body>
+    <h1>NORA KİTAP EVİ — KATALOG ANALİTİK</h1>
+    <div class="sub">${periodLabel} · ${new Date().toLocaleDateString('tr-TR')} · Toplam ${active.length} aktif kitap</div>
+
+    <div class="section">
+      <div class="section-title">KATALOG BÜYÜMESİ</div>
+      ${growthImg ? `<img src="${growthImg}" alt="Büyüme grafiği">` : '<p>Grafik verisi yok.</p>'}
+    </div>
+
+    <div class="section">
+      <div class="section-title">TÜR DAĞILIMI</div>
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        ${pieImg ? `<img src="${pieImg}" alt="Tür dağılımı" style="width:120px;height:120px;">` : ''}
+        <div style="flex:1;">${pieLegendHtml}</div>
+      </div>
+    </div>
+
+    ${publisherHtml ? `<div class="section">
+      <div class="section-title">YAYINEVİ DAĞILIMI</div>
+      <div style="font-size:8pt;">${publisherHtml.replace(/<canvas[^>]*>.*?<\/canvas>/g, '')}</div>
+    </div>` : ''}
+
+    <div class="section">
+      <div class="section-title">ÖZET</div>
+      <div>Toplam kitap: ${active.length}</div>
+      <div>Yerleşik: ${active.filter(b=>b.status==='yerlesik').length}</div>
+      <div>Satışta: ${active.filter(b=>b.status==='satista').length}</div>
+      <div>Ödünçte: ${active.filter(b=>b.status==='borrowed').length}</div>
+    </div>
+  </body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
 function renderAnalytics(period) {
   _analyticsPeriod=period||'all';
   ['week','month','all'].forEach(p=>{const btn=document.getElementById('anPeriod'+p.charAt(0).toUpperCase()+p.slice(1));if(btn){btn.style.background=p===_analyticsPeriod?'var(--ink)':'none';btn.style.color=p===_analyticsPeriod?'var(--paper)':'var(--ink-faint)';}});
@@ -22110,6 +22266,44 @@ function showSyncStatus() {
 }
 window.addEventListener('online',showSyncStatus); window.addEventListener('offline',showSyncStatus);
 setTimeout(showSyncStatus,1000);
+
+// Artefakt Galerisi — müze mantığında, gezilebilir tam ekran vitrin
+// "Kafenin asla satmayacağı" özel koleksiyon için ayrı bir sunum deneyimi
+function showArtefaktGalerisi() {
+  const artefakts = books.filter(b => b.is_artefakt && b.genre !== 'gizli-raf');
+  if (!artefakts.length) { showToast('Henüz artefakt yok'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'artefaktGaleriOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a08;z-index:9500;overflow-y:auto;padding:0;';
+  overlay.innerHTML = `
+    <div style="position:sticky;top:0;background:#0a0a08;border-bottom:1px solid #2a2a1a;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;z-index:2;">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#c9b896;letter-spacing:2px;">◉ ARTEFAKT GALERİSİ</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.65rem;color:#6a6a5a;letter-spacing:2px;margin-top:4px;">${artefakts.length} nadir nesne — kafenin asla satmayacağı koleksiyon</div>
+      </div>
+      <button onclick="document.getElementById('artefaktGaleriOverlay').remove()" style="background:none;border:1px solid #3a3a2a;color:#8a8a6a;font-family:'Courier Prime',monospace;font-size:0.75rem;padding:8px 16px;cursor:pointer;letter-spacing:1px;">✕ KAPAT</button>
+    </div>
+    <div style="max-width:900px;margin:0 auto;padding:40px 24px 80px;display:grid;gap:32px;">
+      ${artefakts.map((b, i) => `
+        <div onclick="document.getElementById('artefaktGaleriOverlay').remove();openDetail(${b.id})" style="cursor:pointer;display:grid;grid-template-columns:120px 1fr;gap:24px;padding:24px;background:#131310;border:1px solid #2a2a1a;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#8a7a4a'" onmouseout="this.style.borderColor='#2a2a1a'">
+          <div style="width:120px;height:168px;background:${b.cover_url ? `url('${b.cover_url}') center/cover` : 'linear-gradient(135deg,#3a3020,#1a1610)'};display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:2rem;color:#5a5040;">${!b.cover_url ? (b.title||'?').charAt(0) : ''}</div>
+          <div>
+            <div style="font-family:'Courier Prime',monospace;font-size:0.58rem;letter-spacing:3px;color:#6a5a3a;margin-bottom:8px;">EKSPONAT No.${String(i+1).padStart(3,'0')}</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.15rem;color:#e8e0d0;margin-bottom:4px;">${b.title}</div>
+            <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;color:#9a9080;margin-bottom:12px;">${b.author||''} ${b.year?'· '+b.year:''}</div>
+            ${b.artefakt_note ? `<div style="font-family:'Playfair Display',serif;font-style:italic;font-size:0.82rem;color:#c9b896;line-height:1.7;border-left:2px solid #4a4030;padding-left:12px;">${b.artefakt_note}</div>` : ''}
+            <div style="display:flex;gap:10px;margin-top:14px;font-family:'Courier Prime',monospace;font-size:0.62rem;color:#6a6a5a;letter-spacing:1px;">
+              ${b.condition ? `<span>DURUM: ${({cok_iyi:'Çok İyi',iyi:'İyi',orta:'Orta',kotu:'Kötü'})[b.condition]||b.condition}</span>` : ''}
+              ${b.edition_info ? `<span>${b.edition_info}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
 
 function show3DLibrary() {
   let ov=document.getElementById('library3dOverlay');
