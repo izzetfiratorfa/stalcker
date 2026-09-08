@@ -18719,6 +18719,7 @@ const GLOBAL_COMMANDS = [
   { icon:'⚠', title:'Hata Kaydı', sub:'Sistem hataları', type:'Günlük', action:()=>showErrorLog() },
   { icon:'🎉', title:'Yıl Dönümü Retrospektifi', sub:'Bu yılın özeti — en çok aranan, en çok eklenen', type:'Nişlik', action:()=>showYilDonumuArsivi() },
   { icon:'🔍', title:'Yazım Kontrolü', sub:'Nora notu/açıklama yazarken hızlı kontrol — hiçbir şeyi otomatik değiştirmez', type:'Nişlik', action:()=>showYazimKontrolu() },
+  { icon:'🏷', title:'Toplu Etiket Önerisi', sub:'Etiketsiz kitaplara türden otomatik öneri üret', type:'Bakım', action:()=>{ switchTab('report'); setTimeout(runBulkTagSuggestion,300); } },
 ];
 
 // Yıl Dönümü Retrospektifi — mevcut created_at ve searchLog verisinden yıllık özet
@@ -19521,6 +19522,141 @@ async function normalizeAllAuthors() {
   showToast(`✓ ${affected.length} yazar adı normalize edildi`, '#2a7a2a');
 }
 
+// --- Toplu Etiket Önerisi (Bölge kural motoru — dış API kullanmaz, mevcut veriden üretir) ---
+// Başlık/açıklamada geçen anahtar kelimelere göre tematik etiket önerir.
+// Amaç: 1800+ etiketsiz kitabı tek tek elle doldurmak yerine, admin'in
+// hızla gözden geçirip onaylayacağı toplu öneriler üretmek.
+const TAG_KEYWORD_MAP = {
+  'aşk': ['aşk','sevgi','sevda'], 'savaş': ['savaş','harp'], 'ölüm': ['ölüm','ölü','yas'],
+  'aile': ['aile','baba','anne','kardeş'], 'çocukluk': ['çocukluk','çocuk'],
+  'yalnızlık': ['yalnız','yalnızlık'], 'göç': ['göç','sürgün','mülteci'],
+  'kimlik': ['kimlik','benlik'], 'distopya': ['distopya','totaliter'],
+  'arkadaşlık': ['arkadaş','dostluk'], 'toplumsal': ['toplum','sınıf','eşitsizlik'],
+  'kadın': ['kadın','feminizm'], 'tarih': ['tarih','imparatorluk','osmanlı'],
+  'köy': ['köy','taşra','kasaba'], 'şehir': ['şehir','istanbul','kent'],
+  'felsefe': ['felsefe','varoluş','anlam'], 'psikoloji': ['psikoloji','ruh','bilinç'],
+  'gizem': ['gizem','sır','esrar'], 'macera': ['macera','yolculuk','sefer'],
+  'siyaset': ['siyaset','iktidar','devrim'], 'din': ['din','tanrı','inanç'],
+  'doğa': ['doğa','orman','deniz'], 'zaman': ['zaman','anı','hatıra'],
+  'umut': ['umut','umutsuzluk'], 'özgürlük': ['özgürlük','esaret'],
+};
+
+// Genre (tür) alanındaki her bir parça zaten iyi bir etiket adayıdır
+function suggestTagsForBook(book) {
+  const suggestions = new Set();
+
+  // Tür alanındaki her parça (Roman, Yerli, Tarih vb.) doğrudan etiket adayı
+  (book.genre || '').split(',').map(g => g.trim()).filter(Boolean).forEach(g => {
+    suggestions.add(g.toLowerCase());
+  });
+
+  // Başlık + açıklamada anahtar kelime taraması — KELİME SINIRI ile (basit substring değil,
+  // yoksa "varoluşçuluk" gibi kelimeler içinde "olu"→"ölü" gibi yanlış eşleşmeler oluşuyordu)
+  const words = normalize((book.title || '') + ' ' + (book.description || '')).split(/[^a-z0-9]+/).filter(Boolean);
+  Object.entries(TAG_KEYWORD_MAP).forEach(([tag, keywords]) => {
+    const hasMatch = keywords.some(kw => {
+      const nkw = normalize(kw);
+      // Bir KELİMENİN kökle BAŞLAMASI yeterli (aşkı, savaşın gibi çekim ekleri yakalanır),
+      // ama kökün başka bir kelimenin ortasında geçmesi (substring) artık sayılmıyor
+      return words.some(w => w.startsWith(nkw));
+    });
+    if (hasMatch) suggestions.add(tag);
+  });
+
+  return [...suggestions].slice(0, 6); // fazla kalabalık olmasın
+}
+
+let _bulkTagQueue = [], _bulkTagPage = 0;
+const BULK_TAG_PAGE_SIZE = 40;
+
+function runBulkTagSuggestion() {
+  const active = books.filter(b => b.genre !== 'gizli-raf' && b.status !== 'satildi' && b.status !== 'ev-koleksiyon');
+  _bulkTagQueue = active.filter(b => !b.tags?.trim());
+  _bulkTagPage = 0;
+  if (!_bulkTagQueue.length) { showToast('Etiketsiz kitap kalmamış ✓', '#2a7a2a'); return; }
+  showBulkTagReviewModal();
+}
+
+function showBulkTagReviewModal() {
+  document.getElementById('bulkTagModal')?.remove();
+  const totalPages = Math.ceil(_bulkTagQueue.length / BULK_TAG_PAGE_SIZE);
+  const pageItems = _bulkTagQueue.slice(_bulkTagPage * BULK_TAG_PAGE_SIZE, (_bulkTagPage + 1) * BULK_TAG_PAGE_SIZE);
+
+  if (!pageItems.length) {
+    showToast(`✓ Toplu etiket önerisi tamamlandı!`, '#2a7a2a');
+    startDataFillCampaign();
+    return;
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'bulkTagModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:640px;width:100%;padding:24px;max-height:88vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">🏷 TOPLU ETİKET ÖNERİSİ</div>
+      <button onclick="document.getElementById('bulkTagModal').remove()" style="background:none;border:none;cursor:pointer;color:var(--ink-faint);">✕</button>
+    </div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);margin-bottom:4px;">
+      Sayfa ${_bulkTagPage+1}/${totalPages} — toplam ${_bulkTagQueue.length} etiketsiz kitap. Öneriler tür ve başlık/açıklamadan otomatik üretildi, kaydetmeden önce düzenleyebilirsin.
+    </div>
+    <div style="height:3px;background:var(--border);margin-bottom:14px;"><div style="width:${((_bulkTagPage)/totalPages*100)}%;height:100%;background:var(--zone-sepia);"></div></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button onclick="toggleAllBulkTagRows(true)" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Tümünü Seç</button>
+      <button onclick="toggleAllBulkTagRows(false)" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.6rem;padding:4px 10px;cursor:pointer;">Hiçbirini Seçme</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;border-top:1px solid var(--border);padding-top:8px;">
+      ${pageItems.map((b, i) => {
+        const suggested = suggestTagsForBook(b).join(', ');
+        return `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--border);">
+          <input type="checkbox" class="bulk-tag-check" data-id="${b.id}" checked style="margin-top:6px;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'Playfair Display',serif;font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.title}</div>
+            <div style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:var(--ink-faint);margin-bottom:4px;">${b.author||'—'} ${b.shelf?'· Raf '+b.shelf:''}</div>
+            <input type="text" class="bulk-tag-input" data-id="${b.id}" value="${suggested}" placeholder="etiket, etiket, etiket" style="width:100%;box-sizing:border-box;font-family:'Courier Prime',monospace;font-size:0.7rem;border:1px solid var(--border-dark);background:var(--paper);color:var(${suggested?'--ink':'--ink-faint'});padding:5px 8px;">
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <button onclick="saveBulkTagPage()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 18px;cursor:pointer;letter-spacing:1px;">Bu Sayfayı Kaydet ve Devam Et</button>
+      <button onclick="document.getElementById('bulkTagModal').remove()" style="background:none;border:1px solid var(--border-dark);color:var(--ink-faint);font-family:'Courier Prime',monospace;font-size:0.68rem;padding:8px 14px;cursor:pointer;">Sonra Devam Et</button>
+      <span id="bulkTagSaveMsg" style="font-family:'Courier Prime',monospace;font-size:0.65rem;"></span>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function toggleAllBulkTagRows(checked) {
+  document.querySelectorAll('.bulk-tag-check').forEach(cb => cb.checked = checked);
+}
+
+async function saveBulkTagPage() {
+  const rows = [...document.querySelectorAll('.bulk-tag-check:checked')];
+  const msg = document.getElementById('bulkTagSaveMsg');
+  if (!rows.length) {
+    // Hiçbiri seçili değilse sadece bu sayfayı atla, kaydetme
+    _bulkTagPage++;
+    showBulkTagReviewModal();
+    return;
+  }
+  if (msg) { msg.textContent = 'Kaydediliyor...'; msg.style.color = 'var(--ink-faint)'; }
+
+  let saved = 0;
+  await processInChunks(rows, async cb => {
+    const id = parseInt(cb.dataset.id);
+    const input = document.querySelector(`.bulk-tag-input[data-id="${id}"]`);
+    const tagsVal = input?.value.trim();
+    if (!tagsVal) return; // boş bırakılmışsa atla, zorla etiket yazma
+    const res = await api('books?id=eq.' + id, { method:'PATCH', body:JSON.stringify({ tags: tagsVal }) });
+    if (res.ok) { const b = books.find(x=>x.id===id); if (b) b.tags = tagsVal; saved++; }
+  }, 10, 30);
+
+  showToast(`✓ ${saved} kitaba etiket kaydedildi`, '#2a7a2a');
+  auditLog('BULK_TAG_SUGGESTION', { count: saved, page: _bulkTagPage });
+  _bulkTagPage++;
+  showBulkTagReviewModal();
+}
+
 // --- Veri Doldurma Kampanyası ---
 const FILL_PRIORITY = [
   { field:'title',    label:'Başlık',     check: b => !b.title },
@@ -19553,7 +19689,7 @@ function startDataFillCampaign() {
         <div style="width:${r.pct}%;height:100%;background:${r.pct>=90?'#2a7a2a':r.pct>=60?'#c87020':'#c84040'};border-radius:2px;transition:width 0.4s;"></div>
       </div>
       <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;min-width:80px;text-align:right;color:${r.pct>=90?'#2a7a2a':r.pct>=60?'#c87020':'#c84040'};">%${r.pct} (${r.missing.length} eksik)</div>
-      ${r.missing.length > 0 ? `<button onclick="runFieldFillCampaign('${r.field}','${r.label}')" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.58rem;padding:2px 8px;cursor:pointer;">Doldur →</button>` : '<span style="font-size:0.7rem;">✓</span>'}
+      ${r.missing.length > 0 ? `<button onclick="${r.field==='tags' ? 'runBulkTagSuggestion()' : `runFieldFillCampaign('${r.field}','${r.label}')`}" style="background:none;border:1px solid var(--zone-sepia);color:var(--zone-sepia);font-family:'Courier Prime',monospace;font-size:0.58rem;padding:2px 8px;cursor:pointer;">${r.field==='tags' ? 'Toplu Öner →' : 'Doldur →'}</button>` : '<span style="font-size:0.7rem;">✓</span>'}
     </div>`).join('')}
   </div>`;
 }
