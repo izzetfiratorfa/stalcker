@@ -189,6 +189,24 @@ setTimeout(() => {
       window.toggleFavorite(1); // temizle
     });
 
+    check('Özellik flag sistemi — varsayılan kapalı öğeler gizleniyor mu', () => {
+      window.applyFeatureFlags();
+      const quotesBtn = window.document.getElementById('btnQuotes');
+      const shelfBtn = window.document.getElementById('btnShelfView');
+      if (!quotesBtn || quotesBtn.style.display !== 'none') throw new Error('Varsayılan kapalı özellik (quotes) gizlenmedi');
+      if (!shelfBtn || shelfBtn.style.display === 'none') throw new Error('Her zaman açık olması gereken Raf butonu gizlenmiş');
+      const kesfetWrap = window.document.getElementById('dropdownKesfet');
+      if (!kesfetWrap || kesfetWrap.style.display !== 'none') throw new Error('Tüm alt öğeleri kapalı olan Keşfet dropdown\'ı gizlenmedi');
+      if (window.isViewBlocked('quotes') !== true) throw new Error('isViewBlocked("quotes") true dönmeli');
+      if (window.isViewBlocked('customer') !== false) throw new Error('isViewBlocked("customer") false dönmeli');
+      // Flag'i açıp tekrar uygulayınca görünür olmalı
+      window.eval(`_featureFlags.quotes = true;`);
+      window.applyFeatureFlags();
+      if (quotesBtn.style.display === 'none') throw new Error('Flag açılınca öğe tekrar görünür olmadı');
+      window.eval(`_featureFlags.quotes = false;`); // test sonrası varsayılana döndür
+      window.applyFeatureFlags();
+    });
+
     check('Admin sıfır sonuç durumu (boş durum ekranı) hata vermiyor mu', () => {
       window.document.getElementById('adminSearch').value = 'bulunamayacak-bir-kelime-xyz';
       window.adminTableReset();
