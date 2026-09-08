@@ -2050,40 +2050,40 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
 <header>
   <div class="logo">NORA KİTAPLIĞI</div>
   <div class="header-btns">
-    <!-- Sabit ana butonlar -->
+    <!-- Sabit ana butonlar — arama ve raf her zaman açık (Katman 0/1) -->
     <button class="btn-mode active" id="btnCustomer" onclick="showView('customer')">Kitap Ara</button>
     <button class="btn-mode" id="btnShelfView" onclick="showView('shelfview')">📚 Raf</button>
 
     <!-- KEŞFET dropdown -->
-    <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
+    <div class="dropdown" id="dropdownKesfet" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
       <button class="btn-mode" id="btnKesfet" style="color:var(--zone-water);">Keşfet ▾</button>
       <div class="dropdown-menu" style="display:none;">
-        <button class="dropdown-item" id="btnQuotes" onclick="showView('quotes')">✦ Nora Quotes</button>
-        <button class="dropdown-item" id="btnUniverse" onclick="showView('universe')">🌌 Kitap Evreni</button>
-        <button class="dropdown-item" id="btnStats" onclick="showView('stats')">📊 İstatistik</button>
-        <button class="dropdown-item" id="btnMood" onclick="showView('mood')">✦ Ruh Hali</button>
-        <button class="dropdown-item" id="btnBlind" onclick="showView('blind')">? Kör Buluşma</button>
-        <button class="dropdown-item" id="btnWheel" onclick="openWheel()">🎡 Kitap Çarkı</button>
-        <button class="dropdown-item" onclick="showCoversPage()">🖼 Kapaklar Galerisi</button>
+        <button class="dropdown-item" id="btnQuotes" data-feature="quotes" onclick="showView('quotes')">✦ Nora Quotes</button>
+        <button class="dropdown-item" id="btnUniverse" data-feature="universe" onclick="showView('universe')">🌌 Kitap Evreni</button>
+        <button class="dropdown-item" id="btnStats" data-feature="stats" onclick="showView('stats')">📊 İstatistik</button>
+        <button class="dropdown-item" id="btnMood" data-feature="mood" onclick="showView('mood')">✦ Ruh Hali</button>
+        <button class="dropdown-item" id="btnBlind" data-feature="blind" onclick="showView('blind')">? Kör Buluşma</button>
+        <button class="dropdown-item" id="btnWheel" data-feature="wheel" onclick="openWheel()">🎡 Kitap Çarkı</button>
+        <button class="dropdown-item" data-feature="covers" onclick="showCoversPage()">🖼 Kapaklar Galerisi</button>
       </div>
     </div>
 
     <!-- NORA dropdown -->
-    <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
+    <div class="dropdown" id="dropdownNora" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
       <button class="btn-mode" id="btnNoraMenu" style="color:var(--gold);">Nora ▾</button>
       <div class="dropdown-menu" style="display:none;">
-        <button class="dropdown-item" id="btnPano" onclick="showView('pano')">📌 Pano</button>
-        <button class="dropdown-item" id="btnMenu" onclick="showView('menu')" style="color:#9c7a3c;">☕ Menü</button>
-        <button class="dropdown-item" id="btnDiary" onclick="showView('diary')" style="color:#9c7a3c;">📔 Günlük</button>
-        <button class="dropdown-item" id="btnSahaf" onclick="showView('sahaf')" style="color:#c8a86b;">📦 Nora Sahaf</button>
-        <button class="dropdown-item" id="btnRadio" onclick="showView('radio')" style="color:#1DB954;">📻 NoRa.dio</button>
+        <button class="dropdown-item" id="btnPano" data-feature="pano" onclick="showView('pano')">📌 Pano</button>
+        <button class="dropdown-item" id="btnMenu" data-feature="menu" onclick="showView('menu')" style="color:#9c7a3c;">☕ Menü</button>
+        <button class="dropdown-item" id="btnDiary" data-feature="diary" onclick="showView('diary')" style="color:#9c7a3c;">📔 Günlük</button>
+        <button class="dropdown-item" id="btnSahaf" data-feature="sahaf" onclick="showView('sahaf')" style="color:#c8a86b;">📦 Nora Sahaf</button>
+        <button class="dropdown-item" id="btnRadio" data-feature="radio" onclick="showView('radio')" style="color:#1DB954;">📻 NoRa.dio</button>
         <button class="dropdown-item" id="btnManifesto" onclick="showView('manifesto')">◈ Manifesto</button>
-        <button class="dropdown-item" id="btnSozluk" onclick="showView('sozluk')">📖 Sahaf Sözlüğü</button>
+        <button class="dropdown-item" id="btnSozluk" data-feature="sozluk" onclick="showView('sozluk')">📖 Sahaf Sözlüğü</button>
       </div>
     </div>
 
     <!-- ASKIDA dropdown -->
-    <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
+    <div class="dropdown" id="dropdownAskida" data-feature="askida" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
       <button class="btn-mode" id="btnAskida" style="color:#c8a86b;border-left-color:#3a2a0a;">❤ Askıda ▾</button>
       <div class="dropdown-menu" style="display:none;">
         <button class="dropdown-item" id="btnAskidaKitaplar" onclick="showView('askida')">Kitaplar & Dağıtım</button>
@@ -2091,14 +2091,14 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
     </div>
 
-    <!-- İLETİŞİM dropdown -->
+    <!-- İLETİŞİM dropdown — Bize Ulaşın + Manifesto Katman 1 (her zaman açık), Profil ayrı flag -->
     <div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').style.display='flex'" onmouseleave="this.querySelector('.dropdown-menu').style.display='none'">
       <button class="btn-mode" id="btnIletisimMenu" style="color:var(--zone-sepia);">İletişim ▾</button>
       <div class="dropdown-menu" style="display:none;">
         <button class="dropdown-item" id="btnIletisim" onclick="showView('iletisim')">📞 Bize Ulaşın</button>
-        <button class="dropdown-item" id="btnProfile" onclick="showView('profile')">👤 Profilim</button>
+        <button class="dropdown-item" id="btnProfile" data-feature="profile" onclick="showView('profile')">👤 Profilim</button>
         <button class="dropdown-item" onclick="showPrivacyPolicy()">🔒 Gizlilik</button>
-        <button class="dropdown-item" onclick="showBadgesPage()">🎖 Rozetlerim</button>
+        <button class="dropdown-item" data-feature="badges" onclick="showBadgesPage()">🎖 Rozetlerim</button>
       </div>
     </div>
 
@@ -2170,11 +2170,11 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
     <!-- Son aramalar -->
     <div id="recentSearchesRow" style="display:none;margin-top:6px;min-height:22px;"></div>
     <!-- Sade keşif linkleri -->
-    <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
-      <span onclick="doSerendipity()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">✦ Serendipity</span>
-      <span onclick="odaBaslat()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">◉ Oda'ya Yolculuk</span>
-      <span onclick="show3DLibrary()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">📚 3D Kütüphane</span>
-      <span onclick="showEdebiyatHaritasi()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">🗺 Edebiyat Haritası</span>
+    <div id="discoveryLinksRow" style="display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+      <span data-feature="serendipity" onclick="doSerendipity()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">✦ Serendipity</span>
+      <span data-feature="oda" onclick="odaBaslat()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">◉ Oda'ya Yolculuk</span>
+      <span data-feature="library3d" onclick="show3DLibrary()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">📚 3D Kütüphane</span>
+      <span data-feature="harita" onclick="showEdebiyatHaritasi()" style="font-family:'Courier Prime',monospace;font-size:0.7rem;letter-spacing:1.5px;color:#888;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#888'">🗺 Edebiyat Haritası</span>
     </div>
   </div>
 
@@ -2619,7 +2619,7 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       </div>
       <!-- GRUP: MEKÂN -->
       <div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:2px;">▸ MEKÂN</div>
-      <div style="display:flex;flex-wrap:wrap;border-bottom:2px solid var(--ink);gap:0;">
+      <div style="display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:10px;gap:0;">
         <button class="tab-btn" id="tabShelfMap" onclick="switchTab('shelfmap')" style="color:var(--zone-water);">🗺 RAF HARİTASI</button>
         <button class="tab-btn" id="tabMenuAdmin" onclick="switchTab('menuadmin')" style="color:var(--gold);">☕ MENÜ</button>
         <button class="tab-btn" id="tabPanoAdmin" onclick="switchTab('panoadmin')" style="color:var(--zone-rust);">PANO</button>
@@ -2628,6 +2628,11 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
         <button class="tab-btn" id="tabSpotify" onclick="switchTab('spotify')" style="color:var(--zone-phosphor);">SPOTİFY</button>
         <button class="tab-btn" id="tabIkram" onclick="switchTab('ikram')" style="color:var(--gold);">İKRAM</button>
         <button class="tab-btn" id="tabDiary" onclick="switchTab('diary')" style="color:var(--zone-sepia);">GÜNLÜK</button>
+      </div>
+      <!-- GRUP: AYARLAR -->
+      <div style="font-family:'Courier Prime',monospace;font-size:0.55rem;letter-spacing:3px;color:var(--zone-sepia);margin-bottom:2px;">▸ AYARLAR</div>
+      <div style="display:flex;flex-wrap:wrap;border-bottom:2px solid var(--ink);gap:0;">
+        <button class="tab-btn" id="tabOzellikler" onclick="switchTab('ozellikler')" style="color:var(--zone-phosphor);font-weight:700;">🎛 ÖZELLİKLER</button>
       </div>
     </div>
     <div id="panelBooks">
@@ -3093,6 +3098,21 @@ if (!navigator.onLine) document.getElementById('offlineBanner').style.display='b
       <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:#c8a86b;letter-spacing:2px;margin-bottom:20px;">> NORA SAHAF — gelen alım teklifleri. Fiyat biçerek cevap ver.</div>
       <div id="sahafAdminList" style="display:flex;flex-direction:column;gap:14px;">
         <div style="font-family:'Courier Prime',monospace;color:#888;font-size:0.8rem;">Yükleniyor...</div>
+      </div>
+    </div>
+
+    <!-- ÖZELLİK YÖNETİMİ PANELİ — yumuşak lansman toggle'ları -->
+    <div id="panelOzellikler" style="display:none;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.75rem;color:var(--zone-phosphor);letter-spacing:2px;margin-bottom:8px;">> ÖZELLİK YÖNETİMİ — müşteri sitesinde neyin görüneceğini kontrol et</div>
+      <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-bottom:20px;line-height:1.6;">
+        Kapalı bir özellik silinmez, sadece müşteriden gizlenir. Arama ve raf her zaman açıktır, bu listede yer almaz.
+      </div>
+      <div id="ozelliklerList" style="display:grid;gap:0;margin-bottom:20px;"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="saveFeatureFlags()" style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 20px;cursor:pointer;letter-spacing:1px;">Kaydet</button>
+        <button onclick="setAllFeatureFlags(true)" style="background:none;border:1px solid #2a7a2a;color:#2a7a2a;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:8px 14px;cursor:pointer;">Hepsini Aç</button>
+        <button onclick="setAllFeatureFlags(false)" style="background:none;border:1px solid #c84040;color:#c84040;font-family:'Courier Prime',monospace;font-size:0.68rem;padding:8px 14px;cursor:pointer;">Hepsini Kapat</button>
+        <span id="ozelliklerSaveMsg" style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:#2a7a2a;"></span>
       </div>
     </div>
 
@@ -4534,6 +4554,149 @@ let _lastFilterBuildCount = -1; // Admin dropdown rebuild optimizasyonu — fetc
 let readingList = {};
 let bookRatings = {};
 let searchLog = {}, missedSearchLog = {};
+
+// ===== ÖZELLİK FLAG SİSTEMİ =====
+// Yumuşak lansman için: sadece arama + temel özellikler açık, geri kalanı admin panelinden açılır.
+// Varsayılan durum — Supabase'de kayıt yoksa bu değerler kullanılır.
+// "true" = herkese açık, "false" = gizli (arama etkilenmez, sadece nav/link gizlenir).
+const FEATURE_FLAGS_DEFAULT = {
+  // Onaylanan Katman 1 — bunlar flag sisteminde YOK, çünkü zaten hep açık:
+  // search (arama), shelfview (raf), iletisim, manifesto, favoriler/okuma listesi
+  quotes: false, universe: false, stats: false, mood: false, blind: false,
+  wheel: false, covers: false, pano: false, menu: false, diary: false,
+  sahaf: false, radio: false, sozluk: false, askida: false, profile: false,
+  badges: false, serendipity: false, oda: false, library3d: false, harita: false,
+};
+let _featureFlags = { ...FEATURE_FLAGS_DEFAULT };
+
+async function loadFeatureFlags() {
+  try {
+    const res = await api('settings?key=eq.feature_flags&select=value');
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows.length && rows[0].value) {
+        const saved = typeof rows[0].value === 'string' ? JSON.parse(rows[0].value) : rows[0].value;
+        _featureFlags = { ...FEATURE_FLAGS_DEFAULT, ...saved };
+      }
+    }
+  } catch(e) {
+    // Ağ/tablo sorunu olursa varsayılanlarla devam — arama hep çalışsın
+  }
+  applyFeatureFlags();
+}
+
+function applyFeatureFlags() {
+  document.querySelectorAll('[data-feature]').forEach(el => {
+    const key = el.dataset.feature;
+    const isOn = _featureFlags[key] !== false; // tanımsız key'ler açık sayılır (ileride eklenen özellikler kırılmasın)
+    el.style.display = isOn ? '' : 'none';
+  });
+  // İçindeki tüm öğeler gizliyse dropdown kabuğunu da gizle (boş menü görünmesin)
+  ['dropdownKesfet', 'dropdownAskida'].forEach(id => {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    const items = wrap.querySelectorAll('[data-feature]');
+    const anyVisible = [...items].some(i => i.style.display !== 'none');
+    wrap.style.display = anyVisible ? '' : 'none';
+  });
+}
+
+// Bir görünüm şu an kapalıysa (flag false) true döner — hash ile doğrudan erişimi engellemek için
+function isViewBlocked(view) {
+  const viewToFeature = {
+    quotes:'quotes', universe:'universe', stats:'stats', mood:'mood', blind:'blind',
+    pano:'pano', menu:'menu', diary:'diary', sahaf:'sahaf', radio:'radio',
+    sozluk:'sozluk', askida:'askida', bagiscilar:'askida', profile:'profile',
+  };
+  const key = viewToFeature[view];
+  if (!key) return false; // flag sistemi kapsamında değilse (search, shelfview, iletisim, manifesto vb.) hep açık
+  return _featureFlags[key] === false;
+}
+
+const FEATURE_LABELS = {
+  quotes: { icon:'✦', label:'Nora Quotes', desc:'Alıntı koleksiyonu' },
+  universe: { icon:'🌌', label:'Kitap Evreni', desc:'Görsel bağlantı haritası (en ağır özellik)' },
+  stats: { icon:'📊', label:'İstatistik', desc:'Katalog analitik sayfası' },
+  mood: { icon:'✦', label:'Ruh Hali', desc:'Ruh haline göre kitap önerisi' },
+  blind: { icon:'?', label:'Kör Buluşma', desc:'İsmi gizli kitap keşfi' },
+  wheel: { icon:'🎡', label:'Kitap Çarkı', desc:'Rastgele kitap çarkı' },
+  covers: { icon:'🖼', label:'Kapaklar Galerisi', desc:'Tüm kapakların galeri görünümü' },
+  pano: { icon:'📌', label:'Pano', desc:'Müşteri ilan panosu (moderasyon gerektirir)' },
+  menu: { icon:'☕', label:'Kafe Menüsü', desc:'Menü sayfası' },
+  diary: { icon:'📔', label:'Günlük', desc:'Nora\'nın günlüğü + zaman kapsülü' },
+  sahaf: { icon:'📦', label:'Nora Sahaf', desc:'Müşteriden kitap alım teklifi' },
+  radio: { icon:'📻', label:'NoRa.dio', desc:'Kafede çalan müzik akışı' },
+  sozluk: { icon:'📖', label:'Sahaf Sözlüğü', desc:'Sahaflık terimleri sözlüğü' },
+  askida: { icon:'❤', label:'Askıda Kitap', desc:'Bağış/dağıtım sistemi + bağışçılar sayfası' },
+  profile: { icon:'👤', label:'Profil & Giriş', desc:'Kullanıcı hesabı, giriş/kayıt' },
+  badges: { icon:'🎖', label:'Rozetler', desc:'Oyunlaştırma rozet sistemi' },
+  serendipity: { icon:'✦', label:'Serendipity', desc:'Tek tık anlık rastgele öneri' },
+  oda: { icon:'◉', label:'Oda\'ya Yolculuk', desc:'Atmosferik çok adımlı keşif' },
+  library3d: { icon:'📚', label:'3D Kütüphane', desc:'Üç boyutlu raf görselleştirme' },
+  harita: { icon:'🗺', label:'Edebiyat Haritası', desc:'Coğrafi/kültürel keşif modu' },
+};
+
+function loadOzelliklerPanel() {
+  const el = document.getElementById('ozelliklerList');
+  if (!el) return;
+  el.innerHTML = Object.keys(FEATURE_FLAGS_DEFAULT).map(key => {
+    const info = FEATURE_LABELS[key] || { icon:'○', label:key, desc:'' };
+    const isOn = _featureFlags[key] !== false;
+    return `<label style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background='var(--paper-dark)'" onmouseout="this.style.background='none'">
+      <input type="checkbox" class="ozellik-toggle" data-key="${key}" ${isOn?'checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--zone-phosphor);flex-shrink:0;">
+      <span style="font-size:1rem;flex-shrink:0;width:24px;">${info.icon}</span>
+      <div style="flex:1;">
+        <div style="font-family:'Courier Prime',monospace;font-size:0.78rem;color:var(--ink);">${info.label}</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);">${info.desc}</div>
+      </div>
+      <span style="font-family:'Courier Prime',monospace;font-size:0.62rem;letter-spacing:1px;color:${isOn?'#2a7a2a':'#c84040'};min-width:40px;text-align:right;" id="ozellikState_${key}">${isOn?'AÇIK':'KAPALI'}</span>
+    </label>`;
+  }).join('');
+
+  el.querySelectorAll('.ozellik-toggle').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const stateEl = document.getElementById('ozellikState_' + cb.dataset.key);
+      if (stateEl) { stateEl.textContent = cb.checked ? 'AÇIK' : 'KAPALI'; stateEl.style.color = cb.checked ? '#2a7a2a' : '#c84040'; }
+    });
+  });
+}
+
+function setAllFeatureFlags(value) {
+  document.querySelectorAll('.ozellik-toggle').forEach(cb => {
+    cb.checked = value;
+    const stateEl = document.getElementById('ozellikState_' + cb.dataset.key);
+    if (stateEl) { stateEl.textContent = value ? 'AÇIK' : 'KAPALI'; stateEl.style.color = value ? '#2a7a2a' : '#c84040'; }
+  });
+}
+
+async function saveFeatureFlags() {
+  const newFlags = {};
+  document.querySelectorAll('.ozellik-toggle').forEach(cb => { newFlags[cb.dataset.key] = cb.checked; });
+
+  const msg = document.getElementById('ozelliklerSaveMsg');
+  if (msg) { msg.textContent = 'Kaydediliyor...'; msg.style.color = 'var(--ink-faint)'; }
+
+  try {
+    const check = await api('settings?key=eq.feature_flags&select=key');
+    const exists = check.ok && (await check.json()).length > 0;
+    const body = { key: 'feature_flags', value: JSON.stringify(newFlags) };
+    const res = exists
+      ? await api('settings?key=eq.feature_flags', { method:'PATCH', body:JSON.stringify({ value: JSON.stringify(newFlags) }) })
+      : await api('settings', { method:'POST', body:JSON.stringify(body) });
+
+    if (res.ok) {
+      _featureFlags = { ...FEATURE_FLAGS_DEFAULT, ...newFlags };
+      applyFeatureFlags();
+      if (msg) { msg.textContent = '✓ Kaydedildi — müşteri tarafında anında geçerli'; msg.style.color = '#2a7a2a'; }
+      auditLog('FEATURE_FLAGS_UPDATE', newFlags);
+      setTimeout(() => { if (msg) msg.textContent = ''; }, 4000);
+    } else {
+      if (msg) { msg.textContent = '✗ Kaydedilemedi'; msg.style.color = '#c84040'; }
+    }
+  } catch(e) {
+    if (msg) { msg.textContent = '✗ Bağlantı hatası'; msg.style.color = '#c84040'; }
+  }
+}
 let darkMode = false;
 let acSelected = -1;
 let soundEnabled = true;
@@ -4786,6 +4949,10 @@ function loadD3ThenRender() {
 
 // ===== VIEWS =====
 async function showView(v) {
+  // Özellik kapalıysa (yumuşak lansman) arama sayfasına yönlendir — admin bunun dışında
+  if (v !== 'admin' && isViewBlocked(v)) {
+    if (v !== 'customer') { showToast('Bu bölüm şu an açık değil'); v = 'customer'; }
+  }
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.add('active');
   ['btnCustomer','btnShelfView','btnKesfet','btnNoraMenu','btnAskida','btnIletisimMenu','btnStats','btnAdmin','btnProfile','btnAskida','btnRadio','btnMood','btnBlind','btnDiary','btnSahaf','btnPano','btnMenu','btnIletisim','btnManifesto','btnSozluk','btnQuotes','btnUniverse'].forEach(id => { const el=document.getElementById(id); if(el) { el.classList.remove('active'); el.classList.remove('dropdown-active'); } });
@@ -8632,7 +8799,7 @@ function switchTab(tab) {
       'askida':'panelAskida','missed':'panelMissed','gizli':'panelGizli',
       'yazarlar':'panelYazarlar','gunun':'panelGunun','spotify':'panelSpotify',
       'ikram':'panelIkram','diary':'panelDiary','sahaf':'panelSahaf',
-      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis','koleksiyon':'panelKoleksiyon','etkinlik':'panelEtkinlik','adminnotes':'panelAdminnotes','secretnotes':'panelSecretNotes'
+      'panoadmin':'panelPanoadmin','report':'panelReport','menuadmin':'panelMenuAdmin','shelfmap':'panelShelfMap','paso':'panelPaso','kolektif':'panelKolektif','fotoscan':'panelFotoScan','temin':'panelTemin','satis':'panelSatis','koleksiyon':'panelKoleksiyon','etkinlik':'panelEtkinlik','adminnotes':'panelAdminnotes','secretnotes':'panelSecretNotes','ozellikler':'panelOzellikler'
     };
     Object.entries(panelMap).forEach(([key, panelId]) => {
       const el = document.getElementById(panelId);
@@ -8644,7 +8811,7 @@ function switchTab(tab) {
       'askida':'tabAskida','missed':'tabMissed','gizli':'tabGizli',
       'yazarlar':'tabYazarlar','gunun':'tabGunun','spotify':'tabSpotify',
       'ikram':'tabIkram','diary':'tabDiary','sahaf':'tabSahaf',
-      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis','koleksiyon':'tabKoleksiyon','etkinlik':'tabEtkinlik','adminnotes':'tabAdminNotes','secretnotes':'tabSecretNotes'
+      'panoadmin':'tabPanoAdmin','report':'tabReport','menuadmin':'tabMenuAdmin','shelfmap':'tabShelfMap','paso':'tabPaso','kolektif':'tabKolektif','fotoscan':'tabFotoScan','temin':'tabTemin','satis':'tabSatis','koleksiyon':'tabKoleksiyon','etkinlik':'tabEtkinlik','adminnotes':'tabAdminNotes','secretnotes':'tabSecretNotes','ozellikler':'tabOzellikler'
     };
     Object.entries(tabMap).forEach(([key, tabId]) => {
       const el = document.getElementById(tabId);
@@ -8666,6 +8833,7 @@ function switchTab(tab) {
   if (tab === 'panoadmin') loadPanoAdmin();
   if (tab === 'report') loadDailyReport();
   if (tab === 'menuadmin') loadMenuAdmin();
+  if (tab === 'ozellikler') loadOzelliklerPanel();
   if (tab === 'shelfmap') renderShelfMap();
   if (tab === 'paso') loadPasoPanel();
   if (tab === 'kolektif') loadKolektif();
@@ -23666,6 +23834,10 @@ function observeLazyImages() {
     if (btn) btn.textContent = '🔇 SES';
   }
 
+  // Özellik flag'lerini erkenden uygula — nav gizlensin, açılışta yanıp sönme olmasın
+  applyFeatureFlags(); // önce varsayılanlarla (senkron, anında)
+  loadFeatureFlags();  // sonra Supabase'den gerçek admin ayarlarını çek (async, üstüne yazar)
+
   const hashMap = {
     '#menu': 'menu',
     '#quotes': 'quotes',
@@ -23679,7 +23851,9 @@ function observeLazyImages() {
 
   // Hash'i sayfa yüklenmeden hemen oku
   const hash = window.location.hash.toLowerCase();
-  const targetView = hashMap[hash] || 'customer';
+  let targetView = hashMap[hash] || 'customer';
+  // Kapalı bir özelliğe hash ile direkt gelinmeye çalışılıyorsa arama sayfasına düş
+  if (isViewBlocked(targetView)) targetView = 'customer';
 
   // Tüm view'ları gizle, hedef view'ı aktifte tut
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -23742,14 +23916,14 @@ function observeLazyImages() {
 <!-- MOBİL DAHA FAZLA MENÜ -->
 <div id="mobMoreMenu" style="display:none;position:fixed;bottom:54px;left:0;right:0;background:var(--black);border-top:1px solid #2a2a2a;z-index:6999;padding:8px 0;animation:toastIn 0.2s ease;">
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;">
-    <button onclick="mobNav('universe',null);closeMobMore()" class="mob-more-item">🌌 Evren</button>
-    <button onclick="mobNav('stats',null);closeMobMore()" class="mob-more-item">📊 İstatistik</button>
-    <button onclick="mobNav('quotes',null);closeMobMore()" class="mob-more-item">✦ Quotes</button>
-    <button onclick="mobNav('menu',null);closeMobMore()" class="mob-more-item">☕ Menü</button>
+    <button data-feature="universe" onclick="mobNav('universe',null);closeMobMore()" class="mob-more-item">🌌 Evren</button>
+    <button data-feature="stats" onclick="mobNav('stats',null);closeMobMore()" class="mob-more-item">📊 İstatistik</button>
+    <button data-feature="quotes" onclick="mobNav('quotes',null);closeMobMore()" class="mob-more-item">✦ Quotes</button>
+    <button data-feature="menu" onclick="mobNav('menu',null);closeMobMore()" class="mob-more-item">☕ Menü</button>
     <button onclick="mobNav('iletisim',null);closeMobMore()" class="mob-more-item">📞 İletişim</button>
     <button onclick="openProfileModal();closeMobMore()" class="mob-more-item">👤 Profil</button>
-    <button onclick="mobNav('mood',null);closeMobMore()" class="mob-more-item">✦ Ruh Hali</button>
-    <button onclick="mobNav('diary',null);closeMobMore()" class="mob-more-item">📔 Günlük</button>
+    <button data-feature="mood" onclick="mobNav('mood',null);closeMobMore()" class="mob-more-item">✦ Ruh Hali</button>
+    <button data-feature="diary" onclick="mobNav('diary',null);closeMobMore()" class="mob-more-item">📔 Günlük</button>
     <button onclick="showAdminLogin();closeMobMore()" class="mob-more-item" style="color:#c8a030;">⚙ Yönetim</button>
   </div>
 </div>
