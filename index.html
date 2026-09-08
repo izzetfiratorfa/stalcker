@@ -18720,6 +18720,7 @@ const GLOBAL_COMMANDS = [
   { icon:'🎉', title:'Yıl Dönümü Retrospektifi', sub:'Bu yılın özeti — en çok aranan, en çok eklenen', type:'Nişlik', action:()=>showYilDonumuArsivi() },
   { icon:'🔍', title:'Yazım Kontrolü', sub:'Nora notu/açıklama yazarken hızlı kontrol — hiçbir şeyi otomatik değiştirmez', type:'Nişlik', action:()=>showYazimKontrolu() },
   { icon:'🏷', title:'Toplu Etiket Önerisi', sub:'Etiketsiz kitaplara türden otomatik öneri üret', type:'Bakım', action:()=>{ switchTab('report'); setTimeout(runBulkTagSuggestion,300); } },
+  { icon:'📥', title:'Tür/Etiket CSV Güncelle', sub:'Araştırılmış Tür/Etiket verisini ID eşleştirerek içe aktar', type:'Bakım', action:()=>openTagUpdateImport() },
 ];
 
 // Yıl Dönümü Retrospektifi — mevcut created_at ve searchLog verisinden yıllık özet
@@ -19655,6 +19656,133 @@ async function saveBulkTagPage() {
   auditLog('BULK_TAG_SUGGESTION', { count: saved, page: _bulkTagPage });
   _bulkTagPage++;
   showBulkTagReviewModal();
+}
+
+// --- CSV ile Tür/Etiket GÜNCELLEME (mevcut kayıtları ID eşleştirerek PATCH'ler — yeni ekleme yapmaz) ---
+// Kullanım akışı: admin mevcut kataloğu CSV olarak dışa aktarır (ID dahil), bu dosya araştırılıp
+// Tür/Etiket sütunları dolduruluyor (Claude tarafında parti parti), sonra buradan geri yüklenir.
+function openTagUpdateImport() {
+  const modal = document.createElement('div');
+  modal.id = 'tagUpdateModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `<div style="background:var(--paper);border:2px solid var(--ink);max-width:520px;width:100%;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:'Courier Prime',monospace;font-size:0.72rem;letter-spacing:2px;">📥 TÜR/ETİKET CSV GÜNCELLE</div>
+      <button onclick="document.getElementById('tagUpdateModal').remove()" style="background:none;border:none;cursor:pointer;color:var(--ink-faint);">✕</button>
+    </div>
+    <div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:var(--ink-faint);margin-bottom:16px;line-height:1.7;">
+      Araştırılmış Tür/Etiket verisi içeren CSV'yi yükle. <strong>ID</strong> sütunuyla mevcut kitapları eşleştirir,
+      sadece <strong>Tür</strong> ve <strong>Etiketler</strong> sütunları doluysa günceller — başka hiçbir alana dokunmaz,
+      yeni kayıt eklemez. Beklenen sütunlar: <code>ID, Tür, Etiketler</code> (fazladan sütunlar görmezden gelinir).
+    </div>
+    <input type="file" id="tagUpdateFileInput" accept=".csv" style="margin-bottom:14px;font-family:'Courier Prime',monospace;font-size:0.7rem;">
+    <div id="tagUpdatePreview" style="max-height:300px;overflow-y:auto;margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button id="tagUpdateApplyBtn" onclick="applyTagUpdateCSV()" disabled style="background:var(--ink);color:var(--paper);border:none;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:9px 18px;cursor:pointer;letter-spacing:1px;opacity:0.4;">Uygula</button>
+      <span id="tagUpdateMsg" style="font-family:'Courier Prime',monospace;font-size:0.65rem;"></span>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  document.getElementById('tagUpdateFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        _tagUpdateRows = parseTagUpdateCSV(ev.target.result);
+        renderTagUpdatePreview();
+      } catch(err) {
+        document.getElementById('tagUpdatePreview').innerHTML = `<div style="color:#c84040;font-family:'Courier Prime',monospace;font-size:0.7rem;">Dosya okunamadı: ${err.message}</div>`;
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+let _tagUpdateRows = [];
+
+function parseTagUpdateCSV(text) {
+  // BOM temizle, satırlara böl
+  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) throw new Error('Dosya boş');
+  // Basit CSV parse — tırnaklı alanları destekler
+  const parseLine = (line) => {
+    const cells = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    cells.push(cur);
+    return cells.map(c => c.trim());
+  };
+  const header = parseLine(lines[0]).map(h => h.toLowerCase());
+  const idIdx = header.findIndex(h => h === 'id');
+  const genreIdx = header.findIndex(h => h.includes('tür') || h.includes('tur') || h === 'genre');
+  const tagsIdx = header.findIndex(h => h.includes('etiket') || h === 'tags');
+  if (idIdx === -1) throw new Error('ID sütunu bulunamadı');
+  if (genreIdx === -1 && tagsIdx === -1) throw new Error('Tür veya Etiketler sütunu bulunamadı');
+
+  return lines.slice(1).map(line => {
+    const cells = parseLine(line);
+    const id = parseInt(cells[idIdx]);
+    if (!id) return null;
+    return {
+      id,
+      genre: genreIdx > -1 ? cells[genreIdx]?.trim() : '',
+      tags: tagsIdx > -1 ? cells[tagsIdx]?.trim() : '',
+    };
+  }).filter(Boolean).filter(r => r.genre || r.tags);
+}
+
+function renderTagUpdatePreview() {
+  const el = document.getElementById('tagUpdatePreview');
+  const btn = document.getElementById('tagUpdateApplyBtn');
+  const matched = _tagUpdateRows.filter(r => books.some(b => b.id === r.id));
+  const unmatched = _tagUpdateRows.length - matched.length;
+
+  el.innerHTML = `<div style="font-family:'Courier Prime',monospace;font-size:0.68rem;color:${matched.length?'#2a7a2a':'#c84040'};margin-bottom:8px;">
+    ${matched.length} kitap eşleşti ve güncellenecek${unmatched ? ` · ${unmatched} ID kataloğa uymuyor (atlanacak)` : ''}
+  </div>` + matched.slice(0, 15).map(r => {
+    const b = books.find(x => x.id === r.id);
+    return `<div style="padding:5px 0;border-bottom:1px dashed var(--border);font-family:'Courier Prime',monospace;font-size:0.65rem;">
+      <strong>${b.title}</strong><br>
+      <span style="color:var(--ink-faint);">${r.genre ? 'Tür: '+r.genre : ''}${r.genre && r.tags ? ' · ' : ''}${r.tags ? 'Etiket: '+r.tags : ''}</span>
+    </div>`;
+  }).join('') + (matched.length > 15 ? `<div style="font-family:'Courier Prime',monospace;font-size:0.62rem;color:var(--ink-faint);padding-top:6px;">...+${matched.length-15} kayıt daha</div>` : '');
+
+  if (matched.length) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+async function applyTagUpdateCSV() {
+  const matched = _tagUpdateRows.filter(r => books.some(b => b.id === r.id));
+  if (!matched.length) return;
+  const msg = document.getElementById('tagUpdateMsg');
+  const btn = document.getElementById('tagUpdateApplyBtn');
+  btn.disabled = true;
+  if (msg) { msg.textContent = 'Uygulanıyor...'; msg.style.color = 'var(--ink-faint)'; }
+
+  showProgress(`${matched.length} kitap güncelleniyor...`, matched.length * 50);
+  let updated = 0;
+  await processInChunks(matched, async r => {
+    const body = {};
+    if (r.genre) body.genre = r.genre;
+    if (r.tags) body.tags = r.tags;
+    const res = await api('books?id=eq.' + r.id, { method:'PATCH', body:JSON.stringify(body) });
+    if (res.ok) {
+      const b = books.find(x => x.id === r.id);
+      if (b) { if (r.genre) b.genre = r.genre; if (r.tags) b.tags = r.tags; }
+      updated++;
+    }
+  }, 10, 30);
+  hideProgress();
+
+  if (msg) { msg.textContent = `✓ ${updated} kitap güncellendi`; msg.style.color = '#2a7a2a'; }
+  auditLog('TAG_UPDATE_CSV_IMPORT', { count: updated });
+  renderAdminTable(); renderStats();
+  setTimeout(() => document.getElementById('tagUpdateModal')?.remove(), 2000);
 }
 
 // --- Veri Doldurma Kampanyası ---
